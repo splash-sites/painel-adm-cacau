@@ -36,3 +36,32 @@ input[type="checkbox"] {
 .scrollbar-hidden::-webkit-scrollbar {
   display: none;
 }
+
+/* Cupom de impressão (ver presentation/order/printOrderReceipt.tsx) — raiz montada fora de
+   #root, escondida em tela; @media print esconde o resto do app e mostra só o cupom. */
+#print-receipt-root {
+  display: none;
+}
+
+@media print {
+  /* Sem isso o navegador usa página A4/Letter (11") por padrão — a térmica alimenta o rolo
+     inteiro até completar essa altura virtual, mesmo com pouco conteúdo (bug real: "papel
+     saindo muito grande"). "auto" na altura deixa a página encolher pro tamanho do cupom.
+     72mm (não 80mm) porque a área imprimível real da TM-T20 em bobina de 80mm é ~72mm —
+     página de 80mm cortava a coluna de valor à direita (bug real: centavos sumindo). */
+  @page {
+    size: 72mm auto;
+    margin: 0;
+  }
+  body > *:not(#print-receipt-root) {
+    display: none !important;
+  }
+  #print-receipt-root {
+    display: block !important;
+    width: 72mm;
+    box-sizing: border-box;
+    /* Assimétrico de propósito — área imprimível da TM-T20 não fica centralizada no rolo,
+       margem esquerda física menor que a direita (visto no cupom real, ver conversa). */
+    padding: 0 5mm 0 5mm;
+  }
+}

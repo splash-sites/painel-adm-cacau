@@ -687,6 +687,27 @@ Entrada na UI: link "Promoções" na sidebar (visível a `store_admin` e `super_
 
 **Sem RLS/SQL novo** — tudo já existia antes deste repo tocar no assunto; só consumo (SELECT/INSERT/UPDATE/DELETE via client, respeitando as policies já criadas pelo storefront).
 
+## Feature: Impressão de pedido na TM-T20 (implementada)
+Cupom impresso automaticamente ao aceitar o pedido (`received` → `preparing`, mesmo ponto do `AcceptOrderModal` que já escolhe o atendente).
+
+**Decisão de arquitetura**: sem servidor de ponte (QZ Tray, Node local, etc) — pedido explícito do usuário foi não instalar nada na máquina além do driver da impressora. Solução: impressão nativa do navegador (`window.print()`) numa impressora TM-T20 instalada como impressora comum do Windows via driver Epson APD (USB, sem cabo de rede disponível). Funciona bem pra multi-loja porque cada PC de loja imprime local, sem depender de servidor central — só precisa do driver + TM-T20 como impressora padrão daquele PC.
+
+**Trade-off aceito**: diálogo de impressão do navegador abre toda vez (não dá pra pular sem flag `--kiosk-printing` no atalho do Chrome, que o usuário optou por não configurar agora) — atendente confirma/clica "Imprimir" manualmente. Formato do cupom: 80mm (padrão da TM-T20).
+
+**Como funciona**: `printOrderReceipt.ts` monta uma raiz React separada (`createRoot`) fora de `#root`, direto em `document.body`, renderiza `OrderReceipt.tsx` e chama `window.print()`. CSS em `index.css` (`@media print`) esconde tudo que não for `#print-receipt-root` na hora de imprimir; escuta `afterprint` pra desmontar e remover o container depois (funciona tanto se o atendente imprime quanto se cancela o diálogo).
+
+**Conteúdo do cupom**: nome da loja, número curto do pedido (últimos 8 caracteres do uuid, maiúsculo — não existe número sequencial no schema), data/hora, canal (`orderChannelLabel`), mesa/endereço de entrega quando aplicável, dados do cliente, itens com variação/adicional/observação (mesma formatação de `OrderItemsList`), total (`calculateOrderTotal`, mesma fórmula do Dashboard/Relatórios) e nome do atendente.
+
+**Camadas:**
+```
+presentation/order/OrderReceipt.tsx       -- componente puro de apresentação do cupom, estilo inline (monoespaçado, preto no branco, independe do tema do app)
+presentation/order/printOrderReceipt.tsx  -- monta OrderReceipt numa raiz React isolada e dispara window.print()
+presentation/attendant/AcceptOrderModal.tsx -- guarda attendantName junto com attendantId (seleção ou criação inline) e chama printOrderReceipt no onSuccess da troca de status; busca nome da loja via useStore(order.storeId)
+index.css                                  -- @media print isolando #print-receipt-root
+```
+
+**Pendente pro usuário**: TM-T20 ainda não instalada na máquina de teste (sem cabo de rede, vai por USB) — driver Epson APD precisa estar instalado e a TM-T20 configurada como impressora padrão em cada PC de loja antes do fluxo funcionar de ponta a ponta. Não testado contra impressora física nesta sessão.
+
 ## Testes
 - Vitest + Testing Library (unitário — `domain`/`application`, sem mockar Supabase, é lógica pura) e Playwright (E2E) já implementados na Fase 1, adiantados em relação ao plano original.
 - E2E real: login → avançar status do pedido → reflete no kanban. Roda contra o Supabase de dev de verdade (não staging — staging só chega na Fase 2), com conta de teste em `.env.local` (`E2E_TEST_EMAIL`/`E2E_TEST_PASSWORD`, nunca commitado).

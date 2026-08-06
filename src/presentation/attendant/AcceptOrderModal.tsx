@@ -5,7 +5,9 @@ import type { Order, OrderStatus } from '../../domain/order/Order'
 import { Button } from '../ui/Button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogTitle } from '../ui/Dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/Select'
+import { printOrderReceipt } from '../order/printOrderReceipt'
 import { useChangeOrderStatus } from '../order/useOrders'
+import { useStore } from '../store/useStores'
 import { AttendantModal } from './AttendantModal'
 import { useAttendantList } from './useAttendants'
 
@@ -19,8 +21,10 @@ export function AcceptOrderModal({
   onClose: () => void
 }) {
   const { data: attendants } = useAttendantList(order.storeId)
+  const { data: store } = useStore(order.storeId)
   const changeStatus = useChangeOrderStatus()
   const [attendantId, setAttendantId] = useState('')
+  const [attendantName, setAttendantName] = useState('')
   const [isCreatingAttendant, setIsCreatingAttendant] = useState(false)
 
   const activeAttendants = (attendants ?? []).filter((attendant) => attendant.active)
@@ -30,7 +34,10 @@ export function AcceptOrderModal({
     changeStatus.mutate(
       { orderId: order.id, newStatus: nextStatus, attendantId },
       {
-        onSuccess: () => onClose(),
+        onSuccess: () => {
+          printOrderReceipt(order, store?.name ?? '', attendantName)
+          onClose()
+        },
         onError: (error) => toast.error(error instanceof Error ? error.message : 'Falha ao aceitar pedido'),
       },
     )
@@ -44,7 +51,13 @@ export function AcceptOrderModal({
           <DialogDescription>Aceitar o pedido exige vincular um atendente.</DialogDescription>
 
           {activeAttendants.length > 0 && (
-            <Select value={attendantId} onValueChange={setAttendantId}>
+            <Select
+              value={attendantId}
+              onValueChange={(id) => {
+                setAttendantId(id)
+                setAttendantName(activeAttendants.find((attendant) => attendant.id === id)?.name ?? '')
+              }}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Selecione o atendente" />
               </SelectTrigger>
@@ -88,6 +101,7 @@ export function AcceptOrderModal({
           onClose={() => setIsCreatingAttendant(false)}
           onCreated={(attendant) => {
             setAttendantId(attendant.id)
+            setAttendantName(attendant.name)
             setIsCreatingAttendant(false)
           }}
         />
