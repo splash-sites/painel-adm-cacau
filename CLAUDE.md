@@ -692,7 +692,7 @@ Cupom impresso automaticamente ao aceitar o pedido (`received` → `preparing`, 
 
 **Decisão de arquitetura**: sem servidor de ponte (QZ Tray, Node local, etc) — pedido explícito do usuário foi não instalar nada na máquina além do driver da impressora. Solução: impressão nativa do navegador (`window.print()`) numa impressora TM-T20 instalada como impressora comum do Windows via driver Epson APD (USB, sem cabo de rede disponível). Funciona bem pra multi-loja porque cada PC de loja imprime local, sem depender de servidor central — só precisa do driver + TM-T20 como impressora padrão daquele PC.
 
-**Trade-off aceito**: diálogo de impressão do navegador abre toda vez (não dá pra pular sem flag `--kiosk-printing` no atalho do Chrome, que o usuário optou por não configurar agora) — atendente confirma/clica "Imprimir" manualmente. Formato do cupom: 80mm (padrão da TM-T20).
+**Diálogo de impressão**: por padrão o navegador abre o diálogo nativo toda vez (atendente confirma/clica "Imprimir" manualmente) — dá pra pular com a flag `--kiosk-printing` num atalho dedicado do Chrome, ver "Impressão silenciosa" logo abaixo (opcional, configurado por loja que quiser). Formato do cupom: 80mm (padrão da TM-T20); área imprimível real é ~72mm, não 80mm — `@page`/`#print-receipt-root` usam 72mm (bug real corrigido: página em 80mm cortava a coluna de valor/centavos à direita, testado com impressora física).
 
 **Como funciona**: `printOrderReceipt.ts` monta uma raiz React separada (`createRoot`) fora de `#root`, direto em `document.body`, renderiza `OrderReceipt.tsx` e chama `window.print()`. CSS em `index.css` (`@media print`) esconde tudo que não for `#print-receipt-root` na hora de imprimir; escuta `afterprint` pra desmontar e remover o container depois (funciona tanto se o atendente imprime quanto se cancela o diálogo).
 
@@ -706,7 +706,24 @@ presentation/attendant/AcceptOrderModal.tsx -- guarda attendantName junto com at
 index.css                                  -- @media print isolando #print-receipt-root
 ```
 
-**Pendente pro usuário**: TM-T20 ainda não instalada na máquina de teste (sem cabo de rede, vai por USB) — driver Epson APD precisa estar instalado e a TM-T20 configurada como impressora padrão em cada PC de loja antes do fluxo funcionar de ponta a ponta. Não testado contra impressora física nesta sessão.
+**Validado com impressora física** (via USB, driver Epson APD, TM-T20 como impressora padrão do Windows) — fluxo completo testado de ponta a ponta: cupom sai com layout, densidade e largura corretos.
+
+### Impressão silenciosa (sem diálogo) — opcional, por PC de loja
+Sem instalar nada além do driver, a única forma de pular o diálogo de impressão do navegador é a flag `--kiosk-printing` num atalho dedicado do Chrome — imprime direto na impressora padrão do Windows. Precisa ser feito 1x em cada PC de loja que quiser esse comportamento (quem não configurar continua vendo o diálogo normal, sem quebrar nada).
+
+**Passo a passo:**
+1. Área de trabalho → botão direito → **Novo** → **Atalho**
+2. Cola exatamente:
+   ```
+   "C:\Program Files\Google\Chrome\Application\chrome.exe" --kiosk-printing
+   ```
+   (ajusta o caminho se o Chrome tiver instalado em `Program Files (x86)`)
+3. Nome do atalho: qualquer coisa **genérica** (ex: "Painel Impressao") — nunca usa o nome de um perfil do Chrome nem cria pelo botão "Criar atalho" de `chrome://settings/manageProfile`
+4. Fecha **todo** Chrome aberto (Gerenciador de Tarefas → mata todo processo "Google Chrome", não só as janelas visíveis)
+5. Abre só por esse atalho novo — confirma em `chrome://version`, linha "Linha de comando", que `--kiosk-printing` aparece
+6. Testa: avança um pedido de `Recebido` → `Em preparo` e confere se não abre diálogo
+
+**Cuidado (bug real encontrado, não reintroduzir)**: atalho de **perfil** do Chrome (aquele gerado automaticamente com nome "NomeDoPerfil - Chrome", ícone que o próprio Chrome cria) tem checagem de integridade que **reescreve o atalho sozinho** e derruba qualquer flag customizada adicionada nele — `--kiosk-printing` e até `--profile-directory` desapareciam da linha de comando mesmo estando escritos no campo Destino. Só funciona com atalho criado manualmente do zero (passo 1-3 acima), nunca editando um atalho de perfil já existente.
 
 ## Testes
 - Vitest + Testing Library (unitário — `domain`/`application`, sem mockar Supabase, é lógica pura) e Playwright (E2E) já implementados na Fase 1, adiantados em relação ao plano original.

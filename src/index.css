@@ -60,8 +60,6 @@ input[type="checkbox"] {
     display: block !important;
     width: 72mm;
     box-sizing: border-box;
-    /* Assimétrico de propósito — área imprimível da TM-T20 não fica centralizada no rolo,
-       margem esquerda física menor que a direita (visto no cupom real, ver conversa). */
-    padding: 0 5mm 0 5mm;
+    padding: 0 5mm;
   }
 }
