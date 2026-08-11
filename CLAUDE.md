@@ -203,6 +203,8 @@ Regras não-negociáveis, independente de feature:
 5. **Dashboard de pedidos** + realtime + máquina de estados — só depois de ter produto cadastrado pra testar contra
 6. A partir daqui o storefront já consegue testar de ponta a ponta (loja, produto e login existem)
 
+**Varredura de segurança — obrigatória antes de dar qualquer feature como concluída:** rodar o agente `security-sweep` (definido em `.claude/agents/security-sweep.md`) passando os arquivos/telas que a feature tocou. Ele conhece o modelo de ameaças do projeto (RLS multi-tenant, `cost_price`, snapshot de preço, Edge Functions, reforço em RPC) e reporta achados com severidade e file:line — só leitura, não corrige. Achado CRÍTICO/ALTO bloqueia o "feito" até resolver.
+
 **Checklist de revisão — rodar ao final de cada etapa acima, antes de avançar pra próxima:**
 - [ ] **Clean Architecture**: a lógica de negócio dessa etapa está em `domain`/`application`, sem `import` de React ou do client Supabase ali dentro?
 - [ ] **SOLID**: componente/hook novo faz uma coisa só? Alguma implementação concreta devia estar atrás de uma interface?
