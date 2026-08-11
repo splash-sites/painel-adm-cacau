@@ -133,6 +133,26 @@ O domínio em si pode ser comprado a qualquer momento, sem depender desse passo 
 
 **Fase 2 — unificação (ao bater o Marco 1 abaixo):** os dois repositórios se juntam num monorepo (Turborepo + pnpm workspaces), as mudanças de schema passam a ser migrations versionadas (`supabase/migrations`), e entra staging (projeto Supabase separado), CI e PR obrigatório.
 
+## Fluxo de branches e release (GitFlow simplificado — vigente desde o período de teste com clientes)
+Clientes reais já usam o deploy de produção (`main` → https://painel-adm-cacau.vercel.app). A partir daqui, **nunca desenvolver direto na `main`** — isso substitui o "push quando quiser" da Fase 1.
+
+- **`main`** — produção, o que os clientes usam. Só recebe merge de release ou hotfix. Todo push na `main` faz deploy de produção na Vercel automaticamente.
+- **`dev`** — desenvolvimento contínuo, branch padrão do dia a dia. Todo push gera Preview Deployment na Vercel com URL estável própria (`painel-adm-cacau-git-dev-...vercel.app`) — é o ambiente de teste interno.
+- **Feature branch** (opcional) — pra tarefa maior/arriscada, criar a partir da `dev` e mergear de volta na `dev`.
+
+**Soltar versão pros clientes:**
+```bash
+git checkout main
+git merge dev
+git tag v1.x.y        # versionamento semântico: major.minor.patch
+git push origin main --tags
+git checkout dev
+```
+
+**Hotfix (bug urgente em produção):** branch a partir da `main`, corrige, merge na `main` (deploy imediato) **e** na `dev` — senão a correção se perde no próximo release.
+
+**Cuidado que branch nenhuma resolve:** o banco Supabase é um só, compartilhado entre `dev` e produção. Mudança de schema/RLS/RPC no SQL Editor atinge os clientes na hora, independente de branch. Durante o período de teste: mudança de schema só aditiva/compatível (campo novo sempre opcional ou com default — convenção que já existe em "Importação de planilha"), nunca renomear/remover coluna ou apertar política que o código em produção ainda usa. Isolamento de banco de verdade (projeto Supabase de staging) é a Fase 2.
+
 ## Stack técnica
 - React 19 + Vite, TypeScript em modo `strict`
 - Tailwind CSS v4 via `@tailwindcss/vite` (sem `tailwind.config.js` — tokens ficam em CSS, bloco `@theme`, quando precisar customizar)

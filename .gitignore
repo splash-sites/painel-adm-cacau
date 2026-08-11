@@ -12,6 +12,12 @@ dist
 dist-ssr
 *.local
 
+# Projeto usa pnpm — lockfile do npm é sempre acidente
+package-lock.json
+
+# Guias de uso pra cliente (gerados localmente, não versionados)
+guia/
+
 # Playwright
 test-results
 playwright-report
