@@ -123,7 +123,9 @@ export function SettingsPage() {
             <p className="text-sm font-body text-foreground/60">
               {permission === 'denied'
                 ? 'Bloqueada nas configurações do navegador — precisa liberar por lá antes de ativar aqui.'
-                : `Status: ${permissionLabel}`}
+                : permission === 'default'
+                  ? 'O navegador ainda não deu permissão — ligar o botão ao lado abre o pedido de permissão.'
+                  : `Status: ${permissionLabel}`}
             </p>
           </div>
           <Switch

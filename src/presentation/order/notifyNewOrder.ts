@@ -12,6 +12,7 @@ export function notifyNewOrder(storeId: string): void {
   }
 
   if (prefs.browserNotificationEnabled && typeof Notification !== 'undefined' && Notification.permission === 'granted') {
-    new Notification('Novo pedido', { body: 'Um novo pedido chegou no dashboard.' })
+    // tag: vários pedidos em sequência substituem o banner anterior em vez de empilhar
+    new Notification('Novo pedido', { body: 'Um novo pedido chegou no dashboard.', tag: 'splash-new-order' })
   }
 }

@@ -2,6 +2,7 @@ import { useEffectiveStoreId } from '../storeContext/useEffectiveStoreId'
 import { useOrderList } from './useOrders'
 import { useFinalizedClear } from './useFinalizedClear'
 import { KANBAN_COLUMNS } from '../../domain/order/orderStatusRules'
+import { NotificationPermissionBanner } from './NotificationPermissionBanner'
 import { OrderCard } from './OrderCard'
 
 const COLUMN_COLOR: Record<string, string> = {
@@ -24,6 +25,8 @@ export function OrderDashboardPage() {
   return (
     <div className="space-y-6">
       <h2 className="font-display text-2xl md:text-3xl text-accent">Dashboard de pedidos</h2>
+
+      {storeId && <NotificationPermissionBanner storeId={storeId} />}
 
       {!storeId && <p className="font-body">Selecione uma loja pra ver os pedidos.</p>}
       {isLoading && <p className="font-body">Carregando...</p>}
