@@ -10,6 +10,7 @@ const COLUMN_COLOR: Record<string, string> = {
   preparing: 'bg-amber-500',
   out_for_delivery: 'bg-blue-500',
   ready_for_pickup: 'bg-blue-500',
+  delivered: 'bg-blue-500',
   finalized: 'bg-green-500',
 }
 
@@ -33,7 +34,7 @@ export function OrderDashboardPage() {
       {error && <p className="font-body text-red-600">Erro ao carregar pedidos</p>}
 
       {orders && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
           {KANBAN_COLUMNS.map((column) => {
             let columnOrders = orders.filter((order) => column.matches(order))
             if (column.key === 'finalized' && clearedAt) {

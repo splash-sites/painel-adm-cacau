@@ -15,6 +15,7 @@ export const STATUS_BAND_CLASS: Record<OrderStatus, string> = {
   received: 'bg-amber-50 text-amber-800',
   preparing: 'bg-amber-50 text-amber-800',
   out_for_delivery: 'bg-blue-50 text-blue-800',
+  delivered: 'bg-blue-50 text-blue-800',
   finalized: 'bg-green-50 text-green-800',
   cancelled: 'bg-secondary/10 text-foreground/60',
 }
@@ -23,6 +24,7 @@ export const STATUS_DOT_CLASS: Record<OrderStatus, string> = {
   received: 'bg-amber-500',
   preparing: 'bg-amber-500',
   out_for_delivery: 'bg-blue-500',
+  delivered: 'bg-blue-500',
   finalized: 'bg-green-500',
   cancelled: 'bg-foreground/30',
 }

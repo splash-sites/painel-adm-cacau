@@ -297,18 +297,20 @@ Exemplo: a regra "`dine_in` pula `out_for_delivery` e vai direto de `preparing` 
 - **I**: hooks pequenos e específicos (`useOrderStatus`, `useOrderRealtime`) em vez de um `useOrders` gigante.
 - **D**: `presentation` depende de abstrações de `application`, nunca importa o client Supabase direto num componente.
 
-## Fluxo de status do pedido (implementado — substitui o rascunho original)
-Valores reais em `orders.status`: `received | preparing | out_for_delivery | finalized | cancelled`. Sem `pending`/`ready`/`served`/`closed`/`awaiting_pickup`/`picked_up`/`delivered` — o fluxo unificou pra 1 vocabulário só, `finalized` cobre "mesa fechada", "retirado" e "entregue".
+## Fluxo de status do pedido (`delivered` adicionado — pendente RPC/schema no Supabase)
+Valores em `orders.status`: `received | preparing | out_for_delivery | delivered | finalized | cancelled`. Sem `pending`/`ready`/`served`/`closed`/`awaiting_pickup`/`picked_up` — o fluxo usa 1 vocabulário só. `finalized` deixou de cobrir "entregue": agora significa especificamente **pagamento confirmado / pedido fechado**, depois que o cliente já recebeu (pedido da cliente Julia, separar entrega de pagamento — `delivered` é o "Entregue").
 
-Fluxo comum: `received` → `preparing` → `out_for_delivery` → `finalized`.
-**`dine_in` pula `out_for_delivery`**: `received` → `preparing` → `finalized` direto (mesa não "sai pra entrega" nem "fica pronta pra retirar"). Regra vive em `domain/order/orderStatusRules.ts` (`FLOW` vs `DINE_IN_FLOW`), pura e testada.
+Fluxo comum: `received` → `preparing` → `out_for_delivery` → `delivered` → `finalized`.
+**`dine_in` pula `out_for_delivery`**: `received` → `preparing` → `delivered` → `finalized` (mesa não "sai pra entrega" nem "fica pronta pra retirar", mas passa por "Entregue" igual — serviu a mesa). Regra vive em `domain/order/orderStatusRules.ts` (`FLOW` vs `DINE_IN_FLOW`), pura e testada.
 
-`out_for_delivery` é **1 status só, mas 2 colunas no kanban** dependendo de `order_type`: aparece como "Saiu pra entrega" pra `delivery`/`dine_in`, e como "Pronto para retirada" pra `pickup` — nunca um valor de banco separado, só rótulo/coluna diferente (`KANBAN_COLUMNS` com `matches()` em vez de 1:1 com status).
+`out_for_delivery` é **1 status só, mas 2 colunas no kanban** dependendo de `order_type`: aparece como "Saiu pra entrega" pra `delivery`/`dine_in`, e como "Pronto para retirada" pra `pickup` — nunca um valor de banco separado, só rótulo/coluna diferente (`KANBAN_COLUMNS` com `matches()` em vez de 1:1 com status). `delivered` é 1 coluna única ("Entregue"), sem esse desdobramento — o que muda por tipo é só o degrau anterior.
 
 - **Cancelar**: só a partir de `received` (`canCancel`).
-- **Voltar etapa**: permitido até `out_for_delivery` (`canRevert`) — depois de `finalized` não reverte mais.
+- **Voltar etapa**: permitido até `delivered` (`canRevert`) — depois de `finalized` não reverte mais.
 - **Editar itens do pedido**: só enquanto `received` (`canEditItems`) — depois que entra em preparo, cozinha já começou. Editar item (novo ou já no pedido) inclui variação (obrigatória, se o produto tiver grupo vinculado) e adicional (opcional) — não é mais só quantidade. Ver "Editar itens: variação e adicional" abaixo.
 - Toda transição valida no RPC (`change_order_status`/`revert_order_status`), nunca só no frontend.
+- **"Finalizado só depois do pagamento" é orientação de uso, não travada pelo sistema** — não existe coluna de status de pagamento no schema; quem decide o momento de clicar em avançar pra `finalized` é a atendente. Travar de verdade (ex: checkbox "pagamento confirmado" obrigatório) é evolução futura, fora do escopo desse ajuste.
+- **Pendente antes de funcionar de ponta a ponta**: código do painel (domain + kanban + testes) já trata `delivered`, mas a RPC (`change_order_status`/`revert_order_status`) e a constraint/enum de `orders.status` no Supabase ainda não conhecem esse valor — até isso ser aplicado no SQL Editor, "Avançar etapa" falha ao tentar sair de `out_for_delivery`/`preparing` pra `delivered`. **Cuidado ao aplicar**: banco é compartilhado com produção (`main`) — a RPC nova precisa continuar aceitando as transições antigas (`out_for_delivery`→`finalized` direto, `preparing`→`finalized` direto no dine_in) até o release que leva esse fluxo pra produção, senão quebra quem ainda tá rodando o código antigo.
 
 ## Papéis dentro deste app
 - **`super_admin`**: vê e gerencia todas as lojas.

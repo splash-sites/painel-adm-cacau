@@ -1,9 +1,13 @@
 import type { Order, OrderStatus, OrderType } from './Order'
 
-const FLOW: OrderStatus[] = ['received', 'preparing', 'out_for_delivery', 'finalized']
+/**
+ * "delivered" (Entregue) marca só que o cliente já recebeu o pedido — "finalized" fica reservado
+ * pro fechamento depois do pagamento confirmado (pedido da cliente Julia, separar entrega de pagamento).
+ */
+const FLOW: OrderStatus[] = ['received', 'preparing', 'out_for_delivery', 'delivered', 'finalized']
 
-/** Mesa não "sai pra entrega" nem "fica pronta pra retirar" — pula direto pra finalizado. */
-const DINE_IN_FLOW: OrderStatus[] = ['received', 'preparing', 'finalized']
+/** Mesa não "sai pra entrega" nem "fica pronta pra retirar" — pula direto pra "Entregue" (serviu a mesa). */
+const DINE_IN_FLOW: OrderStatus[] = ['received', 'preparing', 'delivered', 'finalized']
 
 function flowFor(orderType: OrderType): OrderStatus[] {
   return orderType === 'dine_in' ? DINE_IN_FLOW : FLOW
@@ -11,8 +15,8 @@ function flowFor(orderType: OrderType): OrderStatus[] {
 
 const CANCELLABLE_STATUSES: OrderStatus[] = ['received']
 
-/** Depois de entregue não dá mais pra voltar — "saiu pra entrega" é o último ponto revertível. */
-const REVERTIBLE_STATUSES: OrderStatus[] = ['preparing', 'out_for_delivery']
+/** Depois de finalizado não dá mais pra voltar — "entregue" é o último ponto revertível. */
+const REVERTIBLE_STATUSES: OrderStatus[] = ['preparing', 'out_for_delivery', 'delivered']
 
 export interface KanbanColumn {
   key: string
@@ -38,6 +42,7 @@ export const KANBAN_COLUMNS: KanbanColumn[] = [
     label: 'Pronto para retirada',
     matches: (order) => order.status === 'out_for_delivery' && order.orderType === 'pickup',
   },
+  { key: 'delivered', label: 'Entregue', matches: (order) => order.status === 'delivered' },
   { key: 'finalized', label: 'Finalizado', matches: (order) => order.status === 'finalized' },
 ]
 
@@ -81,6 +86,7 @@ const STATUS_LABELS: Record<OrderStatus, string> = {
   received: 'Recebido',
   preparing: 'Em preparo',
   out_for_delivery: 'Saiu pra entrega',
+  delivered: 'Entregue',
   finalized: 'Finalizado',
   cancelled: 'Cancelado',
 }

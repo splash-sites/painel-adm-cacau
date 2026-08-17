@@ -3,7 +3,7 @@ import type { VariationPriceMode } from '../product/Variation'
 export type OrderType = 'dine_in' | 'pickup' | 'delivery'
 export type SalesChannel = 'retail' | 'reseller'
 
-export type OrderStatus = 'received' | 'preparing' | 'out_for_delivery' | 'finalized' | 'cancelled'
+export type OrderStatus = 'received' | 'preparing' | 'out_for_delivery' | 'delivered' | 'finalized' | 'cancelled'
 
 /** Snapshot do adicional no momento do pedido — nome/preço nunca voltam a consultar addon_options. */
 export interface OrderItemAddon {
