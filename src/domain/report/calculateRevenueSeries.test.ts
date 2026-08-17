@@ -48,6 +48,11 @@ describe('calculateRevenueSeries', () => {
     expect(calculateRevenueSeries(orders, 'day')).toEqual([])
   })
 
+  it('excludes delivered/preparing orders — só finalized é receita confirmada', () => {
+    const orders = [makeOrder({ status: 'delivered' }), makeOrder({ status: 'preparing' })]
+    expect(calculateRevenueSeries(orders, 'day')).toEqual([])
+  })
+
   it('buckets by hour of day and sorts chronologically', () => {
     const early = new Date()
     early.setHours(9, 30, 0, 0)

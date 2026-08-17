@@ -18,13 +18,14 @@ function dayLabel(dateKey: string): string {
 /**
  * 'hour' agrupa por hora do dia (0-23, pro filtro Hoje). 'day' agrupa por data (pro 7d/30d).
  * Sempre em horário local (mesmo padrão de startOfTodayIso), nunca UTC — evita pedido de
- * madrugada cair no dia errado.
+ * madrugada cair no dia errado. Só conta pedido "finalized" (pagamento confirmado) — mesmo
+ * critério de calculateReportSummary, "delivered"/etapas anteriores ainda não são receita.
  */
 export function calculateRevenueSeries(orders: Order[], granularity: 'hour' | 'day'): RevenuePoint[] {
-  const relevantOrders = orders.filter((order) => order.status !== 'cancelled')
+  const paidOrders = orders.filter((order) => order.status === 'finalized')
   const revenueByKey = new Map<string, number>()
 
-  for (const order of relevantOrders) {
+  for (const order of paidOrders) {
     const date = new Date(order.createdAt)
     const key = granularity === 'hour' ? String(date.getHours()).padStart(2, '0') : localDateKey(date)
     revenueByKey.set(key, (revenueByKey.get(key) ?? 0) + calculateOrderTotal(order))

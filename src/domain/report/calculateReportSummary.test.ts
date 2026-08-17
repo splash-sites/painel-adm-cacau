@@ -63,6 +63,18 @@ describe('calculateReportSummary', () => {
     expect(summary.cancelledCount).toBe(1)
   })
 
+  it('counts delivered/preparing orders in orderCount, but not in revenue/average ticket', () => {
+    const orders = [
+      makeOrder({ id: 'a', status: 'finalized', items: [makeItem({ unitPrice: 10 })] }),
+      makeOrder({ id: 'b', status: 'delivered', items: [makeItem({ unitPrice: 999 })] }),
+      makeOrder({ id: 'c', status: 'preparing', items: [makeItem({ unitPrice: 999 })] }),
+    ]
+    const summary = calculateReportSummary(orders)
+    expect(summary.orderCount).toBe(3)
+    expect(summary.totalRevenue).toBe(10)
+    expect(summary.averageTicket).toBe(10)
+  })
+
   it('computes total revenue and average ticket across orders', () => {
     const orders = [
       makeOrder({ id: 'a', items: [makeItem({ quantity: 2, unitPrice: 8 })] }), // 16
@@ -110,6 +122,15 @@ describe('calculateReportSummary', () => {
     ])
   })
 
+  it('counts a delivered order in the channel orderCount, but not in its revenue/average ticket', () => {
+    const orders = [
+      makeOrder({ id: 'a', orderType: 'dine_in', status: 'finalized', items: [makeItem({ unitPrice: 10 })] }),
+      makeOrder({ id: 'b', orderType: 'dine_in', status: 'delivered', items: [makeItem({ unitPrice: 999 })] }),
+    ]
+    const summary = calculateReportSummary(orders)
+    expect(summary.channelBreakdown).toEqual([{ label: 'Cafeteria', orderCount: 2, revenue: 10, averageTicket: 10 }])
+  })
+
   it('ranks attendants by order count, descending, with revenue, ignoring null attendant and cancelled orders', () => {
     const orders = [
       makeOrder({ id: 'a', attendantId: 'att-1', attendantName: 'Ana', items: [makeItem({ unitPrice: 10 })] }),
@@ -123,6 +144,15 @@ describe('calculateReportSummary', () => {
       { attendantId: 'att-1', attendantName: 'Ana', orderCount: 2, revenue: 22 },
       { attendantId: 'att-2', attendantName: 'Bruno', orderCount: 1, revenue: 20 },
     ])
+  })
+
+  it('counts a delivered order towards attendant orderCount, but not towards revenue', () => {
+    const orders = [
+      makeOrder({ id: 'a', status: 'finalized', attendantId: 'att-1', attendantName: 'Ana', items: [makeItem({ unitPrice: 10 })] }),
+      makeOrder({ id: 'b', status: 'delivered', attendantId: 'att-1', attendantName: 'Ana', items: [makeItem({ unitPrice: 999 })] }),
+    ]
+    const summary = calculateReportSummary(orders)
+    expect(summary.attendantRanking).toEqual([{ attendantId: 'att-1', attendantName: 'Ana', orderCount: 2, revenue: 10 }])
   })
 
   it('reuses the addon/variation-aware pricing formula for revenue', () => {
