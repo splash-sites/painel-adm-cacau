@@ -423,6 +423,11 @@ Todo cadastro nasce `customer` por padrão (é o único cadastro público, feito
 
 Todas essas Edge Functions seguem o mesmo padrão de segurança: verificam quem chamou (client com o JWT do caller, sem privilégio) antes de usar um client com `service_role` pra agir — nunca confiar em role vindo do body da requisição.
 
+## Pontos a definir (pedidos da cliente Julia, período de teste)
+Decisão de produto pendente, não é bug — registrado aqui pra não se perder entre conversas.
+
+- **Onde exibir pedido cancelado pros usuários admin.** Hoje, ao cancelar (`change_order_status` → `cancelled`), o pedido some completamente do painel: sai de todas as colunas do kanban (`KANBAN_COLUMNS` não tem `matches()` pra `cancelled`, ver "Fluxo de status do pedido") e não existe nenhuma outra tela que liste pedido por status — não tem "Histórico" nem filtro de cancelados em lugar nenhum. Resultado prático: o motivo de cancelamento (`orders.cancellation_reason`, ver acima) fica gravado no banco, mas **nenhum `store_admin`/`super_admin` consegue ver esse motivo dentro do app** — só consultando o Supabase direto. A cliente pediu motivo de cancelamento "pra ficar registrado no sistema"; registrado no banco já está, mas visível pro usuário do painel, ainda não. Opções a considerar (nenhuma decidida): reaproveitar coluna do kanban (reverte a decisão deliberada de esconder cancelado do board — motivo original dessa decisão não documentado, vale confirmar antes de reverter), tela nova tipo "Cancelamentos" ou "Histórico", ou aba dentro de Relatórios (que já mostra `cancelledCount`/taxa de cancelamento, mas sem lista, só número).
+
 ## Marco 1 — o que precisa estar pronto antes da Fase 2
 **Batido.** Todos os itens abaixo já implementados e validados nesta sessão — próximo passo natural é a Fase 2 (ver "Fases do projeto"), mas decisão é do time, não automática.
 - [x] Login (`store_admin`/`super_admin`) via Supabase Auth
