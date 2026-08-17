@@ -1,6 +1,8 @@
 import { supabase } from '../supabase/client'
 import type {
   OrderChangeEvent,
+  OrderHistoryParams,
+  OrderHistoryResult,
   OrderItemSelection,
   OrderListParams,
   OrderRepository,
@@ -115,13 +117,14 @@ function startOfTodayIso(): string {
   return now.toISOString()
 }
 
+const ORDER_SELECT =
+  '*, attendants(name), order_items(id, product_id, quantity, unit_price, notes, products(name), order_item_addons(id, addon_option_id, name, price, quantity), order_item_variations(id, variation_option_id, name, price, price_mode))'
+
 export class SupabaseOrderRepository implements OrderRepository {
   async list({ storeId, since }: OrderListParams): Promise<Order[]> {
     const { data, error } = await supabase
       .from('orders')
-      .select(
-        '*, attendants(name), order_items(id, product_id, quantity, unit_price, notes, products(name), order_item_addons(id, addon_option_id, name, price, quantity), order_item_variations(id, variation_option_id, name, price, price_mode))',
-      )
+      .select(ORDER_SELECT)
       .eq('store_id', storeId)
       .gte('created_at', since ?? startOfTodayIso())
       .order('created_at')
@@ -129,6 +132,26 @@ export class SupabaseOrderRepository implements OrderRepository {
     if (error) throw new Error(error.message)
 
     return (data as OrderRow[]).map(toOrder)
+  }
+
+  async listHistory({ storeId, since, status, page, pageSize }: OrderHistoryParams): Promise<OrderHistoryResult> {
+    const from = page * pageSize
+    const to = from + pageSize - 1
+
+    let query = supabase.from('orders').select(ORDER_SELECT, { count: 'exact' }).eq('store_id', storeId)
+
+    if (since) {
+      query = query.gte('created_at', since)
+    }
+    if (status) {
+      query = query.eq('status', status)
+    }
+
+    const { data, error, count } = await query.order('created_at', { ascending: false }).range(from, to)
+
+    if (error) throw new Error(error.message)
+
+    return { items: (data as OrderRow[]).map(toOrder), total: count ?? 0 }
   }
 
   async changeStatus(orderId: string, newStatus: OrderStatus, attendantId?: string, reason?: string): Promise<void> {

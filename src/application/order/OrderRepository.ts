@@ -25,8 +25,24 @@ export interface OrderStatusHistoryEntry {
   changedAt: string
 }
 
+export interface OrderHistoryParams {
+  storeId: string
+  /** ISO datetime — omitido busca desde sempre (opção "Tudo" na tela de Histórico). */
+  since?: string
+  status?: OrderStatus
+  page: number
+  pageSize: number
+}
+
+export interface OrderHistoryResult {
+  items: Order[]
+  total: number
+}
+
 export interface OrderRepository {
   list(params: OrderListParams): Promise<Order[]>
+  /** Lista paginada pra tela de Histórico — mais recente primeiro, com filtro opcional de status (inclui "cancelled", que o kanban nunca mostra). */
+  listHistory(params: OrderHistoryParams): Promise<OrderHistoryResult>
   /**
    * attendantId só é exigido (e só faz efeito) na transição received -> preparing — ver needsAttendantToAdvance.
    * reason só é exigido (e só faz efeito) na transição pra "cancelled" — ver needsReasonToCancel.

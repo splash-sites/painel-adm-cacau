@@ -423,16 +423,30 @@ Todo cadastro nasce `customer` por padrão (é o único cadastro público, feito
 
 Todas essas Edge Functions seguem o mesmo padrão de segurança: verificam quem chamou (client com o JWT do caller, sem privilégio) antes de usar um client com `service_role` pra agir — nunca confiar em role vindo do body da requisição.
 
+## Feature: Histórico de pedidos (implementada)
+Resolve o ponto em aberto de "onde exibir pedido cancelado pro admin" (motivo de cancelamento documentado em "Fluxo de status do pedido") com algo mais amplo do que só cancelados: **tela nova que lista todo pedido, em qualquer status**, pedido direto da cliente Julia ("vamos fazer uma tela de histórico onde pode ver todos os pedidos em lista"). Sem tabela nova — mesma `orders`/RLS que o Dashboard já usa, só uma query diferente (paginada, sem agrupar em kanban).
+
+**Por que não é só o kanban com cancelado incluso**: o kanban existe pra guiar o trabalho de hoje (o que fazer agora); Histórico existe pra *consultar* o que já aconteceu (inclusive coisa que não precisa mais de ação, como cancelado e finalizado antigo). Misturar as duas coisas na mesma tela pioraria as duas.
+
+**Camadas:**
+```
+domain/order/orderPeriod.ts            -- OrderPeriod ('today'|'7d'|'30d') + sinceIsoForPeriod, extraído de useReportSummary.ts (Relatórios reusa, não duplica)
+domain/order/orderPeriod.test.ts       -- puro, testado
+application/order/OrderRepository.ts   -- OrderHistoryParams/OrderHistoryResult + listHistory(params), método novo (não mexeu no list() existente do Dashboard)
+infrastructure/order/SupabaseOrderRepository.ts -- listHistory: paginado (.range), filtro opcional de status, mais recente primeiro; ORDER_SELECT virou constante compartilhada com list() (evita duplicar a string de select)
+presentation/order/useOrderHistory.ts  -- HistoryPeriod = OrderPeriod | 'all' ("Tudo" só existe aqui — Relatórios não ganhou essa opção, período fechado é intencional lá)
+presentation/order/OrderHistoryPage.tsx -- rota /historico: toggle de período (Hoje/7dias/30dias/Tudo, mesmo estilo do toggle de Relatórios) + filtro de status (Select) + tabela paginada (10/20/50, mesmo footer de Produtos) + coluna "Motivo do cancelamento" (só preenchida pra pedido cancelado) + botão Detalhes reaproveitando OrderDetailsDrawer sem alteração de lógica (nextStatus/canRevert/canEditItems já retornam null/false pra status terminal, então nenhum botão de ação indevido aparece pra pedido cancelado/finalizado — só confirmado, não precisou mudar)
+```
+`OrderDetailsDrawer.tsx` ganhou um bloco "Motivo: ..." na linha do tempo, visível só quando `status === 'cancelled'` — primeira vez que esse dado aparece em algum lugar da UI.
+
+Entrada na UI: link "Histórico" na sidebar (visível a `store_admin` e `super_admin`, logo abaixo de Dashboard — não é restrito a `super_admin` como Relatórios/Usuários, porque quem mais precisa consultar o motivo no dia a dia é a própria loja).
+
+**Sem SQL novo** — RLS de `orders` já cobre (`store_admin` só a própria loja, `super_admin` tudo), mesma política que Dashboard/Relatórios usam.
+
 ## Pontos a definir (pedidos da cliente Julia, período de teste)
 Decisão de produto pendente, não é bug — registrado aqui pra não se perder entre conversas.
 
-- **Onde exibir pedido cancelado pros usuários admin.** Hoje, ao cancelar (`change_order_status` → `cancelled`), o pedido some completamente do painel: sai de todas as colunas do kanban (`KANBAN_COLUMNS` não tem `matches()` pra `cancelled`, ver "Fluxo de status do pedido") e não existe nenhuma outra tela que liste pedido por status — não tem "Histórico" nem filtro de cancelados em lugar nenhum. Resultado prático: o motivo de cancelamento (`orders.cancellation_reason`, ver acima) fica gravado no banco, mas **nenhum `store_admin`/`super_admin` consegue ver esse motivo dentro do app** — só consultando o Supabase direto. A cliente pediu motivo de cancelamento "pra ficar registrado no sistema"; registrado no banco já está, mas visível pro usuário do painel, ainda não.
-
-  **Sugestão (não decidida ainda) — tela nova `/cancelamentos`, visível a `store_admin` e `super_admin`** (mesmo padrão de Atendentes/Promoções, não restrita a `super_admin` como Relatórios/Usuários — quem mais precisa consultar motivo no dia a dia é a própria loja, não só quem olha número agregado):
-  - Lista simples (mesmo estilo de `AttendantListPage`), sem kanban — pedido, horário, cliente, canal, itens/total, **motivo do cancelamento**, e quem cancelou (via `order_status_history.changed_by`, já existe).
-  - Filtro de período reaproveitando o toggle Hoje/7dias/30dias que `ReportsPage.tsx` já usa — pedido cancelado não é raro, não pode carregar tudo de uma vez sem limite (convenção de "Escalabilidade").
-  - Reaproveita `OrderRepository`/hooks já existentes (`list` já aceita `since`), sem repository novo.
-  - Deliberadamente **não** reaproveita o kanban — reverter a decisão de esconder cancelado do board seria uma mudança de comportamento à parte, não documentada como motivo original, vale confirmar antes de mexer nisso.
+- Nenhum no momento.
 
 ## Marco 1 — o que precisa estar pronto antes da Fase 2
 **Batido.** Todos os itens abaixo já implementados e validados nesta sessão — próximo passo natural é a Fase 2 (ver "Fases do projeto"), mas decisão é do time, não automática.

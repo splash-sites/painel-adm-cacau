@@ -110,6 +110,11 @@ export function OrderDetailsDrawer({ order, onClose }: { order: Order; onClose: 
                   <span>{formatDateTime(order.updatedAt)}</span>
                 </li>
               </ul>
+              {order.status === 'cancelled' && order.cancellationReason && (
+                <p className="rounded-lg bg-red-50 px-2.5 py-1.5 text-sm text-red-800">
+                  Motivo: {order.cancellationReason}
+                </p>
+              )}
             </section>
 
             <section className="space-y-2">

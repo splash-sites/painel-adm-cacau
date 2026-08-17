@@ -3,6 +3,7 @@ import { LoginPage } from './presentation/auth/LoginPage'
 import { ProtectedRoute } from './presentation/auth/ProtectedRoute'
 import { AppLayout } from './presentation/layout/AppLayout'
 import { OrderDashboardPage } from './presentation/order/OrderDashboardPage'
+import { OrderHistoryPage } from './presentation/order/OrderHistoryPage'
 import { StoreFormPage } from './presentation/store/StoreFormPage'
 import { ProductListPage } from './presentation/product/ProductListPage'
 import { ProductImportPage } from './presentation/product/import/ProductImportPage'
@@ -29,6 +30,7 @@ function App() {
           }
         >
           <Route path="/" element={<OrderDashboardPage />} />
+          <Route path="/historico" element={<OrderHistoryPage />} />
           <Route path="/configuracoes" element={<SettingsPage />} />
           <Route path="/produtos" element={<ProductListPage />} />
           <Route path="/produtos/importar" element={<ProductImportPage />} />

@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { SupabaseOrderRepository } from '../../infrastructure/order/SupabaseOrderRepository'
+import { type OrderPeriod, sinceIsoForPeriod } from '../../domain/order/orderPeriod'
 import { calculateReportSummary } from '../../domain/report/calculateReportSummary'
 import { calculateAveragePrepTimeMinutes } from '../../domain/report/calculatePrepTime'
 import { calculateNewVsReturning } from '../../domain/report/calculateNewVsReturning'
@@ -8,20 +9,10 @@ import { calculateOrdersByHour } from '../../domain/report/calculateOrdersByHour
 
 const orderRepository = new SupabaseOrderRepository()
 
-export type ReportPeriod = 'today' | '7d' | '30d'
-
-function sinceIsoFor(period: ReportPeriod): string {
-  const since = new Date()
-  if (period === 'today') {
-    since.setHours(0, 0, 0, 0)
-    return since.toISOString()
-  }
-  since.setDate(since.getDate() - (period === '7d' ? 7 : 30))
-  return since.toISOString()
-}
+export type ReportPeriod = OrderPeriod
 
 export function useReportSummary(storeId: string, period: ReportPeriod) {
-  const since = sinceIsoFor(period)
+  const since = sinceIsoForPeriod(period)
 
   const {
     data: orders,

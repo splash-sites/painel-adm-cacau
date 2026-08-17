@@ -50,6 +50,9 @@ export function AppLayout() {
             <NavLink to="/" end className={linkClass} onClick={() => setSidebarOpen(false)}>
               Dashboard
             </NavLink>
+            <NavLink to="/historico" className={linkClass} onClick={() => setSidebarOpen(false)}>
+              Histórico
+            </NavLink>
             <NavLink to="/produtos" className={linkClass} onClick={() => setSidebarOpen(false)}>
               Produtos
             </NavLink>
