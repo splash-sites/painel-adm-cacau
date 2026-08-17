@@ -7,6 +7,7 @@ import {
   getNextStatus,
   getPreviousStatus,
   needsAttendantToAdvance,
+  needsReasonToCancel,
   orderChannelLabel,
   statusLabel,
 } from './orderStatusRules'
@@ -72,6 +73,17 @@ describe('canCancel', () => {
     expect(canCancel('out_for_delivery')).toBe(false)
     expect(canCancel('finalized')).toBe(false)
     expect(canCancel('cancelled')).toBe(false)
+  })
+})
+
+describe('needsReasonToCancel', () => {
+  it('only requires reason when the order can actually be cancelled (received)', () => {
+    expect(needsReasonToCancel('received')).toBe(true)
+    expect(needsReasonToCancel('preparing')).toBe(false)
+    expect(needsReasonToCancel('out_for_delivery')).toBe(false)
+    expect(needsReasonToCancel('delivered')).toBe(false)
+    expect(needsReasonToCancel('finalized')).toBe(false)
+    expect(needsReasonToCancel('cancelled')).toBe(false)
   })
 })
 

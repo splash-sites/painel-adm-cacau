@@ -27,8 +27,11 @@ export interface OrderStatusHistoryEntry {
 
 export interface OrderRepository {
   list(params: OrderListParams): Promise<Order[]>
-  /** attendantId só é exigido (e só faz efeito) na transição received -> preparing — ver needsAttendantToAdvance. */
-  changeStatus(orderId: string, newStatus: OrderStatus, attendantId?: string): Promise<void>
+  /**
+   * attendantId só é exigido (e só faz efeito) na transição received -> preparing — ver needsAttendantToAdvance.
+   * reason só é exigido (e só faz efeito) na transição pra "cancelled" — ver needsReasonToCancel.
+   */
+  changeStatus(orderId: string, newStatus: OrderStatus, attendantId?: string, reason?: string): Promise<void>
   revertStatus(orderId: string): Promise<void>
   addItem(orderId: string, productId: string, quantity: number, selection?: OrderItemSelection): Promise<void>
   /** Atualiza quantidade e reescreve por completo a variação/adicional do item (não é um patch parcial). */

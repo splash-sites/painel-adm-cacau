@@ -61,4 +61,6 @@ export interface Order {
   /** Quem prepara — vinculado só na transição received -> preparing, trava depois (ver needsAttendantToAdvance). Null enquanto ainda tá "received". */
   attendantId: string | null
   attendantName: string | null
+  /** Preenchido só na transição pra "cancelled" (loja ou cliente) — null pra qualquer outro status. */
+  cancellationReason: string | null
 }

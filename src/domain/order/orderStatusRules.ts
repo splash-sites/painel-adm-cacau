@@ -64,6 +64,15 @@ export function canCancel(status: OrderStatus): boolean {
   return CANCELLABLE_STATUSES.includes(status)
 }
 
+/**
+ * Cancelar (loja recusando/desistindo do pedido, ou cliente) sempre exige motivo — pedido da
+ * cliente Julia, pra ficar registrado por que o pedido não seguiu. Único gatilho hoje é
+ * `canCancel`, mas nome próprio deixa a regra fácil de achar/testar separada.
+ */
+export function needsReasonToCancel(status: OrderStatus): boolean {
+  return canCancel(status)
+}
+
 export function canRevert(status: OrderStatus): boolean {
   return REVERTIBLE_STATUSES.includes(status)
 }

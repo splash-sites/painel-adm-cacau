@@ -33,6 +33,7 @@ function makeOrder(overrides: Partial<Order> = {}): Order {
     updatedAt: '2026-07-28T12:00:00.000Z',
     attendantId: null,
     attendantName: null,
+    cancellationReason: null,
     items: [makeItem()],
     ...overrides,
   }

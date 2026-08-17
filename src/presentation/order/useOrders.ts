@@ -21,11 +21,13 @@ export function useChangeOrderStatus() {
       orderId,
       newStatus,
       attendantId,
+      reason,
     }: {
       orderId: string
       newStatus: OrderStatus
       attendantId?: string
-    }) => orderRepository.changeStatus(orderId, newStatus, attendantId),
+      reason?: string
+    }) => orderRepository.changeStatus(orderId, newStatus, attendantId, reason),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['orders'] })
     },

@@ -214,9 +214,9 @@ export function OrderCard({ order }: { order: Order }) {
         <CancelOrderModal
           isPending={changeStatus.isPending}
           onClose={() => setIsCancelling(false)}
-          onConfirm={() =>
+          onConfirm={(reason) =>
             changeStatus.mutate(
-              { orderId: order.id, newStatus: 'cancelled' },
+              { orderId: order.id, newStatus: 'cancelled', reason },
               {
                 onSuccess: () => setIsCancelling(false),
                 onError: (error) => handleStatusMutationError(error, 'Falha ao cancelar pedido'),

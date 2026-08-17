@@ -63,6 +63,7 @@ interface OrderRow {
   order_items: OrderItemRow[]
   attendant_id: string | null
   attendants: { name: string } | null
+  cancellation_reason: string | null
 }
 
 function toOrder(row: OrderRow): Order {
@@ -82,6 +83,7 @@ function toOrder(row: OrderRow): Order {
     updatedAt: row.updated_at,
     attendantId: row.attendant_id,
     attendantName: row.attendants?.name ?? null,
+    cancellationReason: row.cancellation_reason,
     items: row.order_items.map((item) => ({
       id: item.id,
       productId: item.product_id,
@@ -129,11 +131,12 @@ export class SupabaseOrderRepository implements OrderRepository {
     return (data as OrderRow[]).map(toOrder)
   }
 
-  async changeStatus(orderId: string, newStatus: OrderStatus, attendantId?: string): Promise<void> {
+  async changeStatus(orderId: string, newStatus: OrderStatus, attendantId?: string, reason?: string): Promise<void> {
     const { error } = await supabase.rpc('change_order_status', {
       p_order_id: orderId,
       p_new_status: newStatus,
       p_attendant_id: attendantId ?? null,
+      p_reason: reason ?? null,
     })
     if (error) throw new Error(error.message)
   }
