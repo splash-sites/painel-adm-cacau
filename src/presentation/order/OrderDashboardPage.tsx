@@ -1,6 +1,7 @@
 import { useEffectiveStoreId } from '../storeContext/useEffectiveStoreId'
 import { useOrderList } from './useOrders'
 import { useFinalizedClear } from './useFinalizedClear'
+import { dashboardFinalizedCutoff } from '../../domain/order/orderPeriod'
 import { KANBAN_COLUMNS } from '../../domain/order/orderStatusRules'
 import { NotificationPermissionBanner } from './NotificationPermissionBanner'
 import { OrderCard } from './OrderCard'
@@ -21,7 +22,7 @@ export function OrderDashboardPage() {
 
   const { data: orders, isLoading, error } = useOrderList({ storeId })
 
-  const clearedAt = clearedAtByStore[storeId]
+  const clearedAt = clearedAtByStore[storeId] ?? null
 
   return (
     <div className="space-y-6">
@@ -37,9 +38,10 @@ export function OrderDashboardPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
           {KANBAN_COLUMNS.map((column) => {
             let columnOrders = orders.filter((order) => column.matches(order))
-            if (column.key === 'finalized' && clearedAt) {
+            if (column.key === 'finalized') {
+              const cutoff = dashboardFinalizedCutoff(clearedAt)
               columnOrders = columnOrders.filter(
-                (order) => new Date(order.updatedAt).getTime() > new Date(clearedAt).getTime(),
+                (order) => new Date(order.updatedAt).getTime() > new Date(cutoff).getTime(),
               )
             }
             // Finalizado é histórico — mais útil ver o que acabou de fechar primeiro.
