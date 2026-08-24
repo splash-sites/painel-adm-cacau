@@ -59,6 +59,7 @@ interface OrderRow {
   status: OrderStatus
   sales_channel: Order['salesChannel']
   table_number: string | null
+  table_session_id: string | null
   delivery_address: DeliveryAddress | null
   created_at: string
   updated_at: string
@@ -80,6 +81,7 @@ function toOrder(row: OrderRow): Order {
     status: row.status,
     salesChannel: row.sales_channel,
     tableNumber: row.table_number,
+    tableSessionId: row.table_session_id,
     deliveryAddress: row.delivery_address,
     createdAt: row.created_at,
     updatedAt: row.updated_at,

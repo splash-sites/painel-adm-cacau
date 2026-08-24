@@ -85,6 +85,26 @@ export function useUpdateOrderItem() {
   })
 }
 
+/** Bulk pra "Finalizar tudo" do card mesclado de mesa — cada avanço passa pelo change_order_status de sempre, só a orquestração é client-side. */
+export function useFinalizeTableOrders() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (orderIds: string[]) => {
+      const results = await Promise.allSettled(
+        orderIds.map((orderId) => orderRepository.changeStatus(orderId, 'finalized')),
+      )
+      const failed = results.filter((result): result is PromiseRejectedResult => result.status === 'rejected')
+      if (failed.length > 0) {
+        throw new Error(`${failed.length} de ${orderIds.length} pedido(s) não finalizaram — tenta de novo.`)
+      }
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['orders'] })
+    },
+  })
+}
+
 export function useRemoveOrderItem() {
   const queryClient = useQueryClient()
 

@@ -3,8 +3,10 @@ import { useOrderList } from './useOrders'
 import { useFinalizedClear } from './useFinalizedClear'
 import { dashboardFinalizedCutoff } from '../../domain/order/orderPeriod'
 import { KANBAN_COLUMNS } from '../../domain/order/orderStatusRules'
+import { groupDeliveredOrdersByTable } from '../../domain/order/tableSessionRules'
 import { NotificationPermissionBanner } from './NotificationPermissionBanner'
 import { OrderCard } from './OrderCard'
+import { TableGroupCard } from './TableGroupCard'
 
 const COLUMN_COLOR: Record<string, string> = {
   received: 'bg-amber-500',
@@ -52,6 +54,14 @@ export function OrderDashboardPage() {
                     (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
                   )
                 : columnOrders
+
+            // "Entregue" mescla pedidos (2+) da mesma mesa num card só, pra facilitar a atendente
+            // cobrar a mesa inteira — outras colunas continuam pedido por pedido (cozinha trabalha assim).
+            const { groups: tableGroups, ungrouped: ungroupedOrders } =
+              column.key === 'delivered'
+                ? groupDeliveredOrdersByTable(sortedOrders)
+                : { groups: [], ungrouped: sortedOrders }
+
             return (
               <div key={column.key} data-testid={`kanban-column-${column.key}`} className="space-y-3">
                 <div className="flex items-center gap-2 px-1">
@@ -72,8 +82,11 @@ export function OrderDashboardPage() {
                   {columnOrders.length === 0 && (
                     <p className="text-sm font-body text-foreground/40 px-1">Nenhum pedido</p>
                   )}
-                  {sortedOrders.map((order) => (
+                  {ungroupedOrders.map((order) => (
                     <OrderCard key={order.id} order={order} />
+                  ))}
+                  {tableGroups.map((group) => (
+                    <TableGroupCard key={group.tableSessionId} orders={group.orders} />
                   ))}
                 </div>
               </div>

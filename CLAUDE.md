@@ -775,6 +775,56 @@ Sem instalar nada além do driver, a única forma de pular o diálogo de impress
 
 **Cuidado (bug real encontrado, não reintroduzir)**: atalho de **perfil** do Chrome (aquele gerado automaticamente com nome "NomeDoPerfil - Chrome", ícone que o próprio Chrome cria) tem checagem de integridade que **reescreve o atalho sozinho** e derruba qualquer flag customizada adicionada nele — `--kiosk-printing` e até `--profile-directory` desapareciam da linha de comando mesmo estando escritos no campo Destino. Só funciona com atalho criado manualmente do zero (passo 1-3 acima), nunca editando um atalho de perfil já existente.
 
+## Feature: Consolidação de pedidos por mesa / comanda (implementada)
+Pedido trazido pela cliente: pessoas diferentes da mesma mesa pedindo por celulares diferentes apareciam como pedidos 100% desconectados — sem jeito de a equipe ver "tudo que é da mesa 3" nem cobrar a mesa de uma vez. Escopo decidido com 2 perguntas fechadas antes de codar (ver abaixo), depois expandido por feedback ao ver o resultado ao vivo com pedido real (Mesa 2, 2 celulares).
+
+**Decisões de escopo (perguntas fechadas, não assumidas):**
+- Kanban continua **por pedido** em `received`/`preparing` — cozinha não muda de ritmo, um pedido pode estar "Em preparo" enquanto outro da mesma mesa ainda tá "Recebido". Um resumo/badge separado é que mostra a mesa consolidada.
+- Comanda **fecha manualmente pela equipe** (nunca automático) — evita mesa 5 do almoço se misturar com mesa 5 do jantar. Só libera fechar depois que todo pedido da sessão tá `finalized`/`cancelled`.
+- Depois de ver funcionando ao vivo, pedido adicional da cliente: na coluna **"Entregue"**, pedidos (2+) da mesma mesa viram **1 card só** (itens + total por pessoa + total geral) — facilita a atendente cobrar a mesa. Cada pedido dentro do card mesclado mantém botão próprio de avançar, **e** tem um botão "Finalizar tudo" que fecha a mesa inteira num clique. Em `received`/`preparing`/`finalized` os cards continuam individuais (mesclagem é só o ponto de cobrança).
+
+**Schema (criado):**
+```
+table_sessions (id, store_id, table_number, status: open|closed, opened_at, closed_at)
+orders.table_session_id  uuid null references table_sessions(id)
+```
+Índice único parcial `(store_id, table_number) where status='open'` — garante só 1 sessão aberta por mesa por vez, e é o mesmo índice usado pelo `on conflict` do trigger abaixo (sem corrida entre 2 pedidos quase simultâneos da mesma mesa).
+
+**Vínculo automático — decisão importante, revista depois do teste ao vivo**: o plano original esperava que o `confirm_order` do storefront (repo separado) achasse-ou-criasse a sessão aberta da mesa. Testando com pedido real (Mesa 2, Selso + Bernardo) os cards **não mesclaram** porque `table_session_id` nunca era gravado — o storefront não tinha esse código. Em vez de esperar mudança no outro repositório, a solução virou um **trigger no Postgres** (`assign_table_session`, `before insert on orders`) que resolve isso sozinho pra qualquer INSERT em `orders`, não importa quem grava — elimina a dependência cross-repo inteira, "passo 6" nunca precisou existir. Trigger usa `insert ... on conflict (store_id, table_number) where status='open' do update ... returning id` (não select-depois-insert) pra ser atômico sob concorrência.
+
+**Camadas (Clean Architecture) — implementado:**
+```
+domain/order/Order.ts                          -- Order ganha tableSessionId: string | null
+domain/order/tableSessionRules.ts               -- canCloseTableSession, groupOrdersByTableSession (resumo/badge),
+                                                    groupDeliveredOrdersByTable (mescla só coluna Entregue, 2+ pedidos) — puro, testado
+application/order/TableSessionRepository.ts      -- interface (porta): listOpenIds, close
+infrastructure/order/SupabaseTableSessionRepository.ts -- implementação Supabase
+infrastructure/order/SupabaseOrderRepository.ts  -- toOrder mapeia table_session_id
+presentation/order/useTableSessions.ts           -- useOpenTableSessionIds, useCloseTableSession
+presentation/order/useOrders.ts                  -- useFinalizeTableOrders (bulk "Finalizar tudo" — cada pedido passa
+                                                    pelo change_order_status de sempre, só a orquestração é client-side)
+presentation/order/TableSessionSummaryBar.tsx    -- badge "Mesa X · N pedidos · total · Fechar mesa" no topo do Dashboard,
+                                                    só sessão ainda aberta (consulta listOpenIds, não só os pedidos —
+                                                    ver bug abaixo)
+presentation/order/TableGroupCard.tsx            -- card mesclado da coluna Entregue: 1 seção por pedido (nome, itens,
+                                                    total, "Avançar etapa" próprio) + total geral + "Finalizar tudo"
+presentation/order/OrderDashboardPage.tsx        -- coluna 'delivered' usa groupDeliveredOrdersByTable; outras colunas
+                                                    inalteradas
+```
+
+**RPC (criada):**
+```
+close_table_session(p_session_id)  -- reforçado em Postgres: rejeita se algum pedido vinculado ainda não
+                                       tá finalized/cancelled; checa role/store do caller (super_admin ou
+                                       store_admin da própria loja)
+```
+
+**Segurança**: RLS em `table_sessions` mesmo padrão de toda tabela de domínio (`super_admin`/`store_admin` via `for all`, escopado por `store_id`). Regra de fechamento (todo pedido terminal) reforçada na RPC, não só no client — testado ao vivo chamando a RPC direto (sessão com pedido em aberto rejeitada, sessão só com `finalized`/`cancelled` fechou).
+
+**Cuidado (bug real encontrado e corrigido, não reintroduzir)**: primeira versão do `TableSessionSummaryBar` derivava tudo só dos `orders` já carregados — depois de fechar a mesa pela RPC, o botão "Fechar mesa" continuava aparecendo clicável (clicar de novo dava erro "já fechada"), porque nada no client sabia que a sessão tinha virado `closed` no banco. Fix: Dashboard busca `listOpenIds` (sessões realmente abertas) e filtra o resumo por isso — some da tela assim que fecha, sem esperar reload.
+
+**Testado ao vivo, ponta a ponta, com dado real e de teste** (não só type-check): RPC `close_table_session` bloqueando/liberando conforme esperado, trigger `assign_table_session` vinculando 2 pedidos da mesma mesa na mesma sessão automaticamente (inserção direta sem `table_session_id`, simulando o storefront), card mesclado renderizando com 3 pedidos reais, avanço individual dentro do card, "Finalizar tudo" fechando a mesa inteira com 1 clique e liberando o "Fechar mesa" da barra de resumo em seguida.
+
 ## Testes
 - Vitest + Testing Library (unitário — `domain`/`application`, sem mockar Supabase, é lógica pura) e Playwright (E2E) já implementados na Fase 1, adiantados em relação ao plano original.
 - E2E real: login → avançar status do pedido → reflete no kanban. Roda contra o Supabase de dev de verdade (não staging — staging só chega na Fase 2), com conta de teste em `.env.local` (`E2E_TEST_EMAIL`/`E2E_TEST_PASSWORD`, nunca commitado).

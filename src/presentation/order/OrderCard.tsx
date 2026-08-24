@@ -76,20 +76,17 @@ export function OrderCard({ order }: { order: Order }) {
               {orderChannelLabel(order)}
             </span>
           </div>
-          {(order.customerCpf || order.customerPhone) && (
+          {order.customerCpf && <p className="text-xs text-foreground/60">CPF {formatCpf(order.customerCpf)}</p>}
+          {order.customerPhone && (
             <p className="text-xs text-foreground/60">
-              {order.customerCpf && `CPF ${formatCpf(order.customerCpf)}`}
-              {order.customerCpf && order.customerPhone && ' · '}
-              {order.customerPhone && (
-                <a
-                  href={whatsAppLink(order)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-[#25D366] transition-colors"
-                >
-                  {formatPhone(order.customerPhone)}
-                </a>
-              )}
+              <a
+                href={whatsAppLink(order)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-[#25D366] transition-colors"
+              >
+                {formatPhone(order.customerPhone)}
+              </a>
             </p>
           )}
         </div>

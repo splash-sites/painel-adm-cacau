@@ -54,6 +54,8 @@ export interface Order {
   status: OrderStatus
   salesChannel: SalesChannel
   tableNumber: string | null
+  /** Comanda da mesa (consolidação de pedidos de celulares diferentes) — null pra order_type != dine_in ou enquanto o storefront não vincula. */
+  tableSessionId: string | null
   deliveryAddress: DeliveryAddress | null
   createdAt: string
   updatedAt: string
