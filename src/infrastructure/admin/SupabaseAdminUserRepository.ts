@@ -64,7 +64,7 @@ export class SupabaseAdminUserRepository implements AdminUserRepository {
   }
 
   async update(id: string, input: AdminUserUpdateInput): Promise<void> {
-    const { error } = await supabase.from('profiles').update({ active: input.active }).eq('id', id)
+    const { error } = await supabase.rpc('set_admin_active', { p_user_id: id, p_active: input.active })
 
     if (error) throw new Error(error.message)
   }
