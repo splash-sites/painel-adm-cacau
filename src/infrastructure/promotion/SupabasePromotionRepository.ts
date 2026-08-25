@@ -10,7 +10,7 @@ interface PromotionComboItemRow {
   id: string
   product_id: string
   quantity: number
-  products: { name: string; price: number } | null
+  products: { name: string; price: number; lover_price: number } | null
 }
 
 interface PromotionRow {
@@ -48,6 +48,7 @@ function toPromotion(row: PromotionRow): Promotion {
       productId: item.product_id,
       productName: item.products?.name ?? '—',
       price: item.products?.price ?? 0,
+      loverPrice: item.products?.lover_price ?? 0,
       quantity: item.quantity,
     })),
   }
@@ -66,7 +67,8 @@ function toRow(input: PromotionInput) {
   }
 }
 
-const PROMOTION_SELECT = '*, products(name), promotion_combo_items(id, product_id, quantity, products(name, price))'
+const PROMOTION_SELECT =
+  '*, products(name), promotion_combo_items(id, product_id, quantity, products(name, price, lover_price))'
 
 export class SupabasePromotionRepository implements PromotionRepository {
   async list(storeId: string): Promise<Promotion[]> {

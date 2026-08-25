@@ -47,6 +47,7 @@ interface ComboItemDraft {
   productId: string
   productName: string
   price: number
+  loverPrice: number
   quantity: number
 }
 
@@ -66,10 +67,11 @@ export function PromotionModal({
   const debouncedProductQuery = useDebouncedValue(productQuery, 250)
   const { data: productResults } = useProductSearch(storeId, debouncedProductQuery)
   const [comboItems, setComboItems] = useState<ComboItemDraft[]>(
-    promotion?.comboItems.map(({ productId, productName, price, quantity }) => ({
+    promotion?.comboItems.map(({ productId, productName, price, loverPrice, quantity }) => ({
       productId,
       productName,
       price,
+      loverPrice,
       quantity,
     })) ?? [],
   )
@@ -106,6 +108,20 @@ export function PromotionModal({
       ? calculatePromotionDiscountedTotal(baseTotal, { discountType, discountValue: discountValue as number | null })
       : null
 
+  const loverBaseTotal = currentProduct
+    ? calculatePromotionBaseTotal(
+        currentProduct.loverPrice,
+        comboItems.map((item) => ({ price: item.loverPrice, quantity: item.quantity })),
+      )
+    : null
+  const loverDiscountedTotal =
+    loverBaseTotal != null
+      ? calculatePromotionDiscountedTotal(loverBaseTotal, {
+          discountType,
+          discountValue: discountValue as number | null,
+        })
+      : null
+
   const comboOptions = (comboResults ?? [])
     .filter((product) => product.id !== productId && !comboItems.some((item) => item.productId === product.id))
     .map((product) => ({ value: product.id, label: product.name }))
@@ -115,7 +131,13 @@ export function PromotionModal({
     if (!product) return
     setComboItems((items) => [
       ...items,
-      { productId: product.id, productName: product.name, price: product.price, quantity: 1 },
+      {
+        productId: product.id,
+        productName: product.name,
+        price: product.price,
+        loverPrice: product.loverPrice,
+        quantity: 1,
+      },
     ])
   }
 
@@ -270,7 +292,11 @@ export function PromotionModal({
             )}
             {currentProduct && baseTotal != null && (
               <p className="pt-1 text-sm font-body text-foreground/70">
-                Total do produto{comboItems.length > 0 ? ' + combo' : ''}: <span className="font-medium text-foreground">{formatCurrency(baseTotal)}</span>
+                Total do produto{comboItems.length > 0 ? ' + combo' : ''}:{' '}
+                <span className="font-medium text-foreground">{formatCurrency(baseTotal)}</span>
+                {loverBaseTotal != null && (
+                  <span className="text-foreground/50"> · lover {formatCurrency(loverBaseTotal)}</span>
+                )}
               </p>
             )}
           </div>
@@ -316,6 +342,12 @@ export function PromotionModal({
               <p className="pt-1 text-sm font-body">
                 Total com desconto: <span className="font-medium">{formatCurrency(discountedTotal)}</span>{' '}
                 <span className="text-foreground/50 line-through">{formatCurrency(baseTotal)}</span>
+              </p>
+            )}
+            {discountType && loverDiscountedTotal != null && loverBaseTotal != null && (
+              <p className="text-sm font-body text-foreground/70">
+                Total lover com desconto: <span className="font-medium">{formatCurrency(loverDiscountedTotal)}</span>{' '}
+                <span className="text-foreground/50 line-through">{formatCurrency(loverBaseTotal)}</span>
               </p>
             )}
           </div>
