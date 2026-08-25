@@ -54,14 +54,14 @@ describe('groupOrdersByTableSession', () => {
         id: 'a',
         status: 'preparing',
         items: [
-          { id: 'i1', productId: 'p1', productName: 'Café', quantity: 2, unitPrice: 10, notes: null, addons: [], variations: [] },
+          { id: 'i1', productId: 'p1', productName: 'Café', quantity: 2, unitPrice: 10, notes: null, addons: [], variations: [], promotionId: null },
         ],
       }),
       makeOrder({
         id: 'b',
         status: 'received',
         items: [
-          { id: 'i2', productId: 'p2', productName: 'Bolo', quantity: 1, unitPrice: 15, notes: null, addons: [], variations: [] },
+          { id: 'i2', productId: 'p2', productName: 'Bolo', quantity: 1, unitPrice: 15, notes: null, addons: [], variations: [], promotionId: null },
         ],
       }),
       makeOrder({ id: 'c', status: 'finalized', tableSessionId: 'session-2', tableNumber: '9' }),

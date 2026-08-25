@@ -43,6 +43,7 @@ interface OrderItemRow {
   quantity: number
   unit_price: number
   notes: string | null
+  promotion_id: string | null
   products: { name: string } | null
   order_item_addons: OrderItemAddonRow[]
   order_item_variations: OrderItemVariationRow[]
@@ -95,6 +96,7 @@ function toOrder(row: OrderRow): Order {
       quantity: item.quantity,
       unitPrice: item.unit_price,
       notes: item.notes,
+      promotionId: item.promotion_id,
       addons: item.order_item_addons.map((addon) => ({
         id: addon.id,
         addonOptionId: addon.addon_option_id,
@@ -120,7 +122,7 @@ function startOfTodayIso(): string {
 }
 
 const ORDER_SELECT =
-  '*, attendants(name), order_items(id, product_id, quantity, unit_price, notes, products(name), order_item_addons(id, addon_option_id, name, price, quantity), order_item_variations(id, variation_option_id, name, price, price_mode))'
+  '*, attendants(name), order_items(id, product_id, quantity, unit_price, notes, promotion_id, products(name), order_item_addons(id, addon_option_id, name, price, quantity), order_item_variations(id, variation_option_id, name, price, price_mode))'
 
 export class SupabaseOrderRepository implements OrderRepository {
   async list({ storeId, since }: OrderListParams): Promise<Order[]> {

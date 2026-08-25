@@ -93,9 +93,17 @@ export function PromotionListPage() {
                         </p>
                         <p className="truncate text-xs text-foreground/50">
                           {promotion.productName}
+                          {promotion.comboItems.length > 0 && ` +${promotion.comboItems.length} produto(s)`}
                           {promotion.badgeLabel && ` · ${promotion.badgeLabel}`}
                         </p>
                       </div>
+                      {promotion.discountType && (
+                        <span className="shrink-0 rounded-full bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary">
+                          {promotion.discountType === 'percent'
+                            ? `${promotion.discountValue}% OFF`
+                            : `R$ ${promotion.discountValue} OFF`}
+                        </span>
+                      )}
                       <div className="flex shrink-0 items-center gap-1">
                         <button
                           type="button"

@@ -32,6 +32,8 @@ export interface OrderItem {
   notes: string | null
   addons: OrderItemAddon[]
   variations: OrderItemVariation[]
+  /** Itens com o mesmo promotionId vieram do mesmo combo — null pra item avulso, sem promoção. */
+  promotionId: string | null
 }
 
 /** Contrato com o storefront: é isso que ele precisa mandar no checkout de delivery. */

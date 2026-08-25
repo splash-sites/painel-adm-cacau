@@ -12,6 +12,7 @@ function makeItem(overrides: Partial<OrderItem> = {}): OrderItem {
     notes: null,
     addons: [],
     variations: [],
+    promotionId: null,
     ...overrides,
   }
 }

@@ -1,4 +1,9 @@
-import type { Promotion } from '../../domain/promotion/Promotion'
+import type { Promotion, PromotionDiscountType } from '../../domain/promotion/Promotion'
+
+export interface PromotionComboItemInput {
+  productId: string
+  quantity: number
+}
 
 export interface PromotionInput {
   title: string
@@ -7,6 +12,10 @@ export interface PromotionInput {
   imageUrl: string
   productId: string
   active: boolean
+  discountType: PromotionDiscountType | null
+  discountValue: number | null
+  /** Reescrito por completo a cada save (delete + insert), mesmo princípio de order_item_variations. */
+  comboItems: PromotionComboItemInput[]
 }
 
 export interface PromotionRepository {
