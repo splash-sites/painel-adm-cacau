@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { storeSchema, type StoreFormInput } from '../../application/store/storeSchema'
 import type { Store } from '../../domain/store/Store'
+import { tableNumberRange } from '../../domain/store/tableQrUrl'
 import { useAuth } from '../auth/useAuth'
 import { useActiveStore } from '../storeContext/useActiveStore'
 import { useEffectiveStoreId } from '../storeContext/useEffectiveStoreId'
@@ -17,6 +18,7 @@ import { Label } from '../ui/Label'
 import { Switch } from '../ui/Switch'
 import { cardClass } from '../ui/styles'
 import { DEFAULT_NOTIFICATION_PREFS, useNotificationSettings } from './useNotificationSettings'
+import { printTableQrCodes } from './printTableQrCodes'
 
 function getInitialPermission(): NotificationPermission | 'unsupported' {
   return typeof Notification === 'undefined' ? 'unsupported' : Notification.permission
@@ -200,6 +202,9 @@ export function SettingsPage() {
 
 function StoreDataForm({ store }: { store: Store }) {
   const saveStore = useSaveStore()
+  const [tableFrom, setTableFrom] = useState('1')
+  const [tableTo, setTableTo] = useState('10')
+  const [isGeneratingQr, setIsGeneratingQr] = useState(false)
 
   const {
     register,
@@ -213,6 +218,31 @@ function StoreDataForm({ store }: { store: Store }) {
   })
 
   const slug = watch('slug')
+  const supportsDineIn = watch('supportsDineIn')
+
+  async function handleGenerateQrCodes() {
+    if (!import.meta.env.VITE_STOREFRONT_URL) {
+      toast.error('Configure VITE_STOREFRONT_URL no .env.local pra gerar o QR Code.')
+      return
+    }
+    const numbers = tableNumberRange(Number(tableFrom), Number(tableTo))
+    if (numbers.length === 0) {
+      toast.error('Intervalo de mesa inválido.')
+      return
+    }
+    if (numbers.length > 100) {
+      toast.error('Intervalo grande demais — gera no máximo 100 mesa por vez.')
+      return
+    }
+    setIsGeneratingQr(true)
+    try {
+      await printTableQrCodes(store.name, slug, import.meta.env.VITE_STOREFRONT_URL, numbers)
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Falha ao gerar os QR Codes.')
+    } finally {
+      setIsGeneratingQr(false)
+    }
+  }
 
   async function onSubmitStore(input: StoreFormInput) {
     try {
@@ -230,6 +260,7 @@ function StoreDataForm({ store }: { store: Store }) {
   }
 
   return (
+    <>
     <form onSubmit={handleSubmit(onSubmitStore)} className={`space-y-5 ${cardClass}`} noValidate>
       <div>
         <h3 className="font-body font-medium">Dados da loja</h3>
@@ -314,5 +345,47 @@ function StoreDataForm({ store }: { store: Store }) {
         {isSubmitting ? 'Salvando...' : 'Salvar'}
       </Button>
     </form>
+
+    {slug && supportsDineIn && (
+      <div className={`${cardClass} space-y-4`}>
+        <div>
+          <h3 className="font-body font-medium">QR Code de mesa</h3>
+          <p className="text-sm font-body text-foreground/60">
+            Gera 1 QR Code por mesa, já com o número preenchido no cardápio — pra imprimir e colar
+            na mesa. Cliente escaneia e todo pedido feito ali entra automaticamente na mesma comanda
+            enquanto ela estiver aberta.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="space-y-1">
+            <Label htmlFor="tableFrom">Da mesa</Label>
+            <Input
+              id="tableFrom"
+              type="number"
+              min={1}
+              className="w-20"
+              value={tableFrom}
+              onChange={(event) => setTableFrom(event.target.value)}
+            />
+          </div>
+          <div className="space-y-1">
+            <Label htmlFor="tableTo">Até a mesa</Label>
+            <Input
+              id="tableTo"
+              type="number"
+              min={1}
+              className="w-20"
+              value={tableTo}
+              onChange={(event) => setTableTo(event.target.value)}
+            />
+          </div>
+          <Button type="button" variant="outline" onClick={handleGenerateQrCodes} disabled={isGeneratingQr}>
+            {isGeneratingQr ? 'Gerando...' : 'Gerar e imprimir'}
+          </Button>
+        </div>
+      </div>
+    )}
+  </>
   )
 }

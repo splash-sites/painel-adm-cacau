@@ -37,9 +37,11 @@ input[type="checkbox"] {
   display: none;
 }
 
-/* Cupom de impressão (ver presentation/order/printOrderReceipt.tsx) — raiz montada fora de
-   #root, escondida em tela; @media print esconde o resto do app e mostra só o cupom. */
-#print-receipt-root {
+/* Cupom de impressão (ver presentation/order/printOrderReceipt.tsx) e folha de QR Code de mesa
+   (ver presentation/settings/printTableQrCodes.tsx) — cada raiz montada fora de #root, escondida
+   em tela; @media print esconde o resto do app e mostra só a raiz ativa no momento (só 1 por vez). */
+#print-receipt-root,
+#print-qr-root {
   display: none;
 }
 
@@ -48,12 +50,14 @@ input[type="checkbox"] {
      inteiro até completar essa altura virtual, mesmo com pouco conteúdo (bug real: "papel
      saindo muito grande"). "auto" na altura deixa a página encolher pro tamanho do cupom.
      72mm (não 80mm) porque a área imprimível real da TM-T20 em bobina de 80mm é ~72mm —
-     página de 80mm cortava a coluna de valor à direita (bug real: centavos sumindo). */
+     página de 80mm cortava a coluna de valor à direita (bug real: centavos sumindo).
+     A folha de QR Code sobrescreve esse @page com o próprio (tamanho normal A4/Letter) via
+     <style> injetado só durante aquele print — ver printTableQrCodes.tsx. */
   @page {
     size: 72mm auto;
     margin: 0;
   }
-  body > *:not(#print-receipt-root) {
+  body > *:not(#print-receipt-root):not(#print-qr-root) {
     display: none !important;
   }
   #print-receipt-root {
@@ -61,5 +65,8 @@ input[type="checkbox"] {
     width: 72mm;
     box-sizing: border-box;
     padding: 0 5mm;
+  }
+  #print-qr-root {
+    display: block !important;
   }
 }
