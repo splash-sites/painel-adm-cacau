@@ -50,9 +50,6 @@ export function AppLayout() {
             <NavLink to="/" end className={linkClass} onClick={() => setSidebarOpen(false)}>
               Dashboard
             </NavLink>
-            <NavLink to="/historico" className={linkClass} onClick={() => setSidebarOpen(false)}>
-              Histórico
-            </NavLink>
             <NavLink to="/produtos" className={linkClass} onClick={() => setSidebarOpen(false)}>
               Produtos
             </NavLink>
@@ -63,13 +60,16 @@ export function AppLayout() {
               Atendentes
             </NavLink>
             {isSuperAdmin && (
-              <NavLink to="/usuarios" className={linkClass} onClick={() => setSidebarOpen(false)}>
-                Usuários
-              </NavLink>
-            )}
-            {isSuperAdmin && (
               <NavLink to="/relatorios" className={linkClass} onClick={() => setSidebarOpen(false)}>
                 Relatórios
+              </NavLink>
+            )}
+            <NavLink to="/historico" className={linkClass} onClick={() => setSidebarOpen(false)}>
+              Histórico
+            </NavLink>
+            {isSuperAdmin && (
+              <NavLink to="/usuarios" className={linkClass} onClick={() => setSidebarOpen(false)}>
+                Usuários
               </NavLink>
             )}
           </nav>
