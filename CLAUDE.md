@@ -825,6 +825,99 @@ close_table_session(p_session_id)  -- reforçado em Postgres: rejeita se algum p
 
 **Testado ao vivo, ponta a ponta, com dado real e de teste** (não só type-check): RPC `close_table_session` bloqueando/liberando conforme esperado, trigger `assign_table_session` vinculando 2 pedidos da mesma mesa na mesma sessão automaticamente (inserção direta sem `table_session_id`, simulando o storefront), card mesclado renderizando com 3 pedidos reais, avanço individual dentro do card, "Finalizar tudo" fechando a mesa inteira com 1 clique e liberando o "Fechar mesa" da barra de resumo em seguida.
 
+**Refinamentos pós-uso real (feedback direto vendo a tela com pedido de verdade)**:
+- `TableSessionSummaryBar` foi **tirada da tela** do Dashboard (pedido explícito, "essa parte não precisa existir") — componente, hooks (`useOpenTableSessionIds`/`useCloseTableSession`) e `groupOrdersByTableSession` continuam no código, só sem consumidor na UI. Fechamento de comanda continua garantido pela regra "todo pedido tem que estar terminal" (reforçada na RPC) — só não tem mais botão manual na tela; reabrir esse fluxo (ou automatizar o fechamento) é decisão futura, registrada aqui pra não se perder.
+- `TableGroupCard`: CPF e telefone do cliente ficam em linhas separadas (telefone embaixo do CPF), nunca na mesma linha — mesmo padrão replicado em `OrderCard`. Botão "Avançar etapa" de cada pedido dentro do card usa o mesmo estilo primário dos outros cards do kanban (não link sublinhado), em tamanho reduzido (`px-3 py-1.5 text-sm`) pra caber bem quando a mesa tem várias pessoas. Ganhou também "Voltar etapa" por pedido (antes só existia "Avançar etapa" mesclado) — mesma regra `canRevert` do card individual.
+
+## Feature: QR Code de mesa (implementado neste repo, passo do storefront pendente)
+Pedido 6 da cliente: cada mesa deve ter um QR Code próprio que abre o cardápio já com a mesa preenchida, e todo pedido feito a partir dali continua entrando na mesma comanda enquanto ela estiver aberta.
+
+**O que já estava pronto**: o vínculo automático à comanda (trigger `assign_table_session`, ver "Feature: Consolidação de pedidos por mesa") já cobre a parte "continua vinculado enquanto aberta" — funciona não importa como o `table_number` chega no pedido (digitado ou vindo do QR), então essa metade do pedido da cliente já estava resolvida antes de começar essa feature.
+
+**Decisões de escopo (perguntas fechadas antes de codar):**
+- Numeração de mesa **livre, sem lista salva no banco** — mesmo espírito de `table_number` já ser texto livre hoje, sem tabela `tables`. A tela só pede um intervalo ("Da mesa" / "Até a mesa") e gera todos os QR Codes de uma vez.
+- Geração fica **dentro de Configurações** (mesmo lugar que já tem o link "Ver cardápio" da loja), não em tela/rota nova.
+
+**Contrato de URL com o storefront**: `buildTableMenuUrl` monta `${VITE_STOREFRONT_URL}/${slug}/mesa/${numeroDaMesa}` — path, não query param. Combinado com quem implementou a leitura do lado do storefront (não `?mesa=`, que era o formato inicial antes de alinhar).
+
+**Camadas:**
+```
+domain/store/tableQrUrl.ts              -- buildTableMenuUrl (monta a URL) + tableNumberRange (gera "1".."N" a partir de um intervalo), puro, testado
+presentation/settings/TableQrSheet.tsx  -- folha de impressão (grid de QR + nome da loja + "Mesa N"), estilo inline independente do tema, mesmo princípio de OrderReceipt.tsx
+presentation/settings/printTableQrCodes.tsx -- gera as imagens (lib `qrcode`) e dispara window.print() numa raiz React isolada, mesmo mecanismo de printOrderReceipt.tsx
+presentation/settings/SettingsPage.tsx  -- card próprio "QR Code de mesa" (só aparece se a loja tem supportsDineIn), campos "Da mesa"/"Até a mesa" + botão "Gerar e imprimir"
+```
+`index.css`: `@media print` passou a reconhecer 2 raízes de impressão (`#print-receipt-root` do cupom, `#print-qr-root` novo) sem uma esconder a outra — a folha de QR sobrescreve o `@page` de 72mm (pensado pro cupom térmico) com um `<style>` injetado só durante aquele print (tamanho de página normal A4/Letter), removido no cleanup junto com a raiz.
+
+**Cuidado (ajuste feito ainda na primeira versão)**: a seção "QR Code de mesa" nasceu como uma caixa aninhada dentro do formulário "Dados da loja" — destoava do resto da tela (que usa cards independentes pra "Alerta de pedido novo"/"Zona de risco"). Virou card próprio, irmão do formulário, mesmo padrão visual das outras seções de Configurações.
+
+**Testado ao vivo**: com `VITE_STOREFRONT_URL` configurado, gerar QR Codes de 3 mesas produziu 3 imagens distintas (conteúdo diferente por mesa, confirmado visualmente), nome da loja + número da mesa embaixo de cada uma, `window.print()` disparado corretamente.
+
+**Storefront (fora daqui)**: rota combinada com quem implementa lá é `/:storeSlug/mesa/:tableNumber` (path, não query param — ajustado depois da primeira versão). Esse lado precisa ler o número da mesa nessa rota e pré-preencher no pedido (sem pedir pro cliente digitar), além de já vir marcado como `order_type = 'dine_in'`. Não testado ponta a ponta daqui — confirma com quem mexe no storefront se a rota já está implementada e lendo o parâmetro. O vínculo à comanda (trigger no Postgres, já pronto neste repo) funciona assim que o `table_number` chegar, de qualquer jeito que chegue.
+
+## Feature: Combo e desconto em Promoções (implementado neste repo, storefront pendente)
+Pedido 11 da cliente: esclarecer se toda promoção exige produto novo duplicado no catálogo (ex: cadastrar "Combo água + fondue" como produto próprio) ou se dá pra montar combo/desconto em cima de produto já cadastrado, sem duplicar. Construído dentro da feature `Promoções` já existente (não virou sistema separado), pedido explícito da cliente/usuário.
+
+**Decisões de escopo (perguntas fechadas antes de codar):**
+- Desconto é **percentual OU valor fixo em R$**, escolhido pelo lojista no cadastro (nunca os dois juntos).
+- Produto do combo é **livre escolha** — sem restrição de categoria, lojista escolhe qualquer produto ativo.
+- Promoção continua **só ativo/inativo**, sem vigência (`starts_at`/`ends_at`) — mesmo modelo de sempre.
+- **Múltiplas promoções podem valer ao mesmo tempo** — sem exclusividade mútua no cadastro.
+- **Desconto opcional por promoção** — promoção sem desconto continua existindo exatamente como antes (só destaque visual), decisão explícita pra não quebrar as já cadastradas.
+
+**Modelo escolhido (unifica "desconto simples" e "combo" na mesma estrutura)**: 1 promoção vincula a 1 produto principal (`product_id`, como sempre existiu) + opcionalmente mais produtos extras (`promotion_combo_items`, livre escolha + quantidade) — é combo só quando tem 1+ item extra. O desconto (quando marcado) aplica sobre a soma do produto principal + todos os itens extras.
+
+**Cuidado de compatibilidade (levou ao desenho final)**: `promotions.product_id` é obrigatório hoje e o storefront **já lê ele em produção** pra mostrar imagem/preço no carrossel — não dava pra remover nem tornar opcional (regra do projeto: schema compartilhado só aditivo, nunca aperta o que produção já usa). Por isso `product_id` continua exatamente como estava (produto principal/imagem do card); tudo que é novo é 100% aditivo (`promotion_combo_items` + 2 colunas nullable em `promotions`).
+
+**Schema (criado):**
+```
+promotions ganha (colunas novas, opcionais):
+  discount_type   text null check (in ('percent', 'fixed_amount'))
+  discount_value  numeric null check (is null or > 0)
+
+promotion_combo_items (tabela nova):
+  id, promotion_id, product_id, quantity
+```
+RLS em `promotion_combo_items`: `super_admin`/`store_admin` via `for all` (join até a loja através de `promotions`), mesmo padrão de `product_addon_groups`. **Sem policy de leitura pública** — o `public_promotions` que o storefront lê é uma view do lado deles (fora deste repo); pra combo/desconto aparecer no cardápio, quem mexe no storefront precisa estender essa view (ou criar policy própria) pra incluir as colunas/tabela novas.
+
+**Camadas (Clean Architecture) — implementado:**
+```
+domain/promotion/Promotion.ts            -- ganha discountType, discountValue, comboItems (PromotionComboItem[])
+domain/promotion/promotionPricing.ts     -- calculatePromotionBaseTotal (soma produto principal + itens do combo) e
+                                             calculatePromotionDiscountedTotal (aplica percentual/valor fixo, nunca
+                                             fica negativo), puro, testado — é o contrato de cálculo que o storefront
+                                             replica pra aplicar no carrinho
+application/promotion/PromotionRepository.ts -- PromotionInput ganha discountType/discountValue/comboItems
+application/promotion/promotionSchema.ts     -- Zod: discountValue vira null com preprocess (string vazia -> null,
+                                                 mesmo padrão de lover_price); refine garante valor obrigatório
+                                                 quando discountType setado, e percentual nunca passa de 100
+infrastructure/promotion/SupabasePromotionRepository.ts -- create/update reescrevem promotion_combo_items por
+                                                 completo (delete + insert, mesmo princípio de order_item_variations);
+                                                 reorder ganhou discount_type/discount_value no select/upsert (upsert
+                                                 em lote precisa do row inteiro, mesmo cuidado já documentado ali)
+presentation/promotion/PromotionModal.tsx    -- seção "Combo — produtos extras" (Combobox pra buscar+adicionar produto,
+                                                 lista com quantidade editável + remover, estado local não fica no
+                                                 react-hook-form) + seção "Aplicar desconto" (checkbox liga/desliga,
+                                                 Select percentual/valor fixo, Input do valor)
+presentation/promotion/PromotionListPage.tsx -- linha da lista ganha "+N produto(s)" quando é combo, e badge
+                                                 "20% OFF"/"R$ X OFF" quando tem desconto
+```
+
+**Testado ao vivo, ponta a ponta, com produto real** (não só type-check): criada promoção combo (produto principal + 1 item extra) com desconto percentual 20%, salva e confirmada direto no banco (`promotion_combo_items` com o produto/quantidade certos, `discount_type`/`discount_value` certos), reabrir pra editar recarrega tudo (combo item + desconto) exatamente como salvo, excluir a promoção apaga `promotion_combo_items` sozinho via `on delete cascade` (confirmado, sem precisar apagar manual).
+
+**Storefront (fora daqui) — pendente**: `confirm_order` precisa calcular o total com desconto (usando a mesma fórmula de `calculatePromotionDiscountedTotal`, pra nunca divergir do que foi decidido aqui) e gravar o preço **já com desconto** em `order_items.unit_price` — snapshot, mesmo princípio de sempre (nunca recalcular depois). View pública precisa expor `discount_type`/`discount_value`/`promotion_combo_items` pro carrinho do cliente conseguir montar o combo e aplicar o desconto.
+
+**Rodada 2 — perguntas certeiras do dev do storefront antes de mexer no checkout, expuseram 2 furos reais:**
+1. `unit_price` nunca pode vir calculado do client (`confirm_order` já recalcula tudo server-side a partir de `products.price`, mesma razão que a RPC existe) — cálculo de combo/desconto tem que acontecer **dentro** da RPC, usando `promotion_id` por item pra ela buscar `promotion_combo_items`/`discount_type`/`discount_value` sozinha. Formato exato de `p_items` pra isso é decisão conjunta com quem mexe na RPC (fora deste repo) — não adivinhado aqui.
+2. `promotionPricing.ts` só calculava o **total agregado** do combo — nunca distribuía por linha. Resolvido: `distributePromotionDiscount` (mesmo arquivo), distribui proporcional ao preço original de cada linha, ajustando centavo a centavo (método do maior resto) pra soma bater EXATAMENTE com o total descontado — testado com 30 combos gerados (preço/quantidade variados) + casos de resto feio manual, sempre exato. `unitPrice` pode sair com mais de 2 casas decimais de propósito (soma exata > exibição redonda, igual todo preço no sistema já funciona).
+
+**Decisões extras confirmadas nessa rodada:**
+- Desconto **também se aplica sobre `lover_price`** (mesma fórmula, chamada 2x — uma com preço normal, outra com lover).
+- `order_items` ganhou `promotion_id uuid null references promotions(id)` — marca quais linhas vieram do mesmo combo. `domain/order/orderItemGrouping.ts` (`groupOrderItemsByPromotion`, puro, testado) agrupa por isso; `OrderItemsList.tsx` (usado em `OrderCard`/`OrderDetailsDrawer`/`TableGroupCard`/`OrderReceipt` — todo lugar que lista item de pedido) desenha um bloco "Combo" ao redor dos itens que compartilham `promotionId`, item avulso continua linha solta.
+- Quantidade de combo: se cliente pede 2× do combo, cada linha (produto do combo) vai com `quantity` já multiplicado — 1 linha por produto, nunca repete linha (mesmo padrão de `quantity` em item avulso).
+
+**Testado ao vivo**: pedido de teste com 3 itens (2 com `promotion_id` igual = combo, 1 avulso sem `promotion_id`) renderizou exatamente como esperado no card — bloco "Combo" ao redor dos 2 primeiros, item avulso fora, total batendo.
+
 ## Testes
 - Vitest + Testing Library (unitário — `domain`/`application`, sem mockar Supabase, é lógica pura) e Playwright (E2E) já implementados na Fase 1, adiantados em relação ao plano original.
 - E2E real: login → avançar status do pedido → reflete no kanban. Roda contra o Supabase de dev de verdade (não staging — staging só chega na Fase 2), com conta de teste em `.env.local` (`E2E_TEST_EMAIL`/`E2E_TEST_PASSWORD`, nunca commitado).
