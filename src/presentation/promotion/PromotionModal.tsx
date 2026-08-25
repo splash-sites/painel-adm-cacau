@@ -4,7 +4,9 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'sonner'
 import { promotionSchema, type PromotionFormInput } from '../../application/promotion/promotionSchema'
 import type { Promotion } from '../../domain/promotion/Promotion'
+import { calculatePromotionBaseTotal, calculatePromotionDiscountedTotal } from '../../domain/promotion/promotionPricing'
 import { uploadPromotionImage } from '../../infrastructure/storage/uploadPromotionImage'
+import { formatCurrency } from '../order/orderCardFormat'
 import { useProduct, useProductSearch } from '../product/useProducts'
 import { Button } from '../ui/Button'
 import { Checkbox } from '../ui/Checkbox'
@@ -44,6 +46,7 @@ function toDefaults(promotion: Promotion): PromotionFormInput {
 interface ComboItemDraft {
   productId: string
   productName: string
+  price: number
   quantity: number
 }
 
@@ -63,7 +66,12 @@ export function PromotionModal({
   const debouncedProductQuery = useDebouncedValue(productQuery, 250)
   const { data: productResults } = useProductSearch(storeId, debouncedProductQuery)
   const [comboItems, setComboItems] = useState<ComboItemDraft[]>(
-    promotion?.comboItems.map(({ productId, productName, quantity }) => ({ productId, productName, quantity })) ?? [],
+    promotion?.comboItems.map(({ productId, productName, price, quantity }) => ({
+      productId,
+      productName,
+      price,
+      quantity,
+    })) ?? [],
   )
   const [comboQuery, setComboQuery] = useState('')
   const debouncedComboQuery = useDebouncedValue(comboQuery, 250)
@@ -89,7 +97,14 @@ export function PromotionModal({
   const imageUrl = watch('imageUrl')
   const productId = watch('productId')
   const discountType = watch('discountType')
+  const discountValue = watch('discountValue')
   const { data: currentProduct } = useProduct(productId || undefined)
+
+  const baseTotal = currentProduct ? calculatePromotionBaseTotal(currentProduct.price, comboItems) : null
+  const discountedTotal =
+    baseTotal != null
+      ? calculatePromotionDiscountedTotal(baseTotal, { discountType, discountValue: discountValue as number | null })
+      : null
 
   const comboOptions = (comboResults ?? [])
     .filter((product) => product.id !== productId && !comboItems.some((item) => item.productId === product.id))
@@ -98,7 +113,10 @@ export function PromotionModal({
   function handleAddComboItem(selectedId: string) {
     const product = comboResults?.find((item) => item.id === selectedId)
     if (!product) return
-    setComboItems((items) => [...items, { productId: product.id, productName: product.name, quantity: 1 }])
+    setComboItems((items) => [
+      ...items,
+      { productId: product.id, productName: product.name, price: product.price, quantity: 1 },
+    ])
   }
 
   function handleRemoveComboItem(productIdToRemove: string) {
@@ -184,7 +202,8 @@ export function PromotionModal({
             <Label>Produto principal</Label>
             {currentProduct && (
               <p className="font-body text-sm text-foreground/70">
-                Produto atual: <span className="font-medium text-foreground">{currentProduct.name}</span>
+                Produto atual: <span className="font-medium text-foreground">{currentProduct.name}</span> ·{' '}
+                {formatCurrency(currentProduct.price)}
               </p>
             )}
             <Controller
@@ -224,7 +243,9 @@ export function PromotionModal({
               <ul className="space-y-1.5 pt-1">
                 {comboItems.map((item) => (
                   <li key={item.productId} className="flex items-center justify-between gap-2 text-sm font-body">
-                    <span className="min-w-0 truncate">{item.productName}</span>
+                    <span className="min-w-0 truncate">
+                      {item.productName} <span className="text-foreground/50">· {formatCurrency(item.price)}</span>
+                    </span>
                     <div className="flex shrink-0 items-center gap-2">
                       <Input
                         type="number"
@@ -246,6 +267,11 @@ export function PromotionModal({
                   </li>
                 ))}
               </ul>
+            )}
+            {currentProduct && baseTotal != null && (
+              <p className="pt-1 text-sm font-body text-foreground/70">
+                Total do produto{comboItems.length > 0 ? ' + combo' : ''}: <span className="font-medium text-foreground">{formatCurrency(baseTotal)}</span>
+              </p>
             )}
           </div>
 
@@ -286,6 +312,12 @@ export function PromotionModal({
               </div>
             )}
             {errors.discountValue && <p className="text-sm text-red-600">{errors.discountValue.message}</p>}
+            {discountType && discountedTotal != null && baseTotal != null && (
+              <p className="pt-1 text-sm font-body">
+                Total com desconto: <span className="font-medium">{formatCurrency(discountedTotal)}</span>{' '}
+                <span className="text-foreground/50 line-through">{formatCurrency(baseTotal)}</span>
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">

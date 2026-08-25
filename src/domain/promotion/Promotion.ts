@@ -1,10 +1,11 @@
 export type PromotionDiscountType = 'percent' | 'fixed_amount'
 
-/** name/price são snapshot só de exibição no form — o vínculo real é product_id + quantity, preço sempre lido ao vivo do produto. */
+/** name/price são só pra exibição no form (preço ao vivo, buscado na leitura) — o vínculo real é product_id + quantity, nunca fica congelado. */
 export interface PromotionComboItem {
   id: string
   productId: string
   productName: string
+  price: number
   quantity: number
 }
 
