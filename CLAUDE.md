@@ -918,6 +918,12 @@ presentation/promotion/PromotionListPage.tsx -- linha da lista ganha "+N produto
 
 **Testado ao vivo**: pedido de teste com 3 itens (2 com `promotion_id` igual = combo, 1 avulso sem `promotion_id`) renderizou exatamente como esperado no card — bloco "Combo" ao redor dos 2 primeiros, item avulso fora, total batendo.
 
+**Rodada 3 — preço não aparecia no cadastro (achado testando de verdade, não no código)**: `PromotionModal.tsx` deixava de mostrar o preço do produto principal e de cada item do combo — o dado sempre veio (`searchActive`/`useProduct` já retornam o produto completo), só nunca foi desenhado na tela. Corrigido: modal mostra preço de cada item, total do produto+combo, e total com desconto (valor cheio riscado do lado) enquanto a promoção é montada. `PromotionComboItem` (domínio) ganhou `price` — antes só existia no comentário, nunca no tipo de verdade.
+
+**Confirmado com o dev do storefront, testado com produto real (Fondue: preço base R$26, variação "Banana" R$24 replace)**: quando um item do combo tem variação, o preço que entra na soma que sofre desconto é o **preço já resolvido pela variação** (`applyVariationsToUnitPrice`, mesma função que já existe aqui), não o `products.price` cru — bateu R$24, não R$26, provando que não foi coincidência. **Adicional fica de fora do desconto sempre** — soma cheio, sem desconto, depois de calculado o total do combo. Mesma ordem que `itemTotal()` já usa pra item avulso (variação resolve o preço base, adicional soma por cima) — `distributePromotionDiscount` não precisou mudar (já é agnóstico a como cada linha chegou no preço), só ficou registrado aqui o contrato exato. Storefront achou e corrigiu, do lado deles, um bug real onde a variação sobrescrevia o preço do combo por engano.
+
+**Ainda em aberto (decidido, não implementado)**: "desconto também vale sobre `lover_price`" foi decisão confirmada nessa sessão, mas nunca chegou a virar código em lugar nenhum — nem no admin (`PromotionModal` só mostra total com preço normal) nem confirmado se o storefront trata isso. Retomar quando for a hora.
+
 ## Testes
 - Vitest + Testing Library (unitário — `domain`/`application`, sem mockar Supabase, é lógica pura) e Playwright (E2E) já implementados na Fase 1, adiantados em relação ao plano original.
 - E2E real: login → avançar status do pedido → reflete no kanban. Roda contra o Supabase de dev de verdade (não staging — staging só chega na Fase 2), com conta de teste em `.env.local` (`E2E_TEST_EMAIL`/`E2E_TEST_PASSWORD`, nunca commitado).
