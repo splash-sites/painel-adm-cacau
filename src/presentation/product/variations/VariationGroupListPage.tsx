@@ -1,6 +1,6 @@
 import { Fragment, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronDown, ChevronRight, Pencil, Trash2 } from 'lucide-react'
+import { ArrowLeft, ChevronDown, ChevronRight, Pencil, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useEffectiveStoreId } from '../../storeContext/useEffectiveStoreId'
 import type { VariationGroup } from '../../../domain/product/Variation'
@@ -45,7 +45,8 @@ export function VariationGroupListPage() {
         {storeId && (
           <div className="flex gap-3">
             <Button variant="outline" onClick={() => navigate('/produtos')}>
-              ← Produtos
+              <ArrowLeft className="h-4 w-4" />
+              Produtos
             </Button>
             <Button variant="outline" onClick={() => navigate('/produtos/adicionais')}>
               Adicionais
