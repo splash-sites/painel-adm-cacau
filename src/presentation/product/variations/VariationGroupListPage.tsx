@@ -1,4 +1,5 @@
 import { Fragment, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { ChevronDown, ChevronRight, Pencil, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useEffectiveStoreId } from '../../storeContext/useEffectiveStoreId'
@@ -12,6 +13,7 @@ import { useDeleteVariationGroup, useVariationGroupList } from './useVariations'
 
 export function VariationGroupListPage() {
   const storeId = useEffectiveStoreId()
+  const navigate = useNavigate()
   const { data: groups, isLoading, error } = useVariationGroupList(storeId ?? '')
   const deleteGroup = useDeleteVariationGroup()
   const [expandedGroupId, setExpandedGroupId] = useState<string | null>(null)
@@ -40,7 +42,17 @@ export function VariationGroupListPage() {
             produto. Vincule cada um dentro do cadastro do produto.
           </p>
         </div>
-        {storeId && <Button onClick={() => setIsCreating(true)}>Novo grupo</Button>}
+        {storeId && (
+          <div className="flex gap-3">
+            <Button variant="outline" onClick={() => navigate('/produtos')}>
+              ← Produtos
+            </Button>
+            <Button variant="outline" onClick={() => navigate('/produtos/adicionais')}>
+              Adicionais
+            </Button>
+            <Button onClick={() => setIsCreating(true)}>Novo grupo</Button>
+          </div>
+        )}
       </div>
 
       {!storeId && <p className="font-body">Selecione uma loja pra ver as variações.</p>}
