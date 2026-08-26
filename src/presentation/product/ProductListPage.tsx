@@ -80,7 +80,7 @@ export function ProductListPage() {
             <input
               ref={importInputRef}
               type="file"
-              accept=".xlsx,.xls,.csv"
+              accept=".xlsx,.csv"
               onChange={handleImportFileSelected}
               className="hidden"
             />

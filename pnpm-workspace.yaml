@@ -1,0 +1,6 @@
+packages:
+  - .
+
+overrides:
+  # exceljs depende de uuid <11 (CVE moderado, GHSA-w5hq-g745-h8pq) — força a versão corrigida.
+  uuid: ^11.1.1

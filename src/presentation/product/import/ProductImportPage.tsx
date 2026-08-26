@@ -94,7 +94,7 @@ export function ProductImportPage() {
             Trocar arquivo
             <input
               type="file"
-              accept=".xlsx,.xls,.csv"
+              accept=".xlsx,.csv"
               onChange={handleFileChange}
               className="hidden"
             />
