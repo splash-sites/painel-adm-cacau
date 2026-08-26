@@ -6,6 +6,7 @@ import { KANBAN_COLUMNS } from '../../domain/order/orderStatusRules'
 import { groupDeliveredOrdersByTable, groupOrdersByTableSession } from '../../domain/order/tableSessionRules'
 import { NotificationPermissionBanner } from './NotificationPermissionBanner'
 import { OrderCard } from './OrderCard'
+import { RealtimeConnectionBanner } from './RealtimeConnectionBanner'
 import { TableGroupCard } from './TableGroupCard'
 import { TableSessionSummaryBar } from './TableSessionSummaryBar'
 import { useOpenTableSessionIds } from './useTableSessions'
@@ -41,6 +42,7 @@ export function OrderDashboardPage() {
       <h2 className="font-display text-2xl md:text-3xl text-accent">Dashboard de pedidos</h2>
 
       {storeId && <NotificationPermissionBanner storeId={storeId} />}
+      <RealtimeConnectionBanner />
       <TableSessionSummaryBar summaries={tableSessionSummaries} />
 
       {!storeId && <p className="font-body">Selecione uma loja pra ver os pedidos.</p>}

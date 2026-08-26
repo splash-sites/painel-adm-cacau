@@ -7,6 +7,7 @@ export interface OrderListParams {
 }
 
 export type OrderChangeEvent = 'INSERT' | 'UPDATE' | 'DELETE'
+export type RealtimeConnectionStatus = 'connected' | 'reconnecting'
 
 export interface OrderItemAddonSelection {
   addonOptionId: string
@@ -53,7 +54,11 @@ export interface OrderRepository {
   /** Atualiza quantidade e reescreve por completo a variação/adicional do item (não é um patch parcial). */
   updateItem(itemId: string, quantity: number, selection?: OrderItemSelection): Promise<void>
   removeItem(itemId: string): Promise<void>
-  subscribeToStoreOrders(storeId: string, onChange: (eventType: OrderChangeEvent) => void): () => void
+  subscribeToStoreOrders(
+    storeId: string,
+    onChange: (eventType: OrderChangeEvent) => void,
+    onStatusChange?: (status: RealtimeConnectionStatus) => void,
+  ): () => void
   /** Histórico de status da loja desde `since` — filtrado no banco (join com orders), nunca por lista de IDs (risco de URL gigante). */
   listStatusHistory(storeId: string, since: string): Promise<OrderStatusHistoryEntry[]>
   /**

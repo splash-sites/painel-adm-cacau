@@ -7,6 +7,7 @@ import type {
   OrderListParams,
   OrderRepository,
   OrderStatusHistoryEntry,
+  RealtimeConnectionStatus,
 } from '../../application/order/OrderRepository'
 import type { DeliveryAddress, Order, OrderStatus } from '../../domain/order/Order'
 import type { VariationPriceMode } from '../../domain/product/Variation'
@@ -230,7 +231,11 @@ export class SupabaseOrderRepository implements OrderRepository {
       .filter((phone): phone is string => phone != null)
   }
 
-  subscribeToStoreOrders(storeId: string, onChange: (eventType: OrderChangeEvent) => void): () => void {
+  subscribeToStoreOrders(
+    storeId: string,
+    onChange: (eventType: OrderChangeEvent) => void,
+    onStatusChange?: (status: RealtimeConnectionStatus) => void,
+  ): () => void {
     const channel = supabase
       .channel(`orders-${storeId}`)
       .on(
@@ -238,7 +243,9 @@ export class SupabaseOrderRepository implements OrderRepository {
         { event: '*', schema: 'public', table: 'orders', filter: `store_id=eq.${storeId}` },
         (payload) => onChange(payload.eventType as OrderChangeEvent),
       )
-      .subscribe()
+      .subscribe((status) => {
+        onStatusChange?.(status === 'SUBSCRIBED' ? 'connected' : 'reconnecting')
+      })
 
     return () => {
       supabase.removeChannel(channel)

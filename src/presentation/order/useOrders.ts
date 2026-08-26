@@ -10,6 +10,9 @@ export function useOrderList(params: { storeId: string }) {
     queryKey: ['orders', params],
     queryFn: () => orderRepository.list(params),
     enabled: !!params.storeId,
+    // Fallback pro Realtime: se o canal cair (rede, aba suspensa, limite de conexão), o kanban
+    // ainda se atualiza sozinho a cada 30s em vez de ficar parado em silêncio.
+    refetchInterval: 30_000,
   })
 }
 
