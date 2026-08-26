@@ -1,7 +1,7 @@
 import * as PopoverPrimitive from '@radix-ui/react-popover'
 import { Command as CommandPrimitive } from 'cmdk'
 import { ChevronsUpDown, Search } from 'lucide-react'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { cn } from './cn'
 
 export interface ComboboxOption {
@@ -27,11 +27,20 @@ export function Combobox({
   className?: string
 }) {
   const [open, setOpen] = useState(false)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+
+  /** Devolve o foco pro trigger ao fechar (boa prática de acessibilidade — não é o fix do bug de
+   * Esc fechar o Dialog junto, esse fix mora em ui/Dialog.tsx, ver comentário lá). */
+  function handleOpenChange(nextOpen: boolean) {
+    if (!nextOpen) triggerRef.current?.focus()
+    setOpen(nextOpen)
+  }
 
   return (
-    <PopoverPrimitive.Root open={open} onOpenChange={setOpen}>
+    <PopoverPrimitive.Root open={open} onOpenChange={handleOpenChange}>
       <PopoverPrimitive.Trigger asChild>
         <button
+          ref={triggerRef}
           type="button"
           className={cn(
             'flex w-full items-center justify-between gap-2 rounded-lg border border-secondary/25 bg-background px-3 py-2 text-left font-body text-foreground/60 transition',
@@ -68,7 +77,7 @@ export function Combobox({
                 value={option.label}
                 onSelect={() => {
                   onSelect(option.value)
-                  setOpen(false)
+                  handleOpenChange(false)
                 }}
                 className="flex cursor-pointer select-none items-center rounded-md px-2.5 py-2 font-body text-sm outline-none data-[selected=true]:bg-primary/10"
               >
