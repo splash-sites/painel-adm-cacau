@@ -17,7 +17,7 @@ import { Label } from '../ui/Label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/Select'
 import { inputClass } from '../ui/styles'
 import { useDebouncedValue } from '../ui/useDebouncedValue'
-import { useSavePromotion } from './usePromotions'
+import { useSaveComboItems, useSavePromotion } from './usePromotions'
 
 const emptyDefaults: PromotionFormInput = {
   title: '',
@@ -61,6 +61,10 @@ export function PromotionModal({
   onClose: () => void
 }) {
   const savePromotion = useSavePromotion()
+  const saveComboItems = useSaveComboItems()
+  // Promoção já está salva a partir daqui — qualquer reenvio (ex: falha ao gravar combo) agora
+  // é UPDATE, nunca cria de novo. Mesmo padrão de createdProduct em ProductModal.tsx.
+  const [createdPromotion, setCreatedPromotion] = useState<Promotion | undefined>(promotion)
   const [imageError, setImageError] = useState<string | null>(null)
   const [isUploadingImage, setIsUploadingImage] = useState(false)
   const [productQuery, setProductQuery] = useState('')
@@ -167,9 +171,10 @@ export function PromotionModal({
   }
 
   async function onSubmit(input: PromotionFormInput) {
+    let savedPromotion: Promotion
     try {
-      await savePromotion.mutateAsync({
-        id: promotion?.id,
+      savedPromotion = await savePromotion.mutateAsync({
+        id: createdPromotion?.id,
         storeId,
         input: {
           title: input.title,
@@ -183,11 +188,31 @@ export function PromotionModal({
           comboItems: comboItems.map(({ productId: id, quantity }) => ({ productId: id, quantity })),
         },
       })
-      toast.success(promotion ? 'Promoção atualizada.' : 'Promoção criada.')
-      onClose()
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Falha ao salvar promoção')
+      return
     }
+
+    // Promoção já está salva a partir daqui — se o passo de combo abaixo falhar, o reenvio agora
+    // é UPDATE, nunca cria uma segunda promoção (bug real corrigido, ver CLAUDE.md).
+    setCreatedPromotion(savedPromotion)
+
+    try {
+      await saveComboItems.mutateAsync({
+        promotionId: savedPromotion.id,
+        items: comboItems.map(({ productId: id, quantity }) => ({ productId: id, quantity })),
+      })
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? `Promoção salva, mas falha ao salvar combo: ${error.message} — revise abaixo e salve de novo.`
+          : 'Promoção salva, mas falha ao salvar combo — revise abaixo e salve de novo.',
+      )
+      return
+    }
+
+    toast.success(promotion ? 'Promoção atualizada.' : 'Promoção criada.')
+    onClose()
   }
 
   return (

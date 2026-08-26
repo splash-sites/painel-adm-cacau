@@ -21,8 +21,11 @@ export interface PromotionInput {
 export interface PromotionRepository {
   list(storeId: string): Promise<Promotion[]>
   create(storeId: string, input: PromotionInput): Promise<Promotion>
-  update(id: string, input: PromotionInput): Promise<void>
+  update(id: string, input: PromotionInput): Promise<Promotion>
   delete(id: string): Promise<void>
   /** Grava a nova ordem do carrossel inteira de uma vez, após o drag. */
   reorder(storeId: string, orderedIds: string[]): Promise<void>
+  /** Passo separado de create()/update(), chamado depois — reescreve por completo os itens de combo.
+   * Só depois do id da promoção estar capturado, pra uma falha aqui não duplicar a promoção num reenvio. */
+  saveComboItems(promotionId: string, items: PromotionComboItemInput[]): Promise<void>
 }

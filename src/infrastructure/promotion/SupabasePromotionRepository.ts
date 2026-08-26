@@ -102,22 +102,19 @@ export class SupabasePromotionRepository implements PromotionRepository {
 
     if (error || !inserted) throw new Error(error?.message ?? 'Falha ao criar promoção')
 
-    await this.replaceComboItems(inserted.id, input.comboItems)
-
-    const { data, error: fetchError } = await supabase
-      .from('promotions')
-      .select(PROMOTION_SELECT)
-      .eq('id', inserted.id)
-      .single()
-
-    if (fetchError || !data) throw new Error(fetchError?.message ?? 'Falha ao carregar promoção criada')
-    return toPromotion(data as PromotionRow)
+    return this.fetchById(inserted.id)
   }
 
-  async update(id: string, input: PromotionInput): Promise<void> {
+  async update(id: string, input: PromotionInput): Promise<Promotion> {
     const { error } = await supabase.from('promotions').update(toRow(input)).eq('id', id)
     if (error) throw new Error(error.message)
-    await this.replaceComboItems(id, input.comboItems)
+    return this.fetchById(id)
+  }
+
+  private async fetchById(id: string): Promise<Promotion> {
+    const { data, error } = await supabase.from('promotions').select(PROMOTION_SELECT).eq('id', id).single()
+    if (error || !data) throw new Error(error?.message ?? 'Falha ao carregar promoção')
+    return toPromotion(data as PromotionRow)
   }
 
   async delete(id: string): Promise<void> {
@@ -150,7 +147,10 @@ export class SupabasePromotionRepository implements PromotionRepository {
     if (error) throw new Error(error.message)
   }
 
-  private async replaceComboItems(promotionId: string, items: PromotionComboItemInput[]): Promise<void> {
+  /** Passo separado de create()/update() de propósito — reescreve por completo (delete + insert) os
+   * itens de combo. Uma falha aqui não pode fazer o modal reenviar create() de novo (duplicaria a
+   * promoção); o id da promoção já foi capturado antes desse passo rodar. */
+  async saveComboItems(promotionId: string, items: PromotionComboItemInput[]): Promise<void> {
     const { error: deleteError } = await supabase
       .from('promotion_combo_items')
       .delete()

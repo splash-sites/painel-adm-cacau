@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { SupabasePromotionRepository } from '../../infrastructure/promotion/SupabasePromotionRepository'
-import type { PromotionInput } from '../../application/promotion/PromotionRepository'
+import type { PromotionComboItemInput, PromotionInput } from '../../application/promotion/PromotionRepository'
 
 export const promotionRepository = new SupabasePromotionRepository()
 
@@ -16,13 +16,21 @@ export function useSavePromotion() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async ({ id, storeId, input }: { id?: string; storeId: string; input: PromotionInput }) => {
-      if (id) {
-        await promotionRepository.update(id, input)
-        return
-      }
-      await promotionRepository.create(storeId, input)
+    mutationFn: ({ id, storeId, input }: { id?: string; storeId: string; input: PromotionInput }) =>
+      id ? promotionRepository.update(id, input) : promotionRepository.create(storeId, input),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['promotions'] })
     },
+  })
+}
+
+/** Passo separado do useSavePromotion de propósito — ver saveComboItems no repository. */
+export function useSaveComboItems() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ promotionId, items }: { promotionId: string; items: PromotionComboItemInput[] }) =>
+      promotionRepository.saveComboItems(promotionId, items),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['promotions'] })
     },
