@@ -3,10 +3,12 @@ import { useOrderList } from './useOrders'
 import { useFinalizedClear } from './useFinalizedClear'
 import { dashboardFinalizedCutoff } from '../../domain/order/orderPeriod'
 import { KANBAN_COLUMNS } from '../../domain/order/orderStatusRules'
-import { groupDeliveredOrdersByTable } from '../../domain/order/tableSessionRules'
+import { groupDeliveredOrdersByTable, groupOrdersByTableSession } from '../../domain/order/tableSessionRules'
 import { NotificationPermissionBanner } from './NotificationPermissionBanner'
 import { OrderCard } from './OrderCard'
 import { TableGroupCard } from './TableGroupCard'
+import { TableSessionSummaryBar } from './TableSessionSummaryBar'
+import { useOpenTableSessionIds } from './useTableSessions'
 
 const COLUMN_COLOR: Record<string, string> = {
   received: 'bg-amber-500',
@@ -23,14 +25,23 @@ export function OrderDashboardPage() {
   const clearFinalized = useFinalizedClear((state) => state.clearFinalized)
 
   const { data: orders, isLoading, error } = useOrderList({ storeId })
+  const { data: openTableSessionIds } = useOpenTableSessionIds(storeId)
 
   const clearedAt = clearedAtByStore[storeId] ?? null
+
+  const tableSessionSummaries =
+    orders && openTableSessionIds
+      ? groupOrdersByTableSession(orders).filter((summary) =>
+          openTableSessionIds.includes(summary.tableSessionId),
+        )
+      : []
 
   return (
     <div className="space-y-6">
       <h2 className="font-display text-2xl md:text-3xl text-accent">Dashboard de pedidos</h2>
 
       {storeId && <NotificationPermissionBanner storeId={storeId} />}
+      <TableSessionSummaryBar summaries={tableSessionSummaries} />
 
       {!storeId && <p className="font-body">Selecione uma loja pra ver os pedidos.</p>}
       {isLoading && <p className="font-body">Carregando...</p>}
