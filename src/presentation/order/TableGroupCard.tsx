@@ -107,7 +107,7 @@ export function TableGroupCard({ orders }: { orders: Order[] }) {
         })}
       </div>
 
-      <div className="mt-auto flex flex-wrap items-center justify-between gap-3 border-t border-secondary/10 p-4">
+      <div className="mt-auto space-y-3 border-t border-secondary/10 p-4">
         <div>
           <span className="block text-xs font-medium uppercase tracking-wide text-foreground/50">
             Total da mesa
@@ -126,7 +126,7 @@ export function TableGroupCard({ orders }: { orders: Order[] }) {
             )
           }
           disabled={finalizeAll.isPending}
-          className={buttonClass('primary')}
+          className={`w-full ${buttonClass('primary')}`}
         >
           Finalizar tudo
         </button>

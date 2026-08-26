@@ -129,29 +129,27 @@ export function OrderCard({ order }: { order: Order }) {
 
       {/* Rodapé */}
       <div className="mt-auto space-y-3 border-t border-secondary/10 p-4">
-        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
-          <div>
-            <span className="block text-xs font-medium uppercase tracking-wide text-foreground/50">Total</span>
-            <span className="text-lg font-semibold">{formatCurrency(calculateOrderTotal(order))}</span>
-          </div>
-          {nextStatus && (
-            <button
-              type="button"
-              onClick={() =>
-                needsAttendantToAdvance(order.status)
-                  ? setIsAccepting(true)
-                  : changeStatus.mutate(
-                      { orderId: order.id, newStatus: nextStatus },
-                      { onError: (error) => handleStatusMutationError(error, 'Falha ao avançar etapa') },
-                    )
-              }
-              disabled={changeStatus.isPending}
-              className={`whitespace-nowrap ${buttonClass('primary')}`}
-            >
-              Avançar etapa
-            </button>
-          )}
+        <div>
+          <span className="block text-xs font-medium uppercase tracking-wide text-foreground/50">Total</span>
+          <span className="text-lg font-semibold">{formatCurrency(calculateOrderTotal(order))}</span>
         </div>
+        {nextStatus && (
+          <button
+            type="button"
+            onClick={() =>
+              needsAttendantToAdvance(order.status)
+                ? setIsAccepting(true)
+                : changeStatus.mutate(
+                    { orderId: order.id, newStatus: nextStatus },
+                    { onError: (error) => handleStatusMutationError(error, 'Falha ao avançar etapa') },
+                  )
+            }
+            disabled={changeStatus.isPending}
+            className={`w-full ${buttonClass('primary')}`}
+          >
+            Avançar etapa
+          </button>
+        )}
 
         <div className="space-y-2 text-sm">
           <div className="flex items-center gap-3">
