@@ -125,18 +125,31 @@ function startOfTodayIso(): string {
 const ORDER_SELECT =
   '*, attendants(name), order_items(id, product_id, quantity, unit_price, notes, promotion_id, products(name), order_item_addons(id, addon_option_id, name, price, quantity), order_item_variations(id, variation_option_id, name, price, price_mode))'
 
+/** Teto de linhas por request do Postgrest (`max-rows` do projeto Supabase, default 1000) — list()/listStatusHistory()
+ * fazem loop nesse tamanho pra nunca truncar em silêncio (ex: Relatórios de 30 dias numa loja com bastante pedido). */
+const LIST_PAGE_SIZE = 1000
+
 export class SupabaseOrderRepository implements OrderRepository {
   async list({ storeId, since }: OrderListParams): Promise<Order[]> {
-    const { data, error } = await supabase
-      .from('orders')
-      .select(ORDER_SELECT)
-      .eq('store_id', storeId)
-      .gte('created_at', since ?? startOfTodayIso())
-      .order('created_at')
+    const items: Order[] = []
+    let from = 0
+    for (;;) {
+      const { data, error } = await supabase
+        .from('orders')
+        .select(ORDER_SELECT)
+        .eq('store_id', storeId)
+        .gte('created_at', since ?? startOfTodayIso())
+        .order('created_at')
+        .range(from, from + LIST_PAGE_SIZE - 1)
 
-    if (error) throw new Error(error.message)
+      if (error) throw new Error(error.message)
 
-    return (data as OrderRow[]).map(toOrder)
+      const page = data as OrderRow[]
+      items.push(...page.map(toOrder))
+      if (page.length < LIST_PAGE_SIZE) break
+      from += LIST_PAGE_SIZE
+    }
+    return items
   }
 
   async listHistory({ storeId, since, status, page, pageSize }: OrderHistoryParams): Promise<OrderHistoryResult> {
@@ -209,19 +222,27 @@ export class SupabaseOrderRepository implements OrderRepository {
   }
 
   async listStatusHistory(storeId: string, since: string): Promise<OrderStatusHistoryEntry[]> {
-    const { data, error } = await supabase
-      .from('order_status_history')
-      .select('order_id, status, changed_at, orders!inner(store_id, created_at)')
-      .eq('orders.store_id', storeId)
-      .gte('orders.created_at', since)
+    const entries: OrderStatusHistoryEntry[] = []
+    let from = 0
+    for (;;) {
+      const { data, error } = await supabase
+        .from('order_status_history')
+        .select('order_id, status, changed_at, orders!inner(store_id, created_at)')
+        .eq('orders.store_id', storeId)
+        .gte('orders.created_at', since)
+        .order('changed_at')
+        .range(from, from + LIST_PAGE_SIZE - 1)
 
-    if (error) throw new Error(error.message)
+      if (error) throw new Error(error.message)
 
-    return (data as { order_id: string; status: OrderStatus; changed_at: string }[]).map((row) => ({
-      orderId: row.order_id,
-      status: row.status,
-      changedAt: row.changed_at,
-    }))
+      const page = data as { order_id: string; status: OrderStatus; changed_at: string }[]
+      entries.push(
+        ...page.map((row) => ({ orderId: row.order_id, status: row.status, changedAt: row.changed_at })),
+      )
+      if (page.length < LIST_PAGE_SIZE) break
+      from += LIST_PAGE_SIZE
+    }
+    return entries
   }
 
   async listPrecedingCustomerPhones(storeId: string, beforeIso: string, phones: string[]): Promise<string[]> {
