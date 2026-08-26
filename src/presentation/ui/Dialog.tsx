@@ -28,19 +28,26 @@ export function DialogContent({
   return (
     <DialogPrimitive.Portal>
       <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/40" />
-      <DialogPrimitive.Content
-        onEscapeKeyDown={(event) => {
-          preventEscapeWhilePopperOpen(event)
-          onEscapeKeyDown?.(event)
-        }}
-        className={cn(
-          'fixed left-1/2 top-1/2 z-50 w-full max-w-sm -translate-x-1/2 -translate-y-1/2 space-y-4 rounded-2xl border border-secondary/15 bg-background p-6 font-body shadow-sm sm:p-8',
-          className,
-        )}
-        {...props}
-      >
-        {children}
-      </DialogPrimitive.Content>
+      {/* Centraliza via flex, não via transform: um Popper do Radix (Combobox/Select) aberto
+          dentro do Dialog usa position:fixed pra se posicionar — um ancestral com transform
+          (o -translate-x/y de antes) vira containing block desse fixed e quebra o cálculo de
+          posição do Radix, fazendo o conteúdo rolável do Dialog pular pro topo sozinho ao abrir
+          o popover (bug real, corrigido). Sem transform em nenhum ancestral, esse problema some. */}
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <DialogPrimitive.Content
+          onEscapeKeyDown={(event) => {
+            preventEscapeWhilePopperOpen(event)
+            onEscapeKeyDown?.(event)
+          }}
+          className={cn(
+            'w-full max-w-sm space-y-4 rounded-2xl border border-secondary/15 bg-background p-6 font-body shadow-sm sm:p-8',
+            className,
+          )}
+          {...props}
+        >
+          {children}
+        </DialogPrimitive.Content>
+      </div>
     </DialogPrimitive.Portal>
   )
 }
