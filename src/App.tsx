@@ -1,4 +1,5 @@
 import { BrowserRouter, Outlet, Routes, Route } from 'react-router-dom'
+import { AuthSessionSync } from './presentation/auth/AuthSessionSync'
 import { LoginPage } from './presentation/auth/LoginPage'
 import { ProtectedRoute } from './presentation/auth/ProtectedRoute'
 import { AppLayout } from './presentation/layout/AppLayout'
@@ -20,6 +21,7 @@ import { PromotionListPage } from './presentation/promotion/PromotionListPage'
 function App() {
   return (
     <BrowserRouter>
+      <AuthSessionSync />
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/cadastro" element={<SetupFirstAdminPage />} />

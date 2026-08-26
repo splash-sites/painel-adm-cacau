@@ -1,25 +1,20 @@
-import { useEffect } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { SupabaseAuthRepository } from '../../infrastructure/auth/SupabaseAuthRepository'
-import type { AuthSession } from '../../application/auth/AuthRepository'
 
-const authRepository = new SupabaseAuthRepository()
-const SESSION_QUERY_KEY = ['auth', 'session'] as const
+export const authRepository = new SupabaseAuthRepository()
+export const SESSION_QUERY_KEY = ['auth', 'session'] as const
 
+/**
+ * Hook só de leitura — a assinatura de onAuthStateChange mora em AuthSessionSync.tsx, montada
+ * 1x em App.tsx. useAuth() pode ser chamado em quantos componentes precisar sem criar um novo
+ * listener/refetch de profiles por chamada (bug real: eram 8 assinantes independentes).
+ */
 export function useAuth() {
-  const queryClient = useQueryClient()
-
   const { data: session, isLoading, refetch } = useQuery({
     queryKey: SESSION_QUERY_KEY,
     queryFn: () => authRepository.getSession(),
     staleTime: Infinity,
   })
-
-  useEffect(() => {
-    return authRepository.onAuthStateChange((nextSession) => {
-      queryClient.setQueryData<AuthSession | null>(SESSION_QUERY_KEY, nextSession)
-    })
-  }, [queryClient])
 
   return {
     session: session ?? null,

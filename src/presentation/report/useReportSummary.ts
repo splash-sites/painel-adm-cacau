@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { SupabaseOrderRepository } from '../../infrastructure/order/SupabaseOrderRepository'
 import { type OrderPeriod, sinceIsoForPeriod } from '../../domain/order/orderPeriod'
@@ -12,7 +13,12 @@ const orderRepository = new SupabaseOrderRepository()
 export type ReportPeriod = OrderPeriod
 
 export function useReportSummary(storeId: string, period: ReportPeriod) {
-  const since = sinceIsoForPeriod(period)
+  // Memoizado por período: sinceIsoForPeriod usa new Date() (precisão de milissegundo) — sem
+  // useMemo, recalculava um valor novo a cada render, e como "since" alimenta a queryKey de
+  // report-status-history/report-preceding-phones abaixo, cada render virava uma query "nova"
+  // pro React Query, disparando fetch de novo, cujo retorno causava outro render — loop de
+  // refetch autossustentado enquanto a tela ficasse aberta (achado real, bug de performance).
+  const since = useMemo(() => sinceIsoForPeriod(period), [period])
 
   const {
     data: orders,
@@ -31,9 +37,17 @@ export function useReportSummary(storeId: string, period: ReportPeriod) {
   })
 
   // Só telefones do período atual — escopa a query ao invés de crescer com todo histórico da loja.
-  const currentPeriodPhones = orders
-    ? Array.from(new Set(orders.map((order) => order.customerPhone).filter((phone): phone is string => phone != null)))
-    : []
+  // Memoizado por orders: sem isso, o array novo a cada render também alimentava a queryKey
+  // abaixo e contribuía pro mesmo loop de refetch.
+  const currentPeriodPhones = useMemo(
+    () =>
+      orders
+        ? Array.from(
+            new Set(orders.map((order) => order.customerPhone).filter((phone): phone is string => phone != null)),
+          )
+        : [],
+    [orders],
+  )
 
   const { data: precedingPhones } = useQuery({
     queryKey: ['report-preceding-phones', storeId, since, currentPeriodPhones],
