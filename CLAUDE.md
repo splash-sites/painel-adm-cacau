@@ -967,7 +967,7 @@ Ao criar produto novo e usar a busca (`Combobox`) pra vincular Adicional/Variaç
 
 Os dois fixes moram em `ui/Dialog.tsx` (não em `ProductModal.tsx` nem em `Combobox.tsx`) — qualquer novo uso de `Dialog`+`Popover`/`Select` aninhado no app inteiro já herda os dois de graça (confirmado: a seção de Categoria acima usa exatamente esse caminho, sem precisar de nenhum ajuste extra).
 
-## Auditoria Clean Architecture/SOLID/escalabilidade (em andamento)
+## Auditoria Clean Architecture/SOLID/escalabilidade (CRÍTICO + 5 ALTO corrigidos, MÉDIO/BAIXO pendente — mapeado abaixo)
 Segunda rodada de auditoria dedicada (agente separado, escopo = app inteiro), depois da "Varredura de auditoria pré-Fase 2" acima — achou 24 itens novos (1 CRÍTICO, 5 ALTO, 11 MÉDIO, 7 BAIXO). Corrigindo em ordem de severidade, 1 por vez com teste ao vivo antes do próximo — CLAUDE.md ganha 1 entrada por item corrigido, nunca em lote.
 
 **CRÍTICO — comanda de mesa nunca fechava (corrigido)**: `TableSessionSummaryBar` tinha sido tirada da UI numa rodada anterior (ver "Feature: Consolidação de pedidos por mesa"), mas era o único chamador de `close_table_session` — sem ela a sessão de uma mesa nunca fechava, e turnos diferentes na mesma mesa podiam se fundir na mesma comanda. `OrderDashboardPage.tsx` voltou a renderizar a barra (alimentada por `groupOrdersByTableSession(orders)` filtrado por `useOpenTableSessionIds`, mesmo fix de sincronismo já documentado). Decisão de escopo confirmada com o usuário: fechamento continua **manual** (não automático). Testado ao vivo: barra aparece com "Mesa 12 · 9 pedidos · R$ 145,38 · Fechar mesa", botão corretamente desabilitado enquanto existe pedido não-terminal na sessão.
@@ -998,6 +998,32 @@ Segunda rodada de auditoria dedicada (agente separado, escopo = app inteiro), de
 Achado de brinde nessa rodada (`pnpm audit --prod`, não fazia parte da lista original de 24): `react-router-dom@^7.18.1` tinha CVE alto (GHSA-qwww-vcr4-c8h2, CSRF bypass em modo RSC) — já dentro do range aceito pelo `^7.18.1` do `package.json` (`7.18.2` corrige), só o lockfile estava desatualizado; `pnpm update react-router-dom react-router` resolveu sem mudar nenhuma versão declarada. `exceljs` trouxe `uuid <11.1.1` como dependência transitiva (CVE moderado, GHSA-w5hq-g745-h8pq) — forçado pra `^11.1.1` via `overrides` em `pnpm-workspace.yaml` (não em `package.json`: pnpm 11+ moveu `overrides` pra lá, `"pnpm"` no `package.json` é ignorado silenciosamente com só um warning — cuidado pra próxima vez que precisar de override). `pnpm audit --prod` limpo (zero vulnerabilidade) depois dos três ajustes.
 
 **Testado ao vivo com arquivo real** (não só teste unitário): planilha `.xlsx` gerada com `exceljs` (2 produtos, colunas no formato real documentado em "Importação de planilha de estoque") importada via UI — preview mostrou código/descrição/estoque/custo/preço/ordem certos pros 2 produtos. CSV com `;` (mesmo formato que o Excel brasileiro gera) — preview também certo, confirmando a detecção automática de delimitador funcionando de verdade, não só em teste unitário controlado. Não confirmei a importação de verdade (ficaria só no preview) pra não sujar o banco com produto de QA; preview já é o suficiente pra provar que o parser novo lê o arquivo real corretamente — é exatamente o mesmo dado que viraria produto se confirmado.
+
+**Revisão de segurança pós-lote (`security-sweep` no diff inteiro Categoria+CRÍTICO+5 ALTO)**: zero achado CRÍTICO/ALTO novo introduzido pelos fixes acima. 1 achado MÉDIO real, corrigido na hora — ver "Achado numa varredura de segurança posterior" na seção "Feature: Categoria de produto" acima (`category_id` sem checagem de loja no banco, trigger `products_category_store_check` adicionado e testado ao vivo via REST cross-tenant).
+
+**Backlog MÉDIO/BAIXO da auditoria original (11 + 7, nenhum corrigido ainda — pausado por decisão do usuário, "por enquanto tá bom", 2026-08-26)**. Mapeado aqui pra não se perder entre conversas; numeração igual ao relatório original do agente de auditoria.
+
+MÉDIO:
+7. Nenhuma trilha de auditoria pras mutações de item de pedido (`add_order_item`/`update_order_item`/`remove_order_item` não gravam quem/quando/o quê mudou) — sugestão: tabela `order_item_history`.
+8. `replaceComboItems`/`saveComboItems` (`SupabasePromotionRepository.ts`) faz delete+insert sem transação — falha no meio pode deixar promoção sem itens de combo, storefront vende produto principal sozinho com desconto de combo aplicado.
+9. `promotion_combo_items` não valida que o produto extra é da mesma loja da promoção (mesma classe do achado corrigido em `category_id`, mas aqui ainda pendente).
+10. Não existe reimpressão de cupom — `printOrderReceipt` só é chamado 1x, no aceite do pedido.
+11. N+1 de requests no seletor de variação/adicional (`ItemSelectionFields.tsx`) — 1 request por grupo vinculado ao produto.
+12. `listExternalCodes`/`bulkUpsertFromImport` sem `.range()`/chunking — loja com >1000 produtos trunca o preview de importação.
+13. Busca de produto usa `ilike '%termo%'` — wildcard à esquerda não usa índice, sequential scan a cada tecla.
+14. Índices a conferir no Supabase (sem migration versionada pra checar por leitura estática): `orders (store_id, created_at desc)`, `orders (store_id, customer_phone)`, `promotion_combo_items (promotion_id)`.
+15. `listPrecedingCustomerPhones` manda lista de telefones grande num `.in()` — mesmo anti-padrão que `listStatusHistory` já teve corrigido antes.
+16. `count: 'exact'` no Histórico com período "Tudo" — `count(*)` exato sobre toda a tabela a cada troca de página.
+17. `stock_quantity`/`track_stock` existem mas nada no fluxo de pedido consulta nem decrementa estoque.
+
+BAIXO:
+18. `itemTotal` (cálculo de preço) mora em `presentation/order/orderCardFormat.ts`, duplicado inline em `calculateOrderTotal` — devia estar só em `domain/order/orderPricing.ts`.
+19. `PromotionModal.tsx` com ~400+ linhas e 5 responsabilidades (form, upload, draft de combo, busca dupla, cálculo de preview) — candidato a quebrar em subcomponentes.
+20. `useFinalizeTableOrders` sem atomicidade/retry por pedido — falha parcial exige re-tentar todos, os que já passaram dão erro de transição inválida.
+21. `printOrderReceipt` não remove `#print-receipt-root` órfão antes de criar um novo, se `afterprint` não disparar.
+22. `VITE_STOREFRONT_URL` ausente gera link "Ver cardápio" como `undefined/slug` (botão de QR Code já valida essa env, o link normal não).
+23. `AdminUserRepository.list()` sem paginação — única listagem do app sem `.range()` que não é bounded por loja.
+24. Desconto de promoção aceita valor `0` e ainda mostra badge "0% OFF"/"R$0 OFF" — trocar `.min(0)` por `.positive()` em `promotionSchema.ts`.
 
 ## Testes
 - Vitest + Testing Library (unitário — `domain`/`application`, sem mockar Supabase, é lógica pura) e Playwright (E2E) já implementados na Fase 1, adiantados em relação ao plano original.
