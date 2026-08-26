@@ -1,11 +1,13 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { Check, Printer, QrCode } from 'lucide-react'
+import QRCode from 'qrcode'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { storeSchema, type StoreFormInput } from '../../application/store/storeSchema'
 import type { Store } from '../../domain/store/Store'
-import { tableNumberRange } from '../../domain/store/tableQrUrl'
+import { buildTableMenuUrl, tableNumberRange } from '../../domain/store/tableQrUrl'
 import { useAuth } from '../auth/useAuth'
 import { useActiveStore } from '../storeContext/useActiveStore'
 import { useEffectiveStoreId } from '../storeContext/useEffectiveStoreId'
@@ -17,6 +19,7 @@ import { Input } from '../ui/Input'
 import { Label } from '../ui/Label'
 import { Switch } from '../ui/Switch'
 import { cardClass } from '../ui/styles'
+import { useDebouncedValue } from '../ui/useDebouncedValue'
 import { DEFAULT_NOTIFICATION_PREFS, useNotificationSettings } from './useNotificationSettings'
 import { printTableQrCodes } from './printTableQrCodes'
 
@@ -205,6 +208,7 @@ function StoreDataForm({ store }: { store: Store }) {
   const [tableFrom, setTableFrom] = useState('1')
   const [tableTo, setTableTo] = useState('10')
   const [isGeneratingQr, setIsGeneratingQr] = useState(false)
+  const [qrPreviewUrl, setQrPreviewUrl] = useState<string | null>(null)
 
   const {
     register,
@@ -219,6 +223,28 @@ function StoreDataForm({ store }: { store: Store }) {
 
   const slug = watch('slug')
   const supportsDineIn = watch('supportsDineIn')
+
+  const tableCount = tableNumberRange(Number(tableFrom), Number(tableTo)).length
+  const debouncedTableFrom = useDebouncedValue(tableFrom, 400)
+
+  useEffect(() => {
+    const storefrontUrl = import.meta.env.VITE_STOREFRONT_URL
+    if (!storefrontUrl || !slug || !debouncedTableFrom) {
+      setQrPreviewUrl(null)
+      return
+    }
+    let cancelled = false
+    QRCode.toDataURL(buildTableMenuUrl(storefrontUrl, slug, debouncedTableFrom), { margin: 1, width: 160 })
+      .then((url) => {
+        if (!cancelled) setQrPreviewUrl(url)
+      })
+      .catch(() => {
+        if (!cancelled) setQrPreviewUrl(null)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [slug, debouncedTableFrom])
 
   async function handleGenerateQrCodes() {
     if (!import.meta.env.VITE_STOREFRONT_URL) {
@@ -347,42 +373,83 @@ function StoreDataForm({ store }: { store: Store }) {
     </form>
 
     {slug && supportsDineIn && (
-      <div className={`${cardClass} space-y-4`}>
-        <div>
-          <h3 className="font-body font-medium">QR Code de mesa</h3>
-          <p className="text-sm font-body text-foreground/60">
-            Gera 1 QR Code por mesa, já com o número preenchido no cardápio — pra imprimir e colar
-            na mesa. Cliente escaneia e todo pedido feito ali entra automaticamente na mesma comanda
-            enquanto ela estiver aberta.
-          </p>
+      <div className={`${cardClass} space-y-5`}>
+        <div className="flex items-start gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-secondary">
+            <QrCode className="h-5 w-5" />
+          </div>
+          <div>
+            <h3 className="font-display font-semibold">QR Code de mesa</h3>
+            <p className="text-sm font-body text-foreground/60">
+              Gera 1 QR Code por mesa, já com o número preenchido no cardápio — pra imprimir e colar
+              na mesa. Cliente escaneia e todo pedido feito ali entra automaticamente na mesma comanda
+              enquanto ela estiver aberta.
+            </p>
+          </div>
         </div>
 
-        <div className="flex flex-wrap items-end gap-3">
-          <div className="space-y-1">
-            <Label htmlFor="tableFrom">Da mesa</Label>
-            <Input
-              id="tableFrom"
-              type="number"
-              min={1}
-              className="w-20"
-              value={tableFrom}
-              onChange={(event) => setTableFrom(event.target.value)}
-            />
+        <div className="grid gap-5 rounded-xl border border-secondary/10 bg-secondary/5 p-5 sm:grid-cols-[1fr_auto] sm:items-center">
+          <div>
+            <div className="flex flex-wrap items-end gap-3">
+              <div className="space-y-1">
+                <Label htmlFor="tableFrom">Da mesa</Label>
+                <Input
+                  id="tableFrom"
+                  type="number"
+                  min={1}
+                  className="w-20"
+                  value={tableFrom}
+                  onChange={(event) => setTableFrom(event.target.value)}
+                />
+              </div>
+              <span className="pb-2 text-sm text-foreground/40">até</span>
+              <div className="space-y-1">
+                <Label htmlFor="tableTo">Até a mesa</Label>
+                <Input
+                  id="tableTo"
+                  type="number"
+                  min={1}
+                  className="w-20"
+                  value={tableTo}
+                  onChange={(event) => setTableTo(event.target.value)}
+                />
+              </div>
+            </div>
+
+            <p
+              className={`mt-3 flex items-center gap-1.5 text-sm font-medium ${
+                tableCount > 0 && tableCount <= 100 ? 'text-secondary' : 'text-red-600'
+              }`}
+            >
+              {tableCount > 0 && tableCount <= 100 && <Check className="h-3.5 w-3.5 shrink-0" />}
+              {tableCount === 0
+                ? 'Intervalo inválido — "Da mesa" precisa ser menor ou igual a "Até a mesa"'
+                : tableCount > 100
+                  ? `Intervalo grande demais (${tableCount}) — gera no máximo 100 mesa por vez`
+                  : `Gera ${tableCount} QR Code${tableCount === 1 ? '' : 's'} (mesa ${tableFrom} até ${tableTo})`}
+            </p>
+
+            <Button
+              type="button"
+              onClick={handleGenerateQrCodes}
+              disabled={isGeneratingQr || tableCount === 0 || tableCount > 100}
+              className="mt-4 gap-2"
+            >
+              <Printer className="h-4 w-4" />
+              {isGeneratingQr ? 'Gerando...' : 'Gerar e imprimir'}
+            </Button>
           </div>
-          <div className="space-y-1">
-            <Label htmlFor="tableTo">Até a mesa</Label>
-            <Input
-              id="tableTo"
-              type="number"
-              min={1}
-              className="w-20"
-              value={tableTo}
-              onChange={(event) => setTableTo(event.target.value)}
-            />
-          </div>
-          <Button type="button" variant="outline" onClick={handleGenerateQrCodes} disabled={isGeneratingQr}>
-            {isGeneratingQr ? 'Gerando...' : 'Gerar e imprimir'}
-          </Button>
+
+          {qrPreviewUrl && (
+            <div className="flex flex-col items-center">
+              <img
+                src={qrPreviewUrl}
+                alt={`QR Code da mesa ${tableFrom}`}
+                className="h-24 w-24 rounded-lg border border-secondary/15 bg-white p-1.5"
+              />
+              <p className="mt-1.5 text-xs text-foreground/50">Mesa {tableFrom}</p>
+            </div>
+          )}
         </div>
       </div>
     )}

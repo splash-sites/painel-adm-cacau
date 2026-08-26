@@ -855,6 +855,15 @@ presentation/settings/SettingsPage.tsx  -- card próprio "QR Code de mesa" (só 
 
 **Testado ao vivo**: com `VITE_STOREFRONT_URL` configurado, gerar QR Codes de 3 mesas produziu 3 imagens distintas (conteúdo diferente por mesa, confirmado visualmente), nome da loja + número da mesa embaixo de cada uma, `window.print()` disparado corretamente.
 
+**Redesign visual do card (pedido do usuário, "tá muito feio")**: card original era só título/descrição + 2 `Input` soltos + botão `outline` genérico, sem hierarquia nem feedback. Antes de mexer no código, montei um preview em Artifact (HTML com os tokens de marca reais — `#F0ECD2`/`#CF9047`/`#7B431B`/`#2C120B`, Sora/Inter) comparando "como está" vs "proposta", aprovado pelo usuário antes de implementar. Mudanças:
+- Chip com ícone (`QrCode` do lucide-react, `bg-primary/15 text-secondary`) ao lado do título — dá âncora visual que o card não tinha.
+- Campos "Da mesa"/"Até a mesa" viraram um painel próprio (`rounded-xl border border-secondary/10 bg-secondary/5 p-5`), mesmo padrão das seções "Combo"/"Aplicar desconto" do `PromotionModal`.
+- Contador ao vivo reaproveitando `tableNumberRange` (mesma função que já valida no submit, não reimplementado): verde+check quando o intervalo é válido, vermelho quando inválido ou passa de 100 mesas — e o botão desabilita nesses 2 casos (antes só mostrava toast de erro depois do clique).
+- Botão virou `primary` (era `outline`, mas é a ação principal do card) com ícone `Printer`.
+- **Amostra de QR real ao vivo** (não decorativa) — `QRCode.toDataURL` (mesma lib de `printTableQrCodes.tsx`) gera a imagem da mesa em "Da mesa" a cada mudança, debounced 400ms (`useDebouncedValue`, mesmo hook de busca de produto), mostrando de fato o que vai ser impresso antes de gerar as N folhas — mesmo princípio de "sempre mostra preview antes de gravar" que a Importação de planilha já usa.
+
+**Testado ao vivo, os 3 estados**: intervalo válido (QR real da Mesa 1 aparecendo, contador "Gera 10 QR Codes"), intervalo invertido (mensagem vermelha, botão desabilitado), intervalo >100 (mensagem vermelha com o total, botão desabilitado) — screenshots batendo exatamente com o preview aprovado.
+
 **Storefront (fora daqui)**: rota combinada com quem implementa lá é `/:storeSlug/mesa/:tableNumber` (path, não query param — ajustado depois da primeira versão). Esse lado precisa ler o número da mesa nessa rota e pré-preencher no pedido (sem pedir pro cliente digitar), além de já vir marcado como `order_type = 'dine_in'`. Não testado ponta a ponta daqui — confirma com quem mexe no storefront se a rota já está implementada e lendo o parâmetro. O vínculo à comanda (trigger no Postgres, já pronto neste repo) funciona assim que o `table_number` chegar, de qualquer jeito que chegue.
 
 ## Feature: Combo e desconto em Promoções (implementado neste repo, storefront pendente)
