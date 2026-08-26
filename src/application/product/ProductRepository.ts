@@ -6,7 +6,9 @@ export interface ProductInput {
   name: string
   ncm: string | null
   unit: string | null
+  /** @deprecated texto livre, mantido só por compatibilidade — gravado junto com categoryId (nome espelhado), nunca só ele. */
   category: string | null
+  categoryId: string | null
   description: string | null
   imageUrl: string | null
   trackStock: boolean

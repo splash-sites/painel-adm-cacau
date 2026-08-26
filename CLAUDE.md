@@ -926,6 +926,45 @@ presentation/promotion/PromotionListPage.tsx -- linha da lista ganha "+N produto
 
 **Desconto sobre `lover_price` — implementado**: `PromotionComboItem` (domínio) e `Product` já carregavam `loverPrice`/`lover_price` — só faltava usar. `PromotionModal.tsx` agora calcula e mostra "Total do produto + combo" e "Total com desconto" com a versão lover ao lado (mesma `calculatePromotionBaseTotal`/`calculatePromotionDiscountedTotal`, chamada de novo com os preços lover de cada item). Testado ao vivo: água R$5/lover R$4 + fondue R$20/lover R$16, 20% off → normal R$20,00, lover R$16,00 — bateu exato nos dois. Storefront ainda precisa confirmar se replica esse cálculo lover também (não confirmado do lado deles ainda).
 
+## Feature: Categoria de produto (implementada)
+Pedido da cliente: no cadastro de produto não dava pra ver/reaproveitar categoria já usada — `category` era texto livre puro, sem autocomplete nem tabela própria, risco real de fragmentação silenciosa ("Bebidas" vs "bebidas" vs "Bebidas " virando 3 categorias diferentes na prática, mesmo aparentando a mesma coisa pro lojista). Perguntei se o ajuste devia ser só uma sugestão de UX (`<datalist>`) ou a correção de verdade no banco — **usuário escolheu a versão certa**: categoria vira entidade própria, mesmo padrão já usado pra Atendente/Grupo de Adicional/Grupo de Variação (tabela dedicada, RLS, CRUD, picker com busca + criação inline).
+
+**Cuidado de compatibilidade (mesmo motivo de sempre)**: `products.category` (texto) é lido direto pela produção (`main`) e pelo storefront — não podia sumir nem virar obrigatório de outro jeito. Solução: `category_id` novo (FK, nullable) vira a fonte de verdade daqui pra frente, e `category` (texto) continua gravado **espelhando o nome da categoria escolhida**, calculado no submit do `ProductModal` — nunca os dois divergindo, e nada em produção quebra até o dia (futuro, fora de escopo agora) de aposentar a coluna texto de vez.
+
+**Schema (criado, com backfill):**
+```
+categories (id, store_id, name, active, created_at)
+products.category_id  uuid null references categories(id)
+```
+Backfill rodado 1x na migration: agrupa o `category` texto já existente por loja, case/espaço-insensitive (`lower(trim(category))`), cria 1 linha em `categories` por grupo (nome canônico = `MIN(category)`, primeira grafia em ordem alfabética) e liga `products.category_id` de volta pelo match. RLS mesmo padrão de toda tabela de domínio (`super_admin`/`store_admin` via `for all` escopado por `store_id`) + leitura pública (`for select using (active = true)`, mesmo motivo de adicional/variação — storefront também lê).
+
+**Camadas (Clean Architecture) — implementado:**
+```
+domain/category/Category.ts                     -- entidade { id, storeId, name, active }
+application/category/CategoryRepository.ts       -- interface (porta)
+application/category/categorySchema.ts           -- Zod (name obrigatório, active)
+application/category/CategoryInUseError.ts       -- erro de exclusão bloqueada (produto vinculado), mesmo padrão de AttendantInUseError
+infrastructure/category/SupabaseCategoryRepository.ts -- implementação Supabase, catch do 23503 -> CategoryInUseError
+presentation/category/useCategories.ts            -- hooks React Query (list/save/delete), mesmo padrão de useAttendants
+presentation/category/CategoryModal.tsx           -- CRUD de categoria (modal), com onCreated pro fluxo de criação inline
+presentation/category/CategoryListPage.tsx        -- rota /produtos/categorias, lista simples (sem paginação, bounded por loja) + toolbar "← Produtos" (mesmo padrão de Ajuste 1, ver abaixo)
+```
+`domain/product/Product.ts` ganhou `categoryId: string | null` e `categoryName: string | null` (join só de exibição); `category` (texto) marcado `@deprecated`, mantido só por compatibilidade. `SupabaseProductRepository` usa `PRODUCT_SELECT = '*, categories(name)'` em vez de `select('*')` cru (mesmo padrão de `ORDER_SELECT`/`PROMOTION_SELECT`), e o filtro "Só produtos incompletos" trocou de `category.is.null` pra `category_id.is.null`. `isProductIncomplete` também passou a checar `categoryId`, não mais `category`.
+
+Entrada na UI: botão "Categorias" na toolbar de `/produtos` (ao lado de "Variações"), e dentro do `ProductModal`, o campo Categoria virou busca (`Combobox`, mesmo componente de Adicionais/Variações) com botão **"+ Nova categoria"** que abre `CategoryModal` sem sair do modal de produto — categoria recém-criada já fica selecionada na hora (`onCreated` seta `categoryId` no form). Herda de graça os 2 fixes centralizados em `ui/Dialog.tsx` (Escape não fecha o modal de produto junto, sem scroll-jump ao abrir a busca — ver "Ajuste 2" abaixo) por já usar o mesmo `Dialog`/`Combobox` compartilhado, zero código extra.
+
+**Testado ao vivo, ponta a ponta**: criar categoria nova inline durante cadastro de produto (toast "Categoria criada.", já vem selecionada) → buscar e escolher categoria já existente (lista mostrando "Bebidas/Doces/Pastel" reais da loja) → Escape com a busca aberta não fecha o modal de produto (regressão confirmada não reintroduzida) → scroll do modal não pula pro topo ao abrir a busca (`scrollTop` idêntico antes/depois, confirmado via instrumentação) → salvar grava `category_id` e `category` (texto espelhado) juntos → listagem de Produtos mostra a categoria certa na coluna e o badge "Incompleto" reage a `categoryId`, não mais ao texto antigo.
+
+## Ajuste 1 — navegação entre Produtos/Adicionais/Variações (implementado)
+Nas telas `/produtos/adicionais` e `/produtos/variacoes` não tinha como voltar pra Produtos nem trocar entre as duas sem usar o sidebar. As duas telas ganharam toolbar com botão "Produtos" (ícone `ArrowLeft` do lucide-react — projeto usa Radix + lucide-react, não shadcn, apesar da semelhança visual) + botão pra trocar pra seção irmã (Adicionais ↔ Variações), mesmo padrão replicado em Categorias (`CategoryListPage.tsx`).
+
+## Ajuste 2 — bugs de Dialog aninhado no ProductModal (implementado)
+Ao criar produto novo e usar a busca (`Combobox`) pra vincular Adicional/Variação já existente, 2 bugs reais:
+1. **Esc fechava o modal de produto inteiro**, não só a busca — perdia o formulário todo. Causa: `DismissableLayer` do Radix não isola Esc por camada quando o Popover não é portaled (trade-off já aceito antes por outro motivo, ver "Feature: Adicionais de produto"). Fix central em `ui/Dialog.tsx`: `onEscapeKeyDown` cancela o fechamento do Dialog se existir `[data-radix-popper-content-wrapper]` aberto na hora (cobre Popover/Select/DropdownMenu, não só Combobox).
+2. **Clicar só pra abrir a busca (sem digitar nada) fazia o conteúdo do modal pular pro topo**, perdendo a posição de scroll. Causa: `DialogContent` centralizava via `transform` (`-translate-x-1/2 -translate-y-1/2`), e `transform` num ancestral vira *containing block* de descendente `position: fixed` (regra do CSS) — o Popper do Radix usa `fixed`, calculava posição relativa ao container com scroll em vez do viewport, e o navegador "corrigia" isso resetando o scroll. Fix: `DialogContent` trocou a centralização por wrapper flexbox (`fixed inset-0 flex items-center justify-center`) em vez de `transform` no conteúdo — sem `transform` em nenhum ancestral, Popper volta a se posicionar certo relativo ao viewport real.
+
+Os dois fixes moram em `ui/Dialog.tsx` (não em `ProductModal.tsx` nem em `Combobox.tsx`) — qualquer novo uso de `Dialog`+`Popover`/`Select` aninhado no app inteiro já herda os dois de graça (confirmado: a seção de Categoria acima usa exatamente esse caminho, sem precisar de nenhum ajuste extra).
+
 ## Testes
 - Vitest + Testing Library (unitário — `domain`/`application`, sem mockar Supabase, é lógica pura) e Playwright (E2E) já implementados na Fase 1, adiantados em relação ao plano original.
 - E2E real: login → avançar status do pedido → reflete no kanban. Roda contra o Supabase de dev de verdade (não staging — staging só chega na Fase 2), com conta de teste em `.env.local` (`E2E_TEST_EMAIL`/`E2E_TEST_PASSWORD`, nunca commitado).

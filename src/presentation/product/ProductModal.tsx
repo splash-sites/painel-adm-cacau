@@ -1,16 +1,20 @@
 import { useState, type ChangeEvent } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import { productSchema, type ProductFormInput } from '../../application/product/productSchema'
 import type { Product } from '../../domain/product/Product'
 import { uploadProductImage } from '../../infrastructure/storage/uploadProductImage'
+import { CategoryModal } from '../category/CategoryModal'
+import { useCategoryList } from '../category/useCategories'
 import { useLinkAddonGroupToProduct } from './addons/useAddons'
 import { ProductAddonGroupsSection, type DraftAddonLink } from './addons/ProductAddonGroupsSection'
 import { useLinkVariationGroupToProduct } from './variations/useVariations'
 import { ProductVariationGroupsSection } from './variations/ProductVariationGroupsSection'
 import { Button } from '../ui/Button'
 import { Checkbox } from '../ui/Checkbox'
+import { Combobox } from '../ui/Combobox'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogTitle } from '../ui/Dialog'
 import { Input } from '../ui/Input'
 import { Label } from '../ui/Label'
@@ -25,7 +29,7 @@ const emptyDefaults: ProductFormInput = {
   loverPrice: 0,
   trackStock: true,
   stockQuantity: 0,
-  category: '',
+  categoryId: null,
   availableDineIn: true,
   availablePickup: true,
   availableDelivery: false,
@@ -43,7 +47,7 @@ function toDefaults(product: Product): ProductFormInput {
     ...product,
     ncm: product.ncm ?? '',
     unit: product.unit ?? '',
-    category: product.category ?? '',
+    categoryId: product.categoryId,
     description: product.description ?? '',
     imageUrl: product.imageUrl ?? '',
     costPrice: product.costPrice ?? undefined,
@@ -62,8 +66,10 @@ export function ProductModal({
   const saveProduct = useSaveProduct()
   const linkVariationGroup = useLinkVariationGroupToProduct()
   const linkAddonGroup = useLinkAddonGroupToProduct()
+  const { data: categories } = useCategoryList(storeId)
   const [imageError, setImageError] = useState<string | null>(null)
   const [isUploadingImage, setIsUploadingImage] = useState(false)
+  const [isCreatingCategory, setIsCreatingCategory] = useState(false)
   const [draftVariationGroupIds, setDraftVariationGroupIds] = useState<string[]>([])
   const [draftAddonLinks, setDraftAddonLinks] = useState<DraftAddonLink[]>([])
   // Rastreia o produto já criado nesse fluxo — se o vínculo de adicional/variação falhar depois de
@@ -84,6 +90,11 @@ export function ProductModal({
 
   const trackStock = watch('trackStock')
   const imageUrl = watch('imageUrl')
+  const categoryId = watch('categoryId')
+  const currentCategory = categories?.find((category) => category.id === categoryId)
+  const categoryOptions = (categories ?? [])
+    .filter((category) => category.active)
+    .map((category) => ({ value: category.id, label: category.name }))
 
   async function handleImageChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0]
@@ -110,7 +121,10 @@ export function ProductModal({
           ...input,
           ncm: input.ncm || null,
           unit: input.unit || null,
-          category: input.category || null,
+          categoryId: input.categoryId,
+          // category (texto) fica gravado junto, espelhando o nome da categoria escolhida — main
+          // em produção e o storefront ainda leem esse campo direto, nunca ficou opcional de verdade.
+          category: categories?.find((category) => category.id === input.categoryId)?.name ?? null,
           description: input.description || null,
           imageUrl: input.imageUrl || null,
           costPrice: input.costPrice ?? null,
@@ -211,9 +225,45 @@ export function ProductModal({
           </div>
 
           <div className="space-y-1">
-            <Label htmlFor="category">Categoria</Label>
-            <Input id="category" {...register('category')} />
+            <div className="flex items-center justify-between">
+              <Label>Categoria</Label>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsCreatingCategory(true)}
+                className="h-7 gap-1 px-2 text-xs"
+              >
+                <Plus className="h-3 w-3" />
+                Nova categoria
+              </Button>
+            </div>
+            {currentCategory && (
+              <p className="font-body text-sm text-foreground/70">
+                Categoria atual: <span className="font-medium text-foreground">{currentCategory.name}</span>
+              </p>
+            )}
+            <Controller
+              control={control}
+              name="categoryId"
+              render={({ field }) => (
+                <Combobox
+                  placeholder="Buscar categoria..."
+                  emptyLabel="Nenhuma categoria encontrada."
+                  options={categoryOptions}
+                  onSelect={field.onChange}
+                />
+              )}
+            />
+            {errors.categoryId && <p className="text-sm text-red-600">{errors.categoryId.message}</p>}
           </div>
+
+          {isCreatingCategory && (
+            <CategoryModal
+              storeId={storeId}
+              onClose={() => setIsCreatingCategory(false)}
+              onCreated={(category) => setValue('categoryId', category.id, { shouldValidate: true })}
+            />
+          )}
 
           <fieldset className="space-y-2 rounded-lg bg-secondary/5 p-3">
             <legend className="text-sm font-body mb-1 px-1">Tipo cardápio</legend>

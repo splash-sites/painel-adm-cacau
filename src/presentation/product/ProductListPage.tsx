@@ -93,6 +93,9 @@ export function ProductListPage() {
             <Button variant="outline" onClick={() => navigate('/produtos/variacoes')}>
               Variações
             </Button>
+            <Button variant="outline" onClick={() => navigate('/produtos/categorias')}>
+              Categorias
+            </Button>
             <Button onClick={() => setIsCreating(true)}>Novo produto</Button>
           </div>
         )}
@@ -160,7 +163,7 @@ export function ProductListPage() {
                   </td>
                   <td className="py-3 truncate">{formatCurrency(product.price)}</td>
                   <td className="py-3 truncate">{formatCurrency(product.loverPrice)}</td>
-                  <td className="py-3 truncate">{product.category ?? '—'}</td>
+                  <td className="py-3 truncate">{product.categoryName ?? '—'}</td>
                   <td className="py-3 truncate text-sm">{menuTypeLabel(product)}</td>
                   <td className="py-3 pr-6 text-right">
                     <div className="flex items-center justify-end gap-1">

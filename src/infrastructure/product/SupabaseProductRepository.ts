@@ -18,6 +18,8 @@ interface ProductRow {
   ncm: string | null
   unit: string | null
   category: string | null
+  category_id: string | null
+  categories: { name: string } | null
   description: string | null
   image_url: string | null
   track_stock: boolean
@@ -42,6 +44,8 @@ function toProduct(row: ProductRow): Product {
     ncm: row.ncm,
     unit: row.unit,
     category: row.category,
+    categoryId: row.category_id,
+    categoryName: row.categories?.name ?? null,
     description: row.description,
     imageUrl: row.image_url,
     trackStock: row.track_stock,
@@ -65,6 +69,7 @@ function toRow(input: ProductInput) {
     ncm: input.ncm,
     unit: input.unit,
     category: input.category,
+    category_id: input.categoryId,
     description: input.description,
     image_url: input.imageUrl,
     track_stock: input.trackStock,
@@ -81,6 +86,8 @@ function toRow(input: ProductInput) {
   }
 }
 
+const PRODUCT_SELECT = '*, categories(name)'
+
 export class SupabaseProductRepository implements ProductRepository {
   async list({ storeId, page, pageSize, incompleteOnly }: ProductListParams): Promise<ProductListResult> {
     const from = page * pageSize
@@ -88,11 +95,11 @@ export class SupabaseProductRepository implements ProductRepository {
 
     let query = supabase
       .from('products')
-      .select('*', { count: 'exact' })
+      .select(PRODUCT_SELECT, { count: 'exact' })
       .eq('store_id', storeId)
 
     if (incompleteOnly) {
-      query = query.or('category.is.null,image_url.is.null')
+      query = query.or('category_id.is.null,image_url.is.null')
     }
 
     const { data, error, count } = await query.order('sort_order').range(from, to)
@@ -103,7 +110,7 @@ export class SupabaseProductRepository implements ProductRepository {
   }
 
   async getById(id: string): Promise<Product | null> {
-    const { data, error } = await supabase.from('products').select('*').eq('id', id).single()
+    const { data, error } = await supabase.from('products').select(PRODUCT_SELECT).eq('id', id).single()
     if (error || !data) return null
     return toProduct(data as ProductRow)
   }
@@ -112,7 +119,7 @@ export class SupabaseProductRepository implements ProductRepository {
     const { data, error } = await supabase
       .from('products')
       .insert({ ...toRow(input), store_id: storeId })
-      .select()
+      .select(PRODUCT_SELECT)
       .single()
     if (error || !data) throw new Error(error?.message ?? 'Falha ao criar produto')
     return toProduct(data as ProductRow)
@@ -123,7 +130,7 @@ export class SupabaseProductRepository implements ProductRepository {
       .from('products')
       .update(toRow(input))
       .eq('id', id)
-      .select()
+      .select(PRODUCT_SELECT)
       .single()
     if (error || !data) throw new Error(error?.message ?? 'Falha ao atualizar produto')
     return toProduct(data as ProductRow)
@@ -138,7 +145,7 @@ export class SupabaseProductRepository implements ProductRepository {
   }
 
   async searchActive(storeId: string, query: string): Promise<Product[]> {
-    let request = supabase.from('products').select('*').eq('store_id', storeId).eq('active', true)
+    let request = supabase.from('products').select(PRODUCT_SELECT).eq('store_id', storeId).eq('active', true)
 
     const trimmed = query.trim()
     if (trimmed) request = request.ilike('name', `%${trimmed}%`)

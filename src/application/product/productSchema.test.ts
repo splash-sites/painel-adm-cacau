@@ -5,6 +5,7 @@ function makeInput(overrides: Partial<Record<string, unknown>> = {}) {
   return {
     externalCode: 'ABC',
     name: 'Bombom',
+    categoryId: null,
     trackStock: false,
     stockQuantity: 10,
     price: 5.9,

@@ -11,6 +11,8 @@ function makeProduct(overrides: Partial<Product> = {}): Product {
     ncm: null,
     unit: null,
     category: 'Chocolates',
+    categoryId: 'category-1',
+    categoryName: 'Chocolates',
     description: null,
     imageUrl: 'https://example.com/img.png',
     trackStock: false,
@@ -29,12 +31,12 @@ function makeProduct(overrides: Partial<Product> = {}): Product {
 }
 
 describe('isProductIncomplete', () => {
-  it('is false when category and imageUrl are set', () => {
+  it('is false when categoryId and imageUrl are set', () => {
     expect(isProductIncomplete(makeProduct())).toBe(false)
   })
 
-  it('is true when category is missing', () => {
-    expect(isProductIncomplete(makeProduct({ category: null }))).toBe(true)
+  it('is true when categoryId is missing', () => {
+    expect(isProductIncomplete(makeProduct({ categoryId: null }))).toBe(true)
   })
 
   it('is true when imageUrl is missing', () => {
@@ -42,6 +44,6 @@ describe('isProductIncomplete', () => {
   })
 
   it('is true when both are missing', () => {
-    expect(isProductIncomplete(makeProduct({ category: null, imageUrl: null }))).toBe(true)
+    expect(isProductIncomplete(makeProduct({ categoryId: null, imageUrl: null }))).toBe(true)
   })
 })

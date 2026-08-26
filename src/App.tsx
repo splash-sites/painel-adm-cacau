@@ -9,6 +9,7 @@ import { ProductListPage } from './presentation/product/ProductListPage'
 import { ProductImportPage } from './presentation/product/import/ProductImportPage'
 import { AddonGroupListPage } from './presentation/product/addons/AddonGroupListPage'
 import { VariationGroupListPage } from './presentation/product/variations/VariationGroupListPage'
+import { CategoryListPage } from './presentation/category/CategoryListPage'
 import { AdminUserListPage } from './presentation/admin/AdminUserListPage'
 import { SetupFirstAdminPage } from './presentation/admin/SetupFirstAdminPage'
 import { SettingsPage } from './presentation/settings/SettingsPage'
@@ -36,6 +37,7 @@ function App() {
           <Route path="/produtos/importar" element={<ProductImportPage />} />
           <Route path="/produtos/adicionais" element={<AddonGroupListPage />} />
           <Route path="/produtos/variacoes" element={<VariationGroupListPage />} />
+          <Route path="/produtos/categorias" element={<CategoryListPage />} />
           <Route path="/atendentes" element={<AttendantListPage />} />
           <Route path="/promocoes" element={<PromotionListPage />} />
           <Route

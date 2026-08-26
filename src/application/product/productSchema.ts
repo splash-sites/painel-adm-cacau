@@ -5,7 +5,7 @@ export const productSchema = z.object({
   name: z.string().min(1, 'Descrição obrigatória'),
   ncm: z.string().optional(),
   unit: z.string().optional(),
-  category: z.string().optional(),
+  categoryId: z.string().nullable(),
   description: z.string().optional(),
   imageUrl: z.string().optional(),
   trackStock: z.boolean(),
