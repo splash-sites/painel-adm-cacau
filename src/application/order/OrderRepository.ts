@@ -53,6 +53,8 @@ export interface OrderRepository {
   addItem(orderId: string, productId: string, quantity: number, selection?: OrderItemSelection): Promise<void>
   /** Atualiza quantidade e reescreve por completo a variação/adicional do item (não é um patch parcial). */
   updateItem(itemId: string, quantity: number, selection?: OrderItemSelection): Promise<void>
+  /** Só quantidade — usa quando a seleção (variação/adicional) do item não mudou, pra não re-precificar com o valor de hoje. */
+  updateItemQuantity(itemId: string, quantity: number): Promise<void>
   removeItem(itemId: string): Promise<void>
   subscribeToStoreOrders(
     storeId: string,

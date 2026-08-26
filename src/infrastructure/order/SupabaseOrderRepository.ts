@@ -193,6 +193,16 @@ export class SupabaseOrderRepository implements OrderRepository {
     if (error) throw new Error(error.message)
   }
 
+  /** Só quantidade, sem tocar em order_item_variations/order_item_addons — update_order_item reescreve
+   * (delete+insert) a seleção inteira, o que re-precificaria adicional/variação pro valor de hoje. */
+  async updateItemQuantity(itemId: string, quantity: number): Promise<void> {
+    const { error } = await supabase.rpc('update_order_item_quantity', {
+      p_item_id: itemId,
+      p_quantity: quantity,
+    })
+    if (error) throw new Error(error.message)
+  }
+
   async removeItem(itemId: string): Promise<void> {
     const { error } = await supabase.rpc('remove_order_item', { p_item_id: itemId })
     if (error) throw new Error(error.message)

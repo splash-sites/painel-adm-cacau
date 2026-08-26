@@ -10,7 +10,7 @@ import { Label } from '../ui/Label'
 import { cardClass } from '../ui/styles'
 import { useDebouncedValue } from '../ui/useDebouncedValue'
 import { ItemSelectionFields, type ItemSelectionValue } from './ItemSelectionFields'
-import { useAddOrderItem, useRemoveOrderItem, useUpdateOrderItem } from './useOrders'
+import { useAddOrderItem, useRemoveOrderItem, useUpdateOrderItem, useUpdateOrderItemQuantity } from './useOrders'
 
 const emptySelection: ItemSelectionValue = { variationOptionIds: [], addons: [] }
 
@@ -91,6 +91,7 @@ function ExistingItemCard({
   canRemove: boolean
 }) {
   const updateItem = useUpdateOrderItem()
+  const updateItemQuantity = useUpdateOrderItemQuantity()
   const [quantity, setQuantity] = useState(item.quantity)
   const [selection, setSelection] = useState<ItemSelectionValue>(emptySelection)
   const [selectionValid, setSelectionValid] = useState(true)
@@ -119,11 +120,7 @@ function ExistingItemCard({
     if (isEditing || newQuantity < 1 || newQuantity === item.quantity) return
     setError(null)
     try {
-      await updateItem.mutateAsync({
-        itemId: item.id,
-        quantity: newQuantity,
-        selection: { variationOptionIds: initialVariationOptionIds, addons: initialAddons },
-      })
+      await updateItemQuantity.mutateAsync({ itemId: item.id, quantity: newQuantity })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Falha ao atualizar quantidade')
     }

@@ -88,6 +88,19 @@ export function useUpdateOrderItem() {
   })
 }
 
+/** Só quantidade (fora do modo "editar seleção") — não reescreve variação/adicional, evita re-precificar com o valor de hoje. */
+export function useUpdateOrderItemQuantity() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ itemId, quantity }: { itemId: string; quantity: number }) =>
+      orderRepository.updateItemQuantity(itemId, quantity),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['orders'] })
+    },
+  })
+}
+
 /** Bulk pra "Finalizar tudo" do card mesclado de mesa — cada avanço passa pelo change_order_status de sempre, só a orquestração é client-side. */
 export function useFinalizeTableOrders() {
   const queryClient = useQueryClient()
