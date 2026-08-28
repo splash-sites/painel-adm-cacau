@@ -22,12 +22,21 @@ function cellToPlainValue(value: ExcelJS.CellValue): unknown {
   return value
 }
 
-/** Conta ocorrências de `,` vs `;` na 1ª linha não-vazia pra decidir o delimitador — Excel em
- * pt-BR costuma exportar CSV com `;` (vírgula é separador decimal nesse locale). */
+/** Soma ocorrências de `,` vs `;` nas primeiras linhas não-vazias pra decidir o delimitador —
+ * Excel em pt-BR costuma exportar CSV com `;` (vírgula é separador decimal nesse locale).
+ * Varre várias linhas (não só a 1ª) porque planilha real costuma ter linha de título sem
+ * delimitador nenhum antes do cabeçalho — olhar só a 1ª linha cairia sempre em `,`. */
 function detectCsvDelimiter(text: string): string {
-  const firstLine = text.split(/\r?\n/).find((line) => line.trim() !== '') ?? ''
-  const commaCount = (firstLine.match(/,/g) ?? []).length
-  const semicolonCount = (firstLine.match(/;/g) ?? []).length
+  const lines = text
+    .split(/\r?\n/)
+    .filter((line) => line.trim() !== '')
+    .slice(0, 10)
+  let commaCount = 0
+  let semicolonCount = 0
+  for (const line of lines) {
+    commaCount += (line.match(/,/g) ?? []).length
+    semicolonCount += (line.match(/;/g) ?? []).length
+  }
   return semicolonCount > commaCount ? ';' : ','
 }
 

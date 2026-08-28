@@ -1,5 +1,6 @@
 import type { Product } from '../../domain/product/Product'
 import type { ImportPreviewRow } from '../../domain/product/import/buildImportPreview'
+import type { ProductImportValues } from '../../domain/product/import/ProductImportRow'
 
 export interface ProductInput {
   externalCode: string
@@ -48,8 +49,19 @@ export interface ProductRepository {
   create(storeId: string, input: ProductInput): Promise<Product>
   update(id: string, input: ProductInput): Promise<Product>
   delete(id: string): Promise<void>
-  listExternalCodes(storeId: string): Promise<Set<string>>
+  /**
+   * Estado atual dos produtos que a importação vai tocar, indexado por `external_code`.
+   * Usado pra decidir create vs update e pra manter as colunas cujas células vieram vazias.
+   */
+  listForImportMerge(
+    storeId: string,
+    externalCodes: string[],
+  ): Promise<Map<string, ProductImportValues>>
   /** Busca por nome, produto ativo, escopada no servidor (nunca "traz tudo e filtra no client"). */
   searchActive(storeId: string, query: string): Promise<Product[]>
-  bulkUpsertFromImport(storeId: string, rows: ImportPreviewRow[]): Promise<ProductImportSummary>
+  bulkUpsertFromImport(
+    storeId: string,
+    rows: ImportPreviewRow[],
+    categoryIdByName: Map<string, string>,
+  ): Promise<ProductImportSummary>
 }

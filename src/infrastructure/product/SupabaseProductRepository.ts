@@ -9,6 +9,27 @@ import type {
 import { ProductInUseError } from '../../application/product/ProductInUseError'
 import type { Product } from '../../domain/product/Product'
 import type { ImportPreviewRow } from '../../domain/product/import/buildImportPreview'
+import type { ProductImportValues } from '../../domain/product/import/ProductImportRow'
+
+/** Colunas mínimas pra montar o snapshot de merge da importação (ver listForImportMerge). */
+interface ImportMergeRow {
+  external_code: string
+  description: string | null
+  category: string | null
+  categories: { name: string } | null
+  ncm: string | null
+  unit: string | null
+  track_stock: boolean
+  stock_quantity: number
+  cost_price: number | null
+  price: number
+  lover_price: number
+  sort_order: number
+  active: boolean
+  available_dine_in: boolean
+  available_pickup: boolean
+  available_reseller: boolean
+}
 
 interface ProductRow {
   id: string
@@ -155,32 +176,85 @@ export class SupabaseProductRepository implements ProductRepository {
     return (data as ProductRow[]).map(toProduct)
   }
 
-  async listExternalCodes(storeId: string): Promise<Set<string>> {
-    const { data, error } = await supabase
-      .from('products')
-      .select('external_code')
-      .eq('store_id', storeId)
-    if (error) throw new Error(error.message)
-    return new Set((data ?? []).map((row) => row.external_code as string))
+  async listForImportMerge(
+    storeId: string,
+    externalCodes: string[],
+  ): Promise<Map<string, ProductImportValues>> {
+    const result = new Map<string, ProductImportValues>()
+    const CHUNK = 200
+    const codes = [...new Set(externalCodes)]
+
+    for (let i = 0; i < codes.length; i += CHUNK) {
+      const chunk = codes.slice(i, i + CHUNK)
+      if (chunk.length === 0) continue
+
+      const { data, error } = await supabase
+        .from('products')
+        .select(
+          'external_code, description, category, categories(name), ncm, unit, track_stock, stock_quantity, cost_price, price, lover_price, sort_order, active, available_dine_in, available_pickup, available_reseller',
+        )
+        .eq('store_id', storeId)
+        .in('external_code', chunk)
+
+      if (error) throw new Error(error.message)
+
+      for (const row of (data ?? []) as unknown as ImportMergeRow[]) {
+        result.set(row.external_code, {
+          description: row.description,
+          categoryName: row.categories?.name ?? row.category ?? null,
+          ncm: row.ncm,
+          unit: row.unit,
+          trackStock: row.track_stock,
+          stockQuantity: row.stock_quantity,
+          costPrice: row.cost_price,
+          price: row.price,
+          loverPrice: row.lover_price,
+          sortOrder: row.sort_order,
+          active: row.active,
+          availableDineIn: row.available_dine_in,
+          availablePickup: row.available_pickup,
+          availableReseller: row.available_reseller,
+        })
+      }
+    }
+
+    return result
   }
 
   async bulkUpsertFromImport(
     storeId: string,
     rows: ImportPreviewRow[],
+    categoryIdByName: Map<string, string>,
   ): Promise<ProductImportSummary> {
     const created = rows.filter((row) => row.action === 'create').length
     const updated = rows.length - created
 
-    const payload = rows.map((row) => ({
+    const payload = rows.map(({ externalCode, name, resolved }) => ({
       store_id: storeId,
-      external_code: row.externalCode,
-      name: row.name,
-      ncm: row.ncm,
-      unit: row.unit,
-      stock_quantity: row.stockQuantity,
-      cost_price: row.costPrice,
-      price: row.price,
-      sort_order: row.sortOrder,
+      external_code: externalCode,
+      name,
+      description: resolved.description,
+      // Espelho em texto do nome da categoria (main/storefront ainda leem products.category direto,
+      // mesmo padrão do ProductModal). Nas atualizações resolved.* já carrega o valor atual quando
+      // a célula veio vazia, então nada é apagado sem querer.
+      category: resolved.categoryName,
+      category_id: resolved.categoryName
+        ? categoryIdByName.get(resolved.categoryName.toLowerCase()) ?? null
+        : null,
+      ncm: resolved.ncm,
+      unit: resolved.unit,
+      track_stock: resolved.trackStock,
+      stock_quantity: resolved.stockQuantity,
+      cost_price: resolved.costPrice,
+      price: resolved.price,
+      lover_price: resolved.loverPrice,
+      sort_order: resolved.sortOrder,
+      active: resolved.active,
+      available_dine_in: resolved.availableDineIn,
+      available_pickup: resolved.availablePickup,
+      available_reseller: resolved.availableReseller,
+      // available_delivery e image_url ficam de fora: upsert parcial preserva o valor atual
+      // (e usa o default da coluna em produto novo).
     }))
 
     const { error } = await supabase

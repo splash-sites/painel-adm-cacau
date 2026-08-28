@@ -51,6 +51,15 @@ describe('XlsxSpreadsheetParser', () => {
     expect(rows).toEqual([{ Código: '1', Descrição: 'Produto X', Estoque: '10' }])
   })
 
+  it('detecta delimitador `;` mesmo com linha de título (sem delimitador) antes do cabeçalho', async () => {
+    const file = makeCsvFile(
+      'RELATORIO DE ESTOQUE\n\nCódigo;Descrição;Estoque\n1;Café coado, na hora;10',
+    )
+    const parser = new XlsxSpreadsheetParser()
+    const rows = await parser.parseFile(file)
+    expect(rows).toEqual([{ Código: '1', Descrição: 'Café coado, na hora', Estoque: '10' }])
+  })
+
   it('parseia CSV com campo entre aspas contendo o delimitador', async () => {
     const file = makeCsvFile('Código,Descrição,Estoque\n1,"Produto, especial",10')
     const parser = new XlsxSpreadsheetParser()

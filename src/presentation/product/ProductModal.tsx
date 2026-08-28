@@ -281,16 +281,11 @@ export function ProductModal({
                 name="availablePickup"
                 render={({ field }) => <Checkbox checked={field.value} onCheckedChange={field.onChange} />}
               />
-              Para levar
+              Para levar/entrega
             </label>
-            <label className="flex items-center gap-2 font-body">
-              <Controller
-                control={control}
-                name="availableDelivery"
-                render={({ field }) => <Checkbox checked={field.value} onCheckedChange={field.onChange} />}
-              />
-              Delivery
-            </label>
+            {/* "Delivery" (availableDelivery) não é mais editável aqui — o storefront unificou
+                "para levar" e "entrega" num cardápio só, lendo available_pickup. A coluna
+                continua no banco (produtos antigos mantêm o valor), só saiu da UI. */}
             <label className="flex items-center gap-2 font-body">
               <Controller
                 control={control}

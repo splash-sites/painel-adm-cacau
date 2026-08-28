@@ -32,20 +32,44 @@ function parseText(raw: unknown): string | null {
   return text || null
 }
 
-/** Colunas Local/Custo Total/Preço Total/Situação são ignoradas por não terem alias mapeado aqui. */
+/** Coluna sim/não. `null` quando a célula está vazia ou tem valor não reconhecido — "não informado". */
+function parseYesNo(raw: unknown): boolean | null {
+  const text = normalizeHeader(String(raw ?? ''))
+  if (['sim', 's', 'true', '1', 'x', 'yes', 'ativo', 'ativa'].includes(text)) return true
+  if (['nao', 'n', 'false', '0', 'no', 'inativo', 'inativa'].includes(text)) return false
+  return null
+}
+
+/**
+ * Só extrai os valores da linha, sem aplicar default nenhum — célula vazia vira `null`
+ * ("não informado"). A resolução (manter valor atual vs. usar default) é do resolveImportValues.
+ * Colunas Local/Custo Total/Preço Total/Situação são ignoradas por não terem alias mapeado aqui.
+ */
 export function parseProductImportRow(record: Record<string, unknown>): ProductImportRow | null {
   const externalCode = parseText(findValue(record, ['codigo']))
   const name = parseText(findValue(record, ['descricao']))
   if (!externalCode || !name) return null
 
+  const trackStock = parseYesNo(findValue(record, ['utilizara estoque', 'usar estoque', 'controla estoque', 'controlar estoque']))
+  const rawStock = parseNumber(findValue(record, ['estoque']))
+
   return {
     externalCode,
     name,
+    description: parseText(findValue(record, ['descricao detalhada', 'descricao completa', 'detalhes'])),
+    categoryName: parseText(findValue(record, ['categoria'])),
     ncm: parseText(findValue(record, ['ncm'])),
     unit: parseText(findValue(record, ['unidade'])),
-    stockQuantity: parseNumber(findValue(record, ['estoque'])) ?? 0,
+    trackStock,
+    // "Utilizará estoque = não" força quantidade 0 mesmo se a célula Estoque tiver valor (igual ProductModal).
+    stockQuantity: trackStock === false ? 0 : rawStock,
     costPrice: parseNumber(findValue(record, ['custo r$', 'custo'])),
-    price: parseNumber(findValue(record, ['preco r$', 'preco'])) ?? 0,
-    sortOrder: parseNumber(findValue(record, ['ordem'])) ?? 0,
+    price: parseNumber(findValue(record, ['preco r$', 'preco'])),
+    loverPrice: parseNumber(findValue(record, ['lover r$', 'preco lover r$', 'preco lover', 'lover'])),
+    sortOrder: parseNumber(findValue(record, ['ordem'])),
+    active: parseYesNo(findValue(record, ['ativo', 'ativa', 'produto ativo'])),
+    availableDineIn: parseYesNo(findValue(record, ['cafeteria', 'consumo no local', 'salao'])),
+    availablePickup: parseYesNo(findValue(record, ['para levar/entrega', 'para levar', 'retirada', 'entrega'])),
+    availableReseller: parseYesNo(findValue(record, ['revendedor', 'revenda', 'atacado'])),
   }
 }

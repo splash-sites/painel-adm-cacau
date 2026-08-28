@@ -280,6 +280,9 @@ promotions            (id, store_id, title, subtitle, badge_label, image_url, pr
 Mesma loja, mesmo preço, cadastro livre igual cliente comum — **não é um papel novo em `profiles`**, é só uma vitrine e um fluxo diferentes dentro do mesmo app do storefront. Slug sempre derivado do slug da loja (`{slug-da-loja}/atacado`), nunca um campo separado pra configurar — se a loja não tem `reseller_enabled = true`, essa rota simplesmente não existe pra ela. Catálogo filtra por `available_reseller` em vez de `available_retail`; pedido nasce com `sales_channel = 'reseller'` e não oferece `dine_in` como tipo.
 No dashboard de pedidos, o filtro por canal (varejo/atacado) é uma dimensão a mais, separada do filtro por tipo (local/retirada/delivery) já existente.
 
+## Tipo de cardápio no produto (`available_*`)
+Toggles no `ProductModal` e coluna "Tipo cardápio" na lista de produtos: **Cafeteria** (`available_dine_in`), **Para levar/entrega** (`available_pickup`), **Revendedor** (`available_reseller`). O storefront do colega unificou "para levar" e "entrega" num cardápio só, lendo `available_pickup` — então **`available_delivery` foi aposentado da UI do admin**: o toggle "Delivery" saiu do modal e o badge "Delivery" saiu da lista (`ProductModal.tsx`, `ProductListPage.tsx` `menuTypeLabel`). A coluna `available_delivery` **continua no banco** e no schema/form (`productSchema`, `emptyDefaults`) — produto que já tinha `true` mantém o valor, salvar no modal reescreve o que estava lá, produto novo nasce `false`. Se aparecer produto só com `delivery=true`/`pickup=false`, ele some do cardápio unificado e não dá mais pra ver isso pela tela — checar por SQL e marcar "Para levar/entrega". A importação de planilha escreve os 3 canais vivos, nunca `available_delivery`.
+
 ## Arquitetura limpa (Clean Architecture)
 4 camadas, dependência sempre de fora pra dentro:
 ```
@@ -377,19 +380,38 @@ Formato real recebido da loja (Excel/CSV, colunas nessa ordem):
 |---|---|---|
 | Código | `external_code` | chave de upsert — reimportar não duplica, atualiza pelo `(store_id, external_code)` |
 | Descrição | `name` | |
+| Descrição detalhada | `description` | opcional. Texto livre do cardápio. **Não confundir com "Descrição"** (→ `name`). Aliases: "Descrição detalhada", "Descrição completa", "Detalhes" |
+| Categoria | `category_id` + `category` (texto espelho) | opcional. Nome da categoria. **Categoria que ainda não existe na loja é criada automaticamente** (`active=true`) — comparação sem caixa. Preview lista antes quais vão ser criadas. Resolução nome→id acontece em `useProductImport.ts` (client), não no domínio (que é puro) |
 | NCM | `ncm` | fiscal, guardado mas não usado em regra de negócio |
 | Unidade | `unit` | UN, KG, L etc. |
 | Local | — | ignorada (sempre "Loja" nas planilhas reais, sem valor informativo) |
-| Estoque | `stock_quantity` | |
+| Estoque | `stock_quantity` | ignorado (gravado como 0) quando "Utilizará estoque" = não |
+| Utilizará estoque | `track_stock` | opcional, sim/não. `não`/`n`/`0`/`false` → `track_stock=false` (e zera `stock_quantity` mesmo se a célula Estoque tiver valor). Vazia → mantém/`true` (ver regra de célula vazia abaixo). Aliases: "Utilizará estoque", "Usar estoque", "Controla estoque", "Controlar estoque" |
 | Custo R$ | `cost_price` | **nunca exposto no storefront** — só leitura autenticada de `store_admin`/`super_admin` |
 | Preço R$ | `price` | preço visível ao cliente |
+| Lover R$ | `lover_price` | opcional. Vazia ao **criar** → `lover_price = price` (cliente lover paga o mesmo); vazia ao **atualizar** → mantém o lover atual. Aliases: "Lover R$", "Preço lover R$", "Preço lover", "Lover" |
+| Cafeteria | `available_dine_in` | opcional, sim/não. Vazia → mantém/`true`. Aliases: "Cafeteria", "Consumo no local", "Salão" |
+| Para levar/entrega | `available_pickup` | opcional, sim/não. Vazia → mantém/`true`. Aliases: "Para levar/entrega", "Para levar", "Retirada", "Entrega". (`available_delivery` foi aposentado da UI — ver "Tipo de cardápio no produto"; a importação não escreve essa coluna) |
+| Revendedor | `available_reseller` | opcional, sim/não. Vazia → mantém/`false`. Aliases: "Revendedor", "Revenda", "Atacado" |
+| Ativo | `active` | opcional, sim/não (aceita também `ativo`/`inativo`). Produto inativo não aparece no cardápio do cliente. Vazia → mantém/`true`. Aliases: "Ativo", "Ativa", "Produto ativo" |
 | Custo Total R$ / Preço Total R$ | — | calculado (preço × estoque), não armazenar |
-| Situação | — | ignorada (campo solto, sem uso real) |
+| Situação | — | ignorada — mesmo com valor "Ativo"/"Inativo" nas planilhas de ERP, **não** vira `active`; use a coluna "Ativo" |
 | ORDEM | `sort_order` | ordem de exibição no cardápio |
 
-Fluxo: upload do arquivo → parse (linha a linha) → preview numa tabela (o que vai ser criado vs. atualizado, comparando por `external_code`) → confirmação humana → grava. Nunca gravar direto sem preview, mesmo que pareça óbvio.
+**Célula vazia NÃO sobrescreve** (mudança pedida pelo usuário — importação não pode apagar dado preenchido à mão). Regra por camada:
+- `parseProductImportRow.ts` (puro) só extrai o que está na linha — célula vazia vira `null` = "não informado" (nunca aplica default aqui).
+- `resolveImportValues.ts` (puro, testado) junta a linha crua com o estado atual do produto: célula preenchida vence; **vazia + produto existe → mantém o valor atual**; vazia + produto novo → default neutro (`price=0`, `track_stock=true`, `active=true`, canais Cafeteria/Para levar `true` e Revendedor `false`, resto `null`/`0`).
+- `listForImportMerge(storeId, codes)` (`SupabaseProductRepository`) traz o snapshot atual dos produtos que a planilha referencia (`.in('external_code', chunk)` em lotes de 200), indexado por código — é o que decide create vs update e alimenta o `resolveImportValues`.
+- `useProductImport.ts` resolve os nomes de categoria já resolvidos (`row.resolved.categoryName`) pra id, criando as que faltam, e chama `bulkUpsertFromImport`.
+- `bulkUpsertFromImport` monta o payload **a partir de `row.resolved`** (todas as colunas já com valor final — mantido ou default), incluindo `active`, e faz `upsert` com `onConflict: 'store_id,external_code'`. Como toda linha do payload tem as mesmas chaves e todo valor é real, nada é apagado sem querer. Só `available_delivery` e `image_url` ficam de fora do payload (upsert parcial preserva).
 
-**Campos que não existem na planilha** (`category`, `description`, `image_url`) entram nulos/vazios no produto recém-importado — isso é esperado, a planilha da loja nunca teve esse dado. A tela de produtos deve deixar claro visualmente quais produtos estão "incompletos" (sem categoria e/ou sem foto), pra facilitar o trabalho manual de completar depois do import — sugestão: um filtro/badge "produtos incompletos" na listagem. Como o storefront navega por categoria, vale ter esse passo de categorização feito **antes** de abrir a loja pro cliente final, não é automático.
+A tabela do preview mostra o **valor final resolvido** (o que vai ficar gravado), não o valor cru da planilha.
+
+`detectCsvDelimiter` (só CSV) soma `,` vs `;` nas **primeiras 10 linhas não-vazias**, não só na 1ª — planilha real tem linha de título sem delimitador antes do cabeçalho, e olhar só a 1ª linha caía sempre em `,` (bug latente corrigido junto desta rodada, com teste).
+
+Fluxo: upload do arquivo → parse (linha a linha) → preview numa tabela (o que vai ser criado vs. atualizado, comparando por `external_code`; lista as categorias que serão criadas) → confirmação humana → grava. Nunca gravar direto sem preview, mesmo que pareça óbvio.
+
+**Campos que a planilha pode não trazer** (`image_url`, e `category`/`description` se as colunas novas ficarem em branco) entram nulos/vazios no produto recém-importado — a tela de produtos marca esses como "Incompleto" (badge + filtro "Só produtos incompletos") pra facilitar completar depois. Foto continua sempre manual (não tem coluna de imagem na planilha).
 
 **Convenção de evolução de schema**: todo campo novo adicionado em `products` (ou qualquer tabela que a importação escreve) nasce **opcional ou com valor padrão**, nunca `NOT NULL` sem default. Isso garante que a importação (e qualquer outro fluxo existente) nunca quebra por causa de um campo que não sabe preencher.
 
@@ -1020,7 +1042,7 @@ MÉDIO:
 9. `promotion_combo_items` não valida que o produto extra é da mesma loja da promoção (mesma classe do achado corrigido em `category_id`, mas aqui ainda pendente).
 10. Não existe reimpressão de cupom — `printOrderReceipt` só é chamado 1x, no aceite do pedido.
 11. N+1 de requests no seletor de variação/adicional (`ItemSelectionFields.tsx`) — 1 request por grupo vinculado ao produto.
-12. `listExternalCodes`/`bulkUpsertFromImport` sem `.range()`/chunking — loja com >1000 produtos trunca o preview de importação.
+12. ~~`listExternalCodes`/`bulkUpsertFromImport` sem `.range()`/chunking~~ — `listExternalCodes` foi substituído por `listForImportMerge`, que busca só os códigos da planilha em lotes de 200 (`.in(chunk)`); não varre mais a loja inteira. `bulkUpsertFromImport` continua 1 `upsert` em lote (payload já limitado às linhas confirmadas no preview).
 13. Busca de produto usa `ilike '%termo%'` — wildcard à esquerda não usa índice, sequential scan a cada tecla.
 14. Índices a conferir no Supabase (sem migration versionada pra checar por leitura estática): `orders (store_id, created_at desc)`, `orders (store_id, customer_phone)`, `promotion_combo_items (promotion_id)`.
 15. `listPrecedingCustomerPhones` manda lista de telefones grande num `.in()` — mesmo anti-padrão que `listStatusHistory` já teve corrigido antes.

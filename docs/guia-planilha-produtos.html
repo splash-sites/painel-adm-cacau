@@ -1,0 +1,512 @@
+<title>Guia da Planilha de Produtos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Inter:wght@400;500;600&display=swap">
+
+<style>
+  :root {
+    --bg: #efe9c9;
+    --surface: #f8f5e4;
+    --surface-2: #f2ecd4;
+    --ink: #1d150d;
+    --ink-soft: #5b4e3b;
+    --rule: rgba(123, 67, 27, 0.18);
+    --rule-strong: rgba(123, 67, 27, 0.34);
+    --primary: #a9701f;
+    --heading: #2c120b;
+    --secondary: #7b431b;
+    --ok: #2f7d4f;
+    --ok-bg: #dde9d8;
+    --ok-border: #b6cdae;
+    --warn: #8f5c12;
+    --warn-bg: #f0e3c6;
+    --warn-border: #d9c496;
+    --danger: #9a3826;
+    --danger-bg: #f0dbd4;
+
+    --font-display: "Sora", "Segoe UI", system-ui, sans-serif;
+    --font-body: "Inter", "Segoe UI", system-ui, sans-serif;
+
+    --measure: 44rem;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #16100a;
+      --surface: #211710;
+      --surface-2: #2b2015;
+      --ink: #f1edd4;
+      --ink-soft: #cdbc9d;
+      --rule: rgba(207, 144, 71, 0.22);
+      --rule-strong: rgba(207, 144, 71, 0.42);
+      --primary: #d99f57;
+      --heading: #f1edd4;
+      --secondary: #d29a5f;
+      --ok: #85cb9e;
+      --ok-bg: #1f3a2a;
+      --ok-border: #356048;
+      --warn: #e6b877;
+      --warn-bg: #3a2c15;
+      --warn-border: #5f4a26;
+      --danger: #ec9280;
+      --danger-bg: #3a211b;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #16100a;
+    --surface: #211710;
+    --surface-2: #2b2015;
+    --ink: #f1edd4;
+    --ink-soft: #cdbc9d;
+    --rule: rgba(207, 144, 71, 0.22);
+    --rule-strong: rgba(207, 144, 71, 0.42);
+    --primary: #d99f57;
+    --heading: #f1edd4;
+    --secondary: #d29a5f;
+    --ok: #85cb9e;
+    --ok-bg: #1f3a2a;
+    --ok-border: #356048;
+    --warn: #e6b877;
+    --warn-bg: #3a2c15;
+    --warn-border: #5f4a26;
+    --danger: #ec9280;
+    --danger-bg: #3a211b;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 1.02rem;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: var(--measure);
+    margin: 0 auto;
+    padding: clamp(2rem, 5vw, 4.5rem) clamp(1.1rem, 4vw, 2rem) 5rem;
+  }
+
+  .eyebrow {
+    font-family: var(--font-body);
+    font-size: 0.74rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--primary);
+    margin: 0 0 0.9rem;
+  }
+
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(1.9rem, 5vw, 2.7rem);
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+    color: var(--heading);
+    margin: 0 0 0.7rem;
+  }
+
+  .lede {
+    font-size: 1.08rem;
+    color: var(--ink-soft);
+    margin: 0 0 2.6rem;
+    max-width: 34rem;
+  }
+
+  h2 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.32rem;
+    letter-spacing: -0.005em;
+    text-wrap: balance;
+    color: var(--heading);
+    margin: 3.2rem 0 0.4rem;
+    padding-top: 1.6rem;
+    border-top: 1px solid var(--rule);
+  }
+
+  h2:first-of-type { border-top: none; padding-top: 0; }
+
+  h2 .h2-note {
+    display: block;
+    font-family: var(--font-body);
+    font-weight: 400;
+    font-size: 0.95rem;
+    color: var(--ink-soft);
+    letter-spacing: 0;
+    margin-top: 0.25rem;
+  }
+
+  p { margin: 0 0 1rem; }
+  strong { font-weight: 600; color: var(--ink); }
+
+  a { color: var(--primary); }
+  a:focus-visible,
+  summary:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; border-radius: 3px; }
+
+  ul { margin: 0 0 1rem; padding-left: 1.15rem; }
+  li { margin: 0.35rem 0; }
+  li::marker { color: var(--primary); }
+
+  /* ---- first-things callout ---- */
+  .keybox {
+    background: var(--surface);
+    border: 1px solid var(--rule-strong);
+    border-radius: 10px;
+    padding: 1.3rem 1.4rem 0.6rem;
+    margin: 0 0 1rem;
+  }
+  .keybox h2 { border: none; padding: 0; margin: 0 0 0.8rem; font-size: 1.05rem; }
+  .keybox ol { margin: 0; padding-left: 1.2rem; }
+  .keybox li { margin: 0.5rem 0; }
+
+  /* ---- rule / warning blocks ---- */
+  .rule-block {
+    background: var(--warn-bg);
+    border: 1px solid var(--warn-border);
+    border-left-width: 4px;
+    border-radius: 8px;
+    padding: 1.1rem 1.25rem 0.35rem;
+    margin: 1.4rem 0;
+  }
+  .rule-block .tag {
+    font-family: var(--font-body);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    color: var(--warn);
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+
+  /* ---- table ---- */
+  .table-scroll {
+    overflow-x: auto;
+    border: 1px solid var(--rule-strong);
+    border-radius: 10px;
+    margin: 1.3rem 0 1.6rem;
+    -webkit-overflow-scrolling: touch;
+  }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 40rem;
+    font-size: 0.92rem;
+  }
+  caption { text-align: left; padding: 0 0 0.6rem; color: var(--ink-soft); font-size: 0.9rem; }
+  th, td {
+    text-align: left;
+    padding: 0.7rem 0.95rem;
+    vertical-align: top;
+    border-bottom: 1px solid var(--rule);
+  }
+  thead th {
+    font-family: var(--font-body);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--rule-strong);
+    position: sticky;
+    top: 0;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  td:first-child {
+    font-weight: 600;
+    color: var(--heading);
+    white-space: nowrap;
+  }
+  td:nth-child(3), td:nth-child(4) { white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .group-row td {
+    background: var(--surface);
+    font-family: var(--font-body);
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--primary);
+    border-bottom: 1px solid var(--rule-strong);
+  }
+  .yes { color: var(--danger); font-weight: 600; }
+  .no { color: var(--ink-soft); }
+
+  /* ---- numbered steps ---- */
+  ol.steps {
+    list-style: none;
+    margin: 1.3rem 0 1rem;
+    padding: 0;
+    counter-reset: step;
+  }
+  ol.steps > li {
+    position: relative;
+    padding-left: 2.7rem;
+    margin: 0.9rem 0;
+    counter-increment: step;
+  }
+  ol.steps > li::before {
+    content: counter(step);
+    position: absolute;
+    left: 0;
+    top: 0.05rem;
+    width: 1.75rem;
+    height: 1.75rem;
+    display: grid;
+    place-items: center;
+    background: var(--primary);
+    color: #fff;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 0.9rem;
+    border-radius: 50%;
+  }
+
+  /* ---- mistakes ---- */
+  .mistakes { list-style: none; margin: 1.2rem 0; padding: 0; }
+  .mistakes li {
+    border-left: 3px solid var(--danger);
+    background: var(--danger-bg);
+    border-radius: 0 6px 6px 0;
+    padding: 0.7rem 0.95rem;
+    margin: 0.6rem 0;
+    font-size: 0.96rem;
+  }
+  .mistakes b { color: var(--heading); }
+
+  .chip {
+    display: inline-block;
+    font-family: var(--font-body);
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 0.12rem 0.5rem;
+    border-radius: 5px;
+    border: 1px solid currentColor;
+    line-height: 1.4;
+  }
+  .chip.create { color: var(--ok); background: var(--ok-bg); }
+  .chip.update { color: var(--warn); background: var(--warn-bg); }
+
+  .footer-note {
+    margin-top: 3.5rem;
+    padding-top: 1.4rem;
+    border-top: 1px solid var(--rule);
+    font-size: 0.86rem;
+    color: var(--ink-soft);
+  }
+
+  code {
+    font-family: "Sora", ui-monospace, monospace;
+    font-size: 0.9em;
+    background: var(--surface-2);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 0.05rem 0.35rem;
+  }
+
+  @media print {
+    :root { --bg: #fff; --surface: #fff; --surface-2: #f4f4f4; --ink: #000; --ink-soft: #333; --heading: #000; --rule: #ccc; --rule-strong: #999; }
+    body { font-size: 10.5pt; }
+    .page { max-width: none; padding: 0; }
+    h2 { break-after: avoid; }
+    .table-scroll, .rule-block, .keybox, .mistakes li { break-inside: avoid; }
+    thead th { position: static; }
+  }
+</style>
+
+<div class="page">
+
+  <p class="eyebrow">Painel Splash Pedidos</p>
+  <h1>Guia da Planilha de Produtos</h1>
+  <p class="lede">Como preencher a planilha para cadastrar e atualizar produtos em lote, sem erro e sem apagar nada sem querer.</p>
+
+  <div class="keybox">
+    <h2>3 coisas antes de começar</h2>
+    <ol>
+      <li>O sistema liga cada linha a um produto pelo <strong>Código</strong>. Código que já existe na loja: o produto é <strong>atualizado</strong>. Código novo: um produto é <strong>criado</strong>.</li>
+      <li>Nada é salvo na hora. Depois de escolher o arquivo aparece uma <strong>prévia</strong> com tudo que vai acontecer. Só grava quando você clica em <strong>Confirmar importação</strong>.</li>
+      <li>Ao atualizar um produto, <strong>célula em branco não apaga nada</strong> — aquele campo continua como está no sistema. Preencha só o que você quer mudar.</li>
+    </ol>
+  </div>
+
+  <h2>Formato do arquivo</h2>
+  <p>Salve a planilha como <strong>Excel (.xlsx)</strong>. No Google Planilhas: <em>Arquivo → Fazer download → Microsoft Excel (.xlsx)</em>.</p>
+  <ul>
+    <li><strong>Não</strong> use a opção “Valores separados por vírgulas (.csv)” do Google — os preços podem sair errados (multiplicados ou divididos por 100).</li>
+    <li>Excel antigo, formato <code>.xls</code> (97-2003), não é aceito. Se sua planilha for <code>.xls</code>, abra e salve de novo como <code>.xlsx</code>.</li>
+  </ul>
+
+  <h2>As colunas
+    <span class="h2-note">Em branco, ao <strong>atualizar</strong>: mantém o que já está no produto. Em branco, ao <strong>criar</strong>: usa o padrão da última coluna. Só a <strong>Descrição</strong> é sempre obrigatória.</span>
+  </h2>
+
+  <div class="table-scroll">
+    <table>
+      <caption>Os nomes das colunas podem estar com ou sem acento, em maiúscula ou minúscula. A ordem das colunas não importa.</caption>
+      <thead>
+        <tr>
+          <th scope="col">Coluna</th>
+          <th scope="col">O que preenche</th>
+          <th scope="col">Obrigatória?</th>
+          <th scope="col">Padrão (produto novo)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="group-row"><td colspan="4">Sempre preencher</td></tr>
+        <tr>
+          <td>Código</td>
+          <td>Liga a linha ao produto. Código que já existe: atualiza. Código novo: cria.</td>
+          <td class="yes">Sim</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>Descrição</td>
+          <td>O nome do produto — o que aparece grande no cardápio. Linha sem descrição é ignorada. O que você escrever aqui vira o nome; para manter o nome atual numa atualização, escreva o nome atual de novo.</td>
+          <td class="yes">Sim</td>
+          <td>—</td>
+        </tr>
+
+        <tr class="group-row"><td colspan="4">Opcionais</td></tr>
+        <tr>
+          <td>Descrição detalhada</td>
+          <td>O texto mais longo que aparece abaixo do nome no cardápio. Não é a “Descrição” (essa é o nome).</td>
+          <td class="no">Não</td>
+          <td>vazio</td>
+        </tr>
+        <tr>
+          <td>Categoria</td>
+          <td>Nome da categoria (ex.: Bebidas, Doces). Se a categoria ainda não existe na loja, ela é criada automaticamente. A prévia mostra antes quais categorias serão criadas.</td>
+          <td class="no">Não</td>
+          <td>sem categoria</td>
+        </tr>
+        <tr>
+          <td>NCM</td>
+          <td>Código fiscal do produto. Fica guardado; não aparece em lugar nenhum para o cliente.</td>
+          <td class="no">Não</td>
+          <td>vazio</td>
+        </tr>
+        <tr>
+          <td>Unidade</td>
+          <td>UN, KG, L, etc.</td>
+          <td class="no">Não</td>
+          <td>vazio</td>
+        </tr>
+        <tr>
+          <td>Estoque</td>
+          <td>Quantidade em estoque. É ignorado (fica 0) quando “Utilizará estoque” estiver como <em>não</em>.</td>
+          <td class="no">Não</td>
+          <td>0</td>
+        </tr>
+        <tr>
+          <td>Utilizará estoque</td>
+          <td>sim ou não. “não” desliga o controle de estoque desse produto e zera a quantidade.</td>
+          <td class="no">Não</td>
+          <td>sim</td>
+        </tr>
+        <tr>
+          <td>Custo R$</td>
+          <td>Quanto o produto custa para a loja. Nunca aparece para o cliente.</td>
+          <td class="no">Não</td>
+          <td>vazio</td>
+        </tr>
+        <tr>
+          <td>Preço R$</td>
+          <td>Preço que o cliente vê.</td>
+          <td class="no">Não</td>
+          <td>0</td>
+        </tr>
+        <tr>
+          <td>Lover R$</td>
+          <td>Preço para o cliente lover.</td>
+          <td class="no">Não</td>
+          <td>igual ao Preço</td>
+        </tr>
+        <tr>
+          <td>Cafeteria</td>
+          <td>sim ou não. Produto disponível para consumo no local.</td>
+          <td class="no">Não</td>
+          <td>sim</td>
+        </tr>
+        <tr>
+          <td>Para levar/entrega</td>
+          <td>sim ou não. Produto disponível para retirada e entrega.</td>
+          <td class="no">Não</td>
+          <td>sim</td>
+        </tr>
+        <tr>
+          <td>Revendedor</td>
+          <td>sim ou não. Produto disponível no catálogo de revendedor.</td>
+          <td class="no">Não</td>
+          <td>não</td>
+        </tr>
+        <tr>
+          <td>Ativo</td>
+          <td>sim ou não. Produto <strong>inativo não aparece no cardápio</strong> do cliente — continua só no painel. Aceita também “ativo” / “inativo” como valor.</td>
+          <td class="no">Não</td>
+          <td>sim</td>
+        </tr>
+        <tr>
+          <td>ORDEM</td>
+          <td>Posição do produto no cardápio. Número menor aparece primeiro.</td>
+          <td class="no">Não</td>
+          <td>0</td>
+        </tr>
+
+        <tr class="group-row"><td colspan="4">O sistema ignora — pode deixar na planilha</td></tr>
+        <tr>
+          <td>Local · Custo Total R$ · Preço Total R$ · Situação</td>
+          <td>Não são usados. Se estiverem na planilha, o sistema simplesmente pula essas colunas.</td>
+          <td class="no">—</td>
+          <td>—</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Como escrever os valores</h2>
+  <ul>
+    <li><strong>Dinheiro:</strong> use vírgula para os centavos — <code>12,90</code>. Pode escrever com “R$”: <code>R$ 12,90</code> funciona. Ponto de milhar também: <code>1.199,00</code>.</li>
+    <li><strong>Colunas de sim/não</strong> (Utilizará estoque, Cafeteria, Para levar/entrega, Revendedor, Ativo): aceitam <code>sim</code>, <code>s</code>, <code>1</code>, <code>x</code> para sim; <code>não</code>, <code>n</code>, <code>0</code> para não. A coluna Ativo também aceita <code>ativo</code> / <code>inativo</code>. Célula vazia conta como “não informado”.</li>
+    <li><strong>Cabeçalho:</strong> pode ter uma linha de título ou linhas em branco acima da linha dos nomes das colunas — o sistema procura a linha que tem “Código”.</li>
+  </ul>
+
+  <div class="rule-block">
+    <span class="tag">A regra mais importante</span>
+    <p><strong>Ao atualizar um produto que já existe, célula em branco NÃO apaga o valor.</strong> Aquele campo continua exatamente como está no sistema. A importação nunca sobrescreve o que você preencheu à mão.</p>
+    <p><strong>Ao criar um produto novo</strong>, célula em branco começa vazia ou com o valor padrão (a última coluna da tabela acima).</p>
+    <p>A <strong>única exceção</strong> é a <strong>Descrição</strong> (o nome): ela é sempre obrigatória e sempre gravada. Se você mudar a Descrição de um produto que já existe, ele é renomeado.</p>
+  </div>
+
+  <h2>Passo a passo</h2>
+  <ol class="steps">
+    <li>Abra a planilha modelo e preencha <strong>uma linha por produto</strong>.</li>
+    <li>Salve como <strong>Excel (.xlsx)</strong>.</li>
+    <li>No painel: <strong>Produtos → Importar planilha</strong> e escolha o arquivo.</li>
+    <li>Confira a prévia. Cada linha tem uma etiqueta: <span class="chip create">Criar</span> para produto novo, <span class="chip update">Atualizar</span> para produto que já existe. Se algo devia ser “Atualizar” e apareceu como “Criar”, o Código está errado — corrija antes de continuar.</li>
+    <li>Leia a linha <strong>“Categoria(s) que serão criadas”</strong> no rodapé da prévia. Confira se não é erro de digitação.</li>
+    <li>A tabela da prévia mostra <strong>exatamente o que vai ser salvo</strong> — nas atualizações, já com os valores que foram mantidos preenchidos.</li>
+    <li>Clique em <strong>Confirmar importação</strong>.</li>
+    <li>Produto novo aparece marcado como <strong>“Incompleto”</strong> na lista até você adicionar uma <strong>foto</strong>. A foto nunca vem da planilha — é sempre colocada à mão depois.</li>
+  </ol>
+
+  <h2>Erros comuns</h2>
+  <ul class="mistakes">
+    <li><b>Código errado ou trocado.</b> O produto não é atualizado — em vez disso um produto duplicado é criado com esse código.</li>
+    <li><b>Mudar a Descrição sem querer.</b> O produto é renomeado. Para manter o nome, repita o nome atual na planilha.</li>
+    <li><b>Erro de digitação na Categoria.</b> “Bebidas” e “Bebida” viram duas categorias diferentes. Sempre confira a linha de categorias que serão criadas antes de confirmar.</li>
+    <li><b>Deixar Ativo como “não” sem querer.</b> O produto some do cardápio do cliente na hora, mesmo continuando no painel. Deixe a célula em branco se não quiser mexer nisso.</li>
+    <li><b>Salvar como .csv pelo Google.</b> Os preços podem sair multiplicados ou divididos por 100. Salve como <code>.xlsx</code>.</li>
+    <li><b>Esperar a foto vir da planilha.</b> Não vem. Todo produto novo entra sem foto e precisa ser completado à mão.</li>
+  </ul>
+
+  <p class="footer-note">Guia de uso do recurso “Importar planilha” do painel Splash Pedidos. Em caso de dúvida sobre uma importação específica, use a prévia — ela sempre mostra o resultado antes de gravar.</p>
+
+</div>

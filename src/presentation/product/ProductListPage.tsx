@@ -19,8 +19,7 @@ function menuTypeLabel(product: Product): string {
   return (
     [
       product.availableDineIn && 'Cafeteria',
-      product.availablePickup && 'Para levar',
-      product.availableDelivery && 'Delivery',
+      product.availablePickup && 'Para levar/entrega',
       product.availableReseller && 'Revendedor',
     ]
       .filter(Boolean)
