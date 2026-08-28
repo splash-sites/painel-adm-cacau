@@ -48,3 +48,15 @@ export function useDeleteCategory() {
     },
   })
 }
+
+export function useReorderCategories() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ storeId, orderedIds }: { storeId: string; orderedIds: string[] }) =>
+      categoryRepository.reorder(storeId, orderedIds),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['categories'] })
+    },
+  })
+}

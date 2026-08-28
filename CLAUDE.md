@@ -968,22 +968,25 @@ Pedido da cliente: no cadastro de produto não dava pra ver/reaproveitar categor
 
 **Schema (criado, com backfill):**
 ```
-categories (id, store_id, name, active, created_at)
+categories (id, store_id, name, active, sort_order, created_at)
 products.category_id  uuid null references categories(id)
 ```
+`sort_order integer not null default 0` adicionado depois (feature de reordenar por drag — ver abaixo), com backfill alfabético por loja e índice `(store_id, sort_order)`.
 Backfill rodado 1x na migration: agrupa o `category` texto já existente por loja, case/espaço-insensitive (`lower(trim(category))`), cria 1 linha em `categories` por grupo (nome canônico = `MIN(category)`, primeira grafia em ordem alfabética) e liga `products.category_id` de volta pelo match. RLS mesmo padrão de toda tabela de domínio (`super_admin`/`store_admin` via `for all` escopado por `store_id`) + leitura pública (`for select using (active = true)`, mesmo motivo de adicional/variação — storefront também lê).
 
 **Camadas (Clean Architecture) — implementado:**
 ```
-domain/category/Category.ts                     -- entidade { id, storeId, name, active }
-application/category/CategoryRepository.ts       -- interface (porta)
+domain/category/Category.ts                     -- entidade { id, storeId, name, active, sortOrder }
+application/category/CategoryRepository.ts       -- interface (porta), + reorder(storeId, orderedIds)
 application/category/categorySchema.ts           -- Zod (name obrigatório, active)
 application/category/CategoryInUseError.ts       -- erro de exclusão bloqueada (produto vinculado), mesmo padrão de AttendantInUseError
-infrastructure/category/SupabaseCategoryRepository.ts -- implementação Supabase, catch do 23503 -> CategoryInUseError
-presentation/category/useCategories.ts            -- hooks React Query (list/save/delete), mesmo padrão de useAttendants
+infrastructure/category/SupabaseCategoryRepository.ts -- implementação Supabase, catch do 23503 -> CategoryInUseError; list ordena por sort_order (nome como desempate); create calcula max+1; reorder faz upsert em lote com row inteiro (name/store_id NOT NULL — upsert parcial quebra no ON CONFLICT, mesmo caso de promotions)
+presentation/category/useCategories.ts            -- hooks React Query (list/save/delete/reorder), mesmo padrão de useAttendants/usePromotions
 presentation/category/CategoryModal.tsx           -- CRUD de categoria (modal), com onCreated pro fluxo de criação inline
-presentation/category/CategoryListPage.tsx        -- rota /produtos/categorias, lista simples (sem paginação, bounded por loja) + toolbar "← Produtos" (mesmo padrão de Ajuste 1, ver abaixo)
+presentation/category/CategoryListPage.tsx        -- rota /produtos/categorias, lista arrastável (SortableList/SortableItem, mesmo componente de Promoções) — arrastar grava sort_order; toolbar "← Produtos"
 ```
+
+**Ordem das categorias no cardápio**: a tela de Categorias tem drag-and-drop (`SortableList`, idêntico ao carrossel de Promoções). Arrastar grava `categories.sort_order` via `reorder()` (upsert em lote). `list()` já devolve ordenado por `sort_order`. **O storefront (repo separado) precisa ler `categories` ordenado por `sort_order` e agrupar os produtos por categoria pra isso aparecer no cardápio** — este repo só define a ordem; consumir é passo do storefront, igual adicional/variação passo 6. `useProductImport` cria categoria via `categoryRepository.create`, que já anexa no fim (`max+1`).
 `domain/product/Product.ts` ganhou `categoryId: string | null` e `categoryName: string | null` (join só de exibição); `category` (texto) marcado `@deprecated`, mantido só por compatibilidade. `SupabaseProductRepository` usa `PRODUCT_SELECT = '*, categories(name)'` em vez de `select('*')` cru (mesmo padrão de `ORDER_SELECT`/`PROMOTION_SELECT`), e o filtro "Só produtos incompletos" trocou de `category.is.null` pra `category_id.is.null`. `isProductIncomplete` também passou a checar `categoryId`, não mais `category`.
 
 Entrada na UI: botão "Categorias" na toolbar de `/produtos` (ao lado de "Variações"), e dentro do `ProductModal`, o campo Categoria virou busca (`Combobox`, mesmo componente de Adicionais/Variações) com botão **"+ Nova categoria"** que abre `CategoryModal` sem sair do modal de produto — categoria recém-criada já fica selecionada na hora (`onCreated` seta `categoryId` no form). Herda de graça os 2 fixes centralizados em `ui/Dialog.tsx` (Escape não fecha o modal de produto junto, sem scroll-jump ao abrir a busca — ver "Ajuste 2" abaixo) por já usar o mesmo `Dialog`/`Combobox` compartilhado, zero código extra.
