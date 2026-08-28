@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import { ChevronLeft, ChevronRight, Pencil, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useEffectiveStoreId } from '../storeContext/useEffectiveStoreId'
-import { useDeleteProduct, useProductList } from './useProducts'
+import { useStore } from '../store/useStores'
+import { useDeleteProduct, useExportProducts, useProductList } from './useProducts'
 import { isProductIncomplete } from '../../domain/product/isProductIncomplete'
 import type { Product } from '../../domain/product/Product'
 import { Button } from '../ui/Button'
@@ -50,7 +51,28 @@ export function ProductListPage() {
   }
 
   const { data, isLoading, error } = useProductList({ storeId, page, pageSize, incompleteOnly })
+  const { data: store } = useStore(storeId)
   const deleteProduct = useDeleteProduct()
+  const exportProducts = useExportProducts()
+
+  async function handleExport() {
+    if (!storeId) return
+    const today = new Date().toISOString().slice(0, 10)
+    try {
+      const count = await exportProducts.mutateAsync({
+        storeId,
+        storeName: store?.name ?? 'Loja',
+        fileBase: `produtos-${store?.slug ?? 'loja'}-${today}`,
+      })
+      toast.success(
+        count > 0
+          ? `Planilha exportada — ${count} produto${count === 1 ? '' : 's'}.`
+          : 'Planilha exportada — modelo vazio (nenhum produto cadastrado).',
+      )
+    } catch (exportError) {
+      toast.error(exportError instanceof Error ? exportError.message : 'Falha ao exportar planilha')
+    }
+  }
 
   const totalPages = data ? Math.max(1, Math.ceil(data.total / pageSize)) : 1
 
@@ -85,6 +107,9 @@ export function ProductListPage() {
             />
             <Button variant="outline" onClick={() => importInputRef.current?.click()}>
               Importar planilha
+            </Button>
+            <Button variant="outline" onClick={handleExport} disabled={exportProducts.isPending}>
+              {exportProducts.isPending ? 'Exportando...' : 'Exportar planilha'}
             </Button>
             <Button variant="outline" onClick={() => navigate('/produtos/adicionais')}>
               Adicionais

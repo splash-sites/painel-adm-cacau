@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { SupabaseProductRepository } from '../../infrastructure/product/SupabaseProductRepository'
+import { buildProductsWorkbook } from '../../infrastructure/product/export/buildProductsWorkbook'
 import type { ProductInput } from '../../application/product/ProductRepository'
 
 export const productRepository = new SupabaseProductRepository()
@@ -62,6 +63,38 @@ export function useDeleteProduct() {
     mutationFn: (id: string) => productRepository.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['products'] })
+    },
+  })
+}
+
+/** Baixa um .xlsx com todos os produtos da loja, no mesmo formato que a importação lê. */
+export function useExportProducts() {
+  return useMutation({
+    mutationFn: async ({
+      storeId,
+      storeName,
+      fileBase,
+    }: {
+      storeId: string
+      storeName: string
+      fileBase: string
+    }): Promise<number> => {
+      const products = await productRepository.listAll(storeId)
+      const buffer = await buildProductsWorkbook(products, storeName)
+
+      const blob = new Blob([buffer], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      })
+      const url = URL.createObjectURL(blob)
+      const anchor = document.createElement('a')
+      anchor.href = url
+      anchor.download = `${fileBase}.xlsx`
+      document.body.appendChild(anchor)
+      anchor.click()
+      anchor.remove()
+      URL.revokeObjectURL(url)
+
+      return products.length
     },
   })
 }

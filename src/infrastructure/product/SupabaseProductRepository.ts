@@ -130,6 +130,25 @@ export class SupabaseProductRepository implements ProductRepository {
     return { items: (data as ProductRow[]).map(toProduct), total: count ?? 0 }
   }
 
+  async listAll(storeId: string): Promise<Product[]> {
+    const PAGE = 1000
+    const all: Product[] = []
+    for (let page = 0; ; page++) {
+      const from = page * PAGE
+      const { data, error } = await supabase
+        .from('products')
+        .select(PRODUCT_SELECT)
+        .eq('store_id', storeId)
+        .order('sort_order')
+        .range(from, from + PAGE - 1)
+      if (error) throw new Error(error.message)
+      const batch = (data as ProductRow[]).map(toProduct)
+      all.push(...batch)
+      if (batch.length < PAGE) break
+    }
+    return all
+  }
+
   async getById(id: string): Promise<Product | null> {
     const { data, error } = await supabase.from('products').select(PRODUCT_SELECT).eq('id', id).single()
     if (error || !data) return null
