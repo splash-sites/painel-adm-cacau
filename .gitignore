@@ -18,6 +18,9 @@ package-lock.json
 # Guias de uso pra cliente (gerados localmente, não versionados)
 guia/
 
+# Planilha exportada/gerada localmente (pode ter dado real de cliente — nunca versionar)
+*.xlsx
+
 # Playwright
 test-results
 playwright-report

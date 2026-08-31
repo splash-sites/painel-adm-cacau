@@ -1,5 +1,6 @@
 import ExcelJS from 'exceljs'
 import type { Product } from '../../../domain/product/Product'
+import { XLSX_ACCENT, XLSX_CREAM, XLSX_PRIMARY, XLSX_ROW_ALT, XLSX_SECONDARY } from '../../export/xlsxTheme'
 
 /**
  * Colunas iguais às que a importação lê (`parseProductImportRow`) — o arquivo exportado
@@ -26,12 +27,11 @@ const HEADERS = [
 
 const COLUMN_WIDTH = [14, 34, 42, 20, 14, 10, 10, 16, 12, 12, 12, 12, 18, 13, 10]
 
-// Paleta do painel (CLAUDE.md) em ARGB pro ExcelJS.
-const ACCENT = 'FF2C120B'
-const CREAM = 'FFF0ECD2'
-const PRIMARY = 'FFCF9047'
-const SECONDARY = 'FF7B431B'
-const ROW_ALT = 'FFF7F3E3'
+const ACCENT = XLSX_ACCENT
+const CREAM = XLSX_CREAM
+const PRIMARY = XLSX_PRIMARY
+const SECONDARY = XLSX_SECONDARY
+const ROW_ALT = XLSX_ROW_ALT
 const MONEY_COLUMNS = [9, 10, 11]
 
 function yesNo(value: boolean): string {

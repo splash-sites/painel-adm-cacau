@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Download } from 'lucide-react'
+import { toast } from 'sonner'
 import {
   Area,
   AreaChart,
@@ -15,10 +16,11 @@ import {
   YAxis,
 } from 'recharts'
 import { useEffectiveStoreId } from '../storeContext/useEffectiveStoreId'
+import { useStore } from '../store/useStores'
 import { initials } from '../ui/initials'
 import { Button } from '../ui/Button'
 import { cardClass } from '../ui/styles'
-import { downloadReportCsv } from './exportReportCsv'
+import { downloadReportWorkbook } from './downloadReportWorkbook'
 import { type ReportPeriod, useReportSummary } from './useReportSummary'
 
 const PERIOD_LABEL: Record<ReportPeriod, string> = {
@@ -73,19 +75,30 @@ function ChartTooltip({
 export function ReportsPage() {
   const storeId = useEffectiveStoreId()
   const [period, setPeriod] = useState<ReportPeriod>('today')
+  const [isExporting, setIsExporting] = useState(false)
+  const { data: store } = useStore(storeId)
   const { summary, revenueSeries, ordersByHour, avgPrepTimeMinutes, newVsReturning, isLoading, error } =
     useReportSummary(storeId, period)
 
   const peakHourCount = ordersByHour ? Math.max(...ordersByHour.map((point) => point.count)) : 0
 
-  function handleExport() {
+  async function handleExport() {
     if (!summary) return
-    downloadReportCsv(
-      summary,
-      avgPrepTimeMinutes,
-      newVsReturning,
-      `relatorio-${period}-${new Date().toISOString().slice(0, 10)}.csv`,
-    )
+    setIsExporting(true)
+    try {
+      await downloadReportWorkbook(
+        summary,
+        avgPrepTimeMinutes,
+        newVsReturning,
+        store?.name ?? 'Loja',
+        period,
+        `relatorio-${period}-${new Date().toISOString().slice(0, 10)}.xlsx`,
+      )
+    } catch (exportError) {
+      toast.error(exportError instanceof Error ? exportError.message : 'Falha ao exportar planilha')
+    } finally {
+      setIsExporting(false)
+    }
   }
 
   return (
@@ -113,9 +126,14 @@ export function ReportsPage() {
                 </button>
               ))}
             </div>
-            <Button variant="outline" onClick={handleExport} disabled={!summary} className="gap-1.5 text-sm">
+            <Button
+              variant="outline"
+              onClick={handleExport}
+              disabled={!summary || isExporting}
+              className="gap-1.5 text-sm"
+            >
               <Download className="h-4 w-4" />
-              Exportar CSV
+              {isExporting ? 'Exportando...' : 'Exportar planilha'}
             </Button>
           </div>
         )}

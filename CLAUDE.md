@@ -1044,6 +1044,26 @@ presentation/product/addons/AddonOptionsPanel.tsx, variations/VariationOptionsPa
 
 **Onde isso importa pro cardápio**: a ordem dos grupos por produto já valia antes; o que é novo de ponta a ponta é a ordem das **opções dentro do grupo** (ex: lista de sabores) — isso sim é o que o cliente literalmente vê no seletor. Storefront (fora daqui) precisa ler `addon_options.sort_order`/`variation_options.sort_order` pra respeitar a ordem — não confirmado se já lê, avisar quem mexe lá.
 
+## Feature: Exportar Relatórios como planilha (implementada)
+CSV plano trocado por `.xlsx` de verdade, mesmo padrão visual do export de Produtos (`buildProductsWorkbook.ts`) — paleta da marca, cabeçalho fixo, linha alternada, filtro automático. Preview aprovado pelo usuário (arquivo real gerado com dado de exemplo) antes de implementar.
+
+**Decisão de estrutura**: 1 aba por seção (Resumo/Produtos/Canais/Atendentes) em vez de 1 CSV com blocos separados por linha em branco — cada tabela fica filtrável/ordenável sozinha, sem misturar com as outras.
+
+**Camadas:**
+```
+infrastructure/export/xlsxTheme.ts                  -- constantes de cor ARGB extraídas de buildProductsWorkbook.ts (evita duplicar a paleta em 2 arquivos)
+infrastructure/report/export/buildReportWorkbook.ts  -- monta as 4 abas (puro, testado — 6 casos incluindo abas vazias e ausência de novos/recorrentes)
+presentation/report/downloadReportWorkbook.ts         -- dispara o download via Blob, mesmo mecanismo de useExportProducts
+presentation/report/ReportsPage.tsx                   -- botão "Exportar planilha" (era "Exportar CSV"), estado isExporting, usa useStore(storeId) pro nome da loja no título
+```
+`exportReportCsv.ts`/`.test.ts` removidos — nenhum outro lugar do app ainda dependia deles.
+
+**Segurança (`security-sweep` rodado, zero achado CRÍTICO/ALTO/MÉDIO)**: ponto principal da varredura foi confirmar se a neutralização de formula injection que o CSV antigo tinha (`'` na frente de célula começando com `=`/`+`/`-`/`@`) precisava ser recriada pro `.xlsx` — **não precisa**: confirmado lendo o código-fonte do `exceljs` que uma célula `string` crua nunca vira fórmula (só objeto `{ formula: ... }` explícito viraria, e o código daqui nunca monta isso) — OOXML declara o tipo de cada célula no binário, diferente de CSV, que o Excel reparseia e decide sozinho. Não é uma proteção que ficou faltando, é uma classe de vulnerabilidade que não existe nesse formato escrito dessa forma.
+
+**Achado BAIXO da varredura, corrigido**: o arquivo de preview que gerei pra aprovação (`relatorio-preview.xlsx`, dado real da loja — faturamento, nome de atendente) ficou solto na raiz do repo, sem `.gitignore` cobrindo `.xlsx` — um `git add -A` de rotina teria commitado dado real de cliente. Apagado, e `*.xlsx` entrou no `.gitignore`.
+
+**Testado ao vivo, ponta a ponta**: clique real em "Exportar planilha" → download efetivo → reaberto com `exceljs` pra conferir o conteúdo → nome da loja certo ("Cacau Show Capão da Canoa"), período certo ("Hoje"/"30 dias"), valores batendo com o que a tela mostra (loja de teste sem pedido no período, então tudo zerado nos dois — consistente, não é bug).
+
 ## Ajuste 1 — navegação entre Produtos/Adicionais/Variações (implementado)
 Nas telas `/produtos/adicionais` e `/produtos/variacoes` não tinha como voltar pra Produtos nem trocar entre as duas sem usar o sidebar. As duas telas ganharam toolbar com botão "Produtos" (ícone `ArrowLeft` do lucide-react — projeto usa Radix + lucide-react, não shadcn, apesar da semelhança visual) + botão pra trocar pra seção irmã (Adicionais ↔ Variações), mesmo padrão replicado em Categorias (`CategoryListPage.tsx`).
 
