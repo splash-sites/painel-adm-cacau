@@ -24,7 +24,6 @@ interface ImportMergeRow {
   cost_price: number | null
   price: number
   lover_price: number
-  sort_order: number
   active: boolean
   available_dine_in: boolean
   available_pickup: boolean
@@ -254,7 +253,7 @@ export class SupabaseProductRepository implements ProductRepository {
       const { data, error } = await supabase
         .from('products')
         .select(
-          'external_code, description, category, categories(name), ncm, unit, track_stock, stock_quantity, cost_price, price, lover_price, sort_order, active, available_dine_in, available_pickup, available_reseller',
+          'external_code, description, category, categories(name), ncm, unit, track_stock, stock_quantity, cost_price, price, lover_price, active, available_dine_in, available_pickup, available_reseller',
         )
         .eq('store_id', storeId)
         .in('external_code', chunk)
@@ -272,7 +271,6 @@ export class SupabaseProductRepository implements ProductRepository {
           costPrice: row.cost_price,
           price: row.price,
           loverPrice: row.lover_price,
-          sortOrder: row.sort_order,
           active: row.active,
           availableDineIn: row.available_dine_in,
           availablePickup: row.available_pickup,
@@ -311,13 +309,13 @@ export class SupabaseProductRepository implements ProductRepository {
       cost_price: resolved.costPrice,
       price: resolved.price,
       lover_price: resolved.loverPrice,
-      sort_order: resolved.sortOrder,
       active: resolved.active,
       available_dine_in: resolved.availableDineIn,
       available_pickup: resolved.availablePickup,
       available_reseller: resolved.availableReseller,
-      // available_delivery e image_url ficam de fora: upsert parcial preserva o valor atual
-      // (e usa o default da coluna em produto novo).
+      // sort_order, available_delivery e image_url ficam de fora: a ordem do cardápio agora é só
+      // pela tela "Organizar cardápio". Upsert parcial preserva o sort_order atual do produto
+      // (e usa o default 0 da coluna em produto novo).
     }))
 
     const { error } = await supabase

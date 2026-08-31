@@ -13,7 +13,6 @@ function existingValues(overrides: Partial<ProductImportValues> = {}): ProductIm
     costPrice: null,
     price: 0,
     loverPrice: 0,
-    sortOrder: 0,
     active: true,
     availableDineIn: true,
     availablePickup: true,

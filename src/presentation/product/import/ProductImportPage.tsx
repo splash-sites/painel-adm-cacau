@@ -158,8 +158,7 @@ export function ProductImportPage() {
                     <th className={tableHeaderCellClass}>Estoque</th>
                     <th className={tableHeaderCellClass}>Custo</th>
                     <th className={tableHeaderCellClass}>Preço</th>
-                    <th className={tableHeaderCellClass}>Lover</th>
-                    <th className={`${tableHeaderCellClass} !pr-6`}>Ordem</th>
+                    <th className={`${tableHeaderCellClass} !pr-6`}>Lover</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -186,8 +185,7 @@ export function ProductImportPage() {
                       </td>
                       <td className="py-3">{row.resolved.costPrice ?? '—'}</td>
                       <td className="py-3">{row.resolved.price}</td>
-                      <td className="py-3">{row.resolved.loverPrice}</td>
-                      <td className="py-3 !pr-6">{row.resolved.sortOrder}</td>
+                      <td className="py-3 !pr-6">{row.resolved.loverPrice}</td>
                     </tr>
                   ))}
                 </tbody>

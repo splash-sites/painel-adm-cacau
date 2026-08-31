@@ -27,7 +27,6 @@ export function resolveImportValues(
     price,
     // Lover não informado: mantém o atual; se não houver atual (produto novo), cai no preço normal.
     loverPrice: row.loverPrice ?? existing?.loverPrice ?? price,
-    sortOrder: row.sortOrder ?? existing?.sortOrder ?? 0,
     active: row.active ?? existing?.active ?? true,
     availableDineIn: row.availableDineIn ?? existing?.availableDineIn ?? true,
     availablePickup: row.availablePickup ?? existing?.availablePickup ?? true,

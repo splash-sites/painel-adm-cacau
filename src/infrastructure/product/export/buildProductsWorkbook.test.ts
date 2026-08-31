@@ -57,7 +57,6 @@ describe('buildProductsWorkbook', () => {
       costPrice: 2.3,
       price: 7,
       loverPrice: 6,
-      sortOrder: 3,
       active: false,
       availableDineIn: true,
       availablePickup: false,

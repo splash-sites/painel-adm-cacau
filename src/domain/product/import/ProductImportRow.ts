@@ -17,7 +17,6 @@ export interface ProductImportRow {
   costPrice: number | null
   price: number | null
   loverPrice: number | null
-  sortOrder: number | null
   active: boolean | null
   availableDineIn: boolean | null
   availablePickup: boolean | null
@@ -39,7 +38,6 @@ export interface ProductImportValues {
   costPrice: number | null
   price: number
   loverPrice: number
-  sortOrder: number
   active: boolean
   availableDineIn: boolean
   availablePickup: boolean

@@ -396,14 +396,14 @@ Formato real recebido da loja (Excel/CSV, colunas nessa ordem):
 | Ativo | `active` | opcional, sim/não (aceita também `ativo`/`inativo`). Produto inativo não aparece no cardápio do cliente. Vazia → mantém/`true`. Aliases: "Ativo", "Ativa", "Produto ativo" |
 | Custo Total R$ / Preço Total R$ | — | calculado (preço × estoque), não armazenar |
 | Situação | — | ignorada — mesmo com valor "Ativo"/"Inativo" nas planilhas de ERP, **não** vira `active`; use a coluna "Ativo" |
-| ORDEM | `sort_order` | ordem de exibição no cardápio |
+| ORDEM | — | **removida da importação** — a ordem do cardápio agora é só pela tela "Organizar cardápio" (`products.sort_order` não é mais lido nem escrito pelo import). Coluna "ORDEM" na planilha é ignorada. |
 
 **Célula vazia NÃO sobrescreve** (mudança pedida pelo usuário — importação não pode apagar dado preenchido à mão). Regra por camada:
 - `parseProductImportRow.ts` (puro) só extrai o que está na linha — célula vazia vira `null` = "não informado" (nunca aplica default aqui).
-- `resolveImportValues.ts` (puro, testado) junta a linha crua com o estado atual do produto: célula preenchida vence; **vazia + produto existe → mantém o valor atual**; vazia + produto novo → default neutro (`price=0`, `track_stock=true`, `active=true`, canais Cafeteria/Para levar `true` e Revendedor `false`, resto `null`/`0`).
+- `resolveImportValues.ts` (puro, testado) junta a linha crua com o estado atual do produto: célula preenchida vence; **vazia + produto existe → mantém o valor atual**; vazia + produto novo → default neutro (`price=0`, `track_stock=true`, `active=true`, canais Cafeteria/Para levar `true` e Revendedor `false`, resto `null`/`0`). Não trata `sort_order` — a ordem do cardápio é só pela tela "Organizar cardápio".
 - `listForImportMerge(storeId, codes)` (`SupabaseProductRepository`) traz o snapshot atual dos produtos que a planilha referencia (`.in('external_code', chunk)` em lotes de 200), indexado por código — é o que decide create vs update e alimenta o `resolveImportValues`.
 - `useProductImport.ts` resolve os nomes de categoria já resolvidos (`row.resolved.categoryName`) pra id, criando as que faltam, e chama `bulkUpsertFromImport`.
-- `bulkUpsertFromImport` monta o payload **a partir de `row.resolved`** (todas as colunas já com valor final — mantido ou default), incluindo `active`, e faz `upsert` com `onConflict: 'store_id,external_code'`. Como toda linha do payload tem as mesmas chaves e todo valor é real, nada é apagado sem querer. Só `available_delivery` e `image_url` ficam de fora do payload (upsert parcial preserva).
+- `bulkUpsertFromImport` monta o payload **a partir de `row.resolved`** (todas as colunas já com valor final — mantido ou default), incluindo `active`, e faz `upsert` com `onConflict: 'store_id,external_code'`. Como toda linha do payload tem as mesmas chaves e todo valor é real, nada é apagado sem querer. `sort_order`, `available_delivery` e `image_url` ficam de fora do payload (upsert parcial preserva — produto novo pega o default `0` de `sort_order`).
 
 A tabela do preview mostra o **valor final resolvido** (o que vai ficar gravado), não o valor cru da planilha.
 

@@ -66,7 +66,6 @@ export function parseProductImportRow(record: Record<string, unknown>): ProductI
     costPrice: parseNumber(findValue(record, ['custo r$', 'custo'])),
     price: parseNumber(findValue(record, ['preco r$', 'preco'])),
     loverPrice: parseNumber(findValue(record, ['lover r$', 'preco lover r$', 'preco lover', 'lover'])),
-    sortOrder: parseNumber(findValue(record, ['ordem'])),
     active: parseYesNo(findValue(record, ['ativo', 'ativa', 'produto ativo'])),
     availableDineIn: parseYesNo(findValue(record, ['cafeteria', 'consumo no local', 'salao'])),
     availablePickup: parseYesNo(findValue(record, ['para levar/entrega', 'para levar', 'retirada', 'entrega'])),

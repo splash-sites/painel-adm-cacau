@@ -19,7 +19,6 @@ describe('parseProductImportRow', () => {
       Cafeteria: 'sim',
       'Para levar/entrega': 'sim',
       Revendedor: 'não',
-      Ordem: '3',
     })
 
     expect(row).toEqual({
@@ -34,7 +33,6 @@ describe('parseProductImportRow', () => {
       costPrice: 2.5,
       price: 5.9,
       loverPrice: 4.9,
-      sortOrder: 3,
       active: true,
       availableDineIn: true,
       availablePickup: true,
@@ -76,7 +74,6 @@ describe('parseProductImportRow', () => {
       costPrice: null,
       price: null,
       loverPrice: null,
-      sortOrder: null,
       active: null,
       availableDineIn: null,
       availablePickup: null,

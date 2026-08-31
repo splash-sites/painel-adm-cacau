@@ -22,10 +22,9 @@ const HEADERS = [
   'Para levar/entrega',
   'Revendedor',
   'Ativo',
-  'ORDEM',
 ] as const
 
-const COLUMN_WIDTH = [14, 34, 42, 20, 14, 10, 10, 16, 12, 12, 12, 12, 18, 13, 10, 9]
+const COLUMN_WIDTH = [14, 34, 42, 20, 14, 10, 10, 16, 12, 12, 12, 12, 18, 13, 10]
 
 // Paleta do painel (CLAUDE.md) em ARGB pro ExcelJS.
 const ACCENT = 'FF2C120B'
@@ -56,7 +55,6 @@ function productToRow(product: Product): (string | number)[] {
     yesNo(product.availablePickup),
     yesNo(product.availableReseller),
     yesNo(product.active),
-    product.sortOrder,
   ]
 }
 
