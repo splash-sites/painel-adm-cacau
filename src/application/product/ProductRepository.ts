@@ -25,12 +25,20 @@ export interface ProductInput {
   availableReseller: boolean
 }
 
+export type ProductMenuType = 'dine_in' | 'pickup' | 'reseller'
+
 export interface ProductListParams {
   storeId: string
   page: number
   pageSize: number
   /** Só produtos sem categoria e/ou sem foto — pra facilitar completar cadastro pós-importação. */
   incompleteOnly?: boolean
+  /** Casa (ilike) contra external_code OU name. */
+  search?: string
+  /** Filtra por categoria vinculada. */
+  categoryId?: string
+  /** Filtra por canal do produto (available_dine_in/pickup/reseller = true). */
+  menuType?: ProductMenuType
 }
 
 export interface ProductListResult {

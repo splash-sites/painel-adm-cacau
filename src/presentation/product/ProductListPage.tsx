@@ -1,18 +1,28 @@
-import { useRef, useState, type ChangeEvent } from 'react'
+import { useEffect, useRef, useState, type ChangeEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, Pencil, Trash2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Pencil, Search, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useEffectiveStoreId } from '../storeContext/useEffectiveStoreId'
 import { useStore } from '../store/useStores'
+import { useCategoryList } from '../category/useCategories'
 import { useDeleteProduct, useExportProducts, useProductList } from './useProducts'
 import { isProductIncomplete } from '../../domain/product/isProductIncomplete'
 import type { Product } from '../../domain/product/Product'
+import type { ProductMenuType } from '../../application/product/ProductRepository'
 import { Button } from '../ui/Button'
 import { Checkbox } from '../ui/Checkbox'
 import { ConfirmModal } from '../ui/ConfirmModal'
+import { Input } from '../ui/Input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/Select'
+import { useDebouncedValue } from '../ui/useDebouncedValue'
 import { cardClass, tableCardClass, tableHeaderCellClass, tableRowClass } from '../ui/styles'
 import { ProductModal } from './ProductModal'
+
+const MENU_TYPE_OPTIONS: { value: ProductMenuType; label: string }[] = [
+  { value: 'dine_in', label: 'Cafeteria' },
+  { value: 'pickup', label: 'Para levar/entrega' },
+  { value: 'reseller', label: 'Revendedor' },
+]
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50] as const
 
@@ -39,9 +49,22 @@ export function ProductListPage() {
   const [page, setPage] = useState(0)
   const [pageSize, setPageSize] = useState<number>(10)
   const [incompleteOnly, setIncompleteOnly] = useState(false)
+  const [searchInput, setSearchInput] = useState('')
+  const [categoryFilter, setCategoryFilter] = useState('all')
+  const [menuTypeFilter, setMenuTypeFilter] = useState<'all' | ProductMenuType>('all')
   const [deletingProduct, setDeletingProduct] = useState<Product | null>(null)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [isCreating, setIsCreating] = useState(false)
+
+  const search = useDebouncedValue(searchInput.trim(), 300)
+  const categoryId = categoryFilter === 'all' ? undefined : categoryFilter
+  const menuType = menuTypeFilter === 'all' ? undefined : menuTypeFilter
+  const hasFilters = Boolean(search) || Boolean(categoryId) || Boolean(menuType) || incompleteOnly
+
+  // Qualquer filtro que muda o conjunto de resultados volta pra página 1.
+  useEffect(() => {
+    setPage(0)
+  }, [search, categoryId, menuType, incompleteOnly])
 
   function handleImportFileSelected(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0]
@@ -50,8 +73,17 @@ export function ProductListPage() {
     navigate('/produtos/importar', { state: { file } })
   }
 
-  const { data, isLoading, error } = useProductList({ storeId, page, pageSize, incompleteOnly })
+  const { data, isLoading, error } = useProductList({
+    storeId,
+    page,
+    pageSize,
+    incompleteOnly,
+    search: search || undefined,
+    categoryId,
+    menuType,
+  })
   const { data: store } = useStore(storeId)
+  const { data: categories } = useCategoryList(storeId ?? '')
   const deleteProduct = useDeleteProduct()
   const exportProducts = useExportProducts()
 
@@ -130,21 +162,67 @@ export function ProductListPage() {
       {error && <p className="font-body text-red-600">Erro ao carregar produtos</p>}
 
       {storeId && (
-        <label className="flex w-fit items-center gap-2 font-body text-sm">
-          <Checkbox
-            checked={incompleteOnly}
-            onCheckedChange={(checked) => {
-              setIncompleteOnly(checked === true)
-              setPage(0)
-            }}
-          />
-          Só produtos incompletos (sem categoria e/ou sem foto)
-        </label>
+        <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-center">
+          <div className="relative w-full md:w-72">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/40" />
+            <Input
+              type="search"
+              value={searchInput}
+              onChange={(event) => setSearchInput(event.target.value)}
+              placeholder="Buscar por código ou nome"
+              aria-label="Buscar produtos por código ou nome"
+              className="pl-9"
+            />
+          </div>
+
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger className="w-full md:w-52">
+              <SelectValue placeholder="Categoria" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas as categorias</SelectItem>
+              {(categories ?? []).map((category) => (
+                <SelectItem key={category.id} value={category.id}>
+                  {category.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Select
+            value={menuTypeFilter}
+            onValueChange={(value) => setMenuTypeFilter(value as 'all' | ProductMenuType)}
+          >
+            <SelectTrigger className="w-full md:w-52">
+              <SelectValue placeholder="Tipo cardápio" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos os tipos</SelectItem>
+              {MENU_TYPE_OPTIONS.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <label className="flex items-center gap-2 font-body text-sm">
+            <Checkbox
+              checked={incompleteOnly}
+              onCheckedChange={(checked) => setIncompleteOnly(checked === true)}
+            />
+            Só incompletos
+          </label>
+        </div>
       )}
 
       {data && data.items.length === 0 && (
         <div className={cardClass}>
-          <p className="font-body text-foreground/70">Nenhum produto cadastrado ainda.</p>
+          <p className="font-body text-foreground/70">
+            {hasFilters
+              ? 'Nenhum produto encontrado com esses filtros.'
+              : 'Nenhum produto cadastrado ainda.'}
+          </p>
         </div>
       )}
 

@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { SupabaseProductRepository } from '../../infrastructure/product/SupabaseProductRepository'
 import { buildProductsWorkbook } from '../../infrastructure/product/export/buildProductsWorkbook'
-import type { ProductInput } from '../../application/product/ProductRepository'
+import type { ProductInput, ProductMenuType } from '../../application/product/ProductRepository'
 
 export const productRepository = new SupabaseProductRepository()
 const PAGE_SIZE = 10
@@ -11,6 +11,9 @@ export function useProductList(params: {
   page: number
   pageSize?: number
   incompleteOnly?: boolean
+  search?: string
+  categoryId?: string
+  menuType?: ProductMenuType
 }) {
   const pageSize = params.pageSize ?? PAGE_SIZE
 
@@ -22,6 +25,9 @@ export function useProductList(params: {
         page: params.page,
         pageSize,
         incompleteOnly: params.incompleteOnly,
+        search: params.search,
+        categoryId: params.categoryId,
+        menuType: params.menuType,
       }),
     enabled: !!params.storeId,
   })

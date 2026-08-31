@@ -110,7 +110,15 @@ function toRow(input: ProductInput) {
 const PRODUCT_SELECT = '*, categories(name)'
 
 export class SupabaseProductRepository implements ProductRepository {
-  async list({ storeId, page, pageSize, incompleteOnly }: ProductListParams): Promise<ProductListResult> {
+  async list({
+    storeId,
+    page,
+    pageSize,
+    incompleteOnly,
+    search,
+    categoryId,
+    menuType,
+  }: ProductListParams): Promise<ProductListResult> {
     const from = page * pageSize
     const to = from + pageSize - 1
 
@@ -122,6 +130,17 @@ export class SupabaseProductRepository implements ProductRepository {
     if (incompleteOnly) {
       query = query.or('category_id.is.null,image_url.is.null')
     }
+
+    // Neutraliza a sintaxe do .or() do PostgREST (vírgula/parênteses/curinga) antes de interpolar.
+    const term = search?.replace(/[%,()*\\]/g, ' ').trim()
+    if (term) {
+      query = query.or(`external_code.ilike.%${term}%,name.ilike.%${term}%`)
+    }
+
+    if (categoryId) query = query.eq('category_id', categoryId)
+    if (menuType === 'dine_in') query = query.eq('available_dine_in', true)
+    if (menuType === 'pickup') query = query.eq('available_pickup', true)
+    if (menuType === 'reseller') query = query.eq('available_reseller', true)
 
     const { data, error, count } = await query.order('sort_order').range(from, to)
 
