@@ -7,6 +7,7 @@ import { OrderDashboardPage } from './presentation/order/OrderDashboardPage'
 import { OrderHistoryPage } from './presentation/order/OrderHistoryPage'
 import { StoreFormPage } from './presentation/store/StoreFormPage'
 import { ProductListPage } from './presentation/product/ProductListPage'
+import { MenuOrderPage } from './presentation/product/MenuOrderPage'
 import { ProductImportPage } from './presentation/product/import/ProductImportPage'
 import { AddonGroupListPage } from './presentation/product/addons/AddonGroupListPage'
 import { VariationGroupListPage } from './presentation/product/variations/VariationGroupListPage'
@@ -36,6 +37,7 @@ function App() {
           <Route path="/historico" element={<OrderHistoryPage />} />
           <Route path="/configuracoes" element={<SettingsPage />} />
           <Route path="/produtos" element={<ProductListPage />} />
+          <Route path="/produtos/ordenar" element={<MenuOrderPage />} />
           <Route path="/produtos/importar" element={<ProductImportPage />} />
           <Route path="/produtos/adicionais" element={<AddonGroupListPage />} />
           <Route path="/produtos/variacoes" element={<VariationGroupListPage />} />

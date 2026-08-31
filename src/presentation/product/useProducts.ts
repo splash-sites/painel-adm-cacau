@@ -2,9 +2,19 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { SupabaseProductRepository } from '../../infrastructure/product/SupabaseProductRepository'
 import { buildProductsWorkbook } from '../../infrastructure/product/export/buildProductsWorkbook'
 import type { ProductInput, ProductMenuType } from '../../application/product/ProductRepository'
+import type { Product } from '../../domain/product/Product'
 
 export const productRepository = new SupabaseProductRepository()
 const PAGE_SIZE = 10
+
+/** Todos os produtos da loja (sem paginação) — tela de organizar cardápio / exportação. */
+export function useAllProducts(storeId: string) {
+  return useQuery({
+    queryKey: ['products', 'all', storeId],
+    queryFn: () => productRepository.listAll(storeId),
+    enabled: !!storeId,
+  })
+}
 
 export function useProductList(params: {
   storeId: string
@@ -68,6 +78,42 @@ export function useDeleteProduct() {
   return useMutation({
     mutationFn: (id: string) => productRepository.delete(id),
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] })
+    },
+  })
+}
+
+/**
+ * Reordena os produtos de uma categoria (categoryId null = sem categoria).
+ * Atualização otimista no cache ['products','all',storeId]; reverte + refetch no erro.
+ */
+export function useReorderProductsInCategory(storeId: string) {
+  const queryClient = useQueryClient()
+  const key = ['products', 'all', storeId]
+
+  return useMutation({
+    mutationFn: ({ categoryId, orderedIds }: { categoryId: string | null; orderedIds: string[] }) =>
+      productRepository.reorderInCategory(storeId, categoryId, orderedIds),
+    onMutate: async ({ orderedIds }) => {
+      await queryClient.cancelQueries({ queryKey: key })
+      const previous = queryClient.getQueryData<Product[]>(key)
+      if (previous) {
+        const position = new Map(orderedIds.map((id, index) => [id, index]))
+        queryClient.setQueryData<Product[]>(
+          key,
+          previous.map((product) =>
+            position.has(product.id)
+              ? { ...product, sortOrder: position.get(product.id) as number }
+              : product,
+          ),
+        )
+      }
+      return { previous }
+    },
+    onError: (_error, _vars, context) => {
+      if (context?.previous) queryClient.setQueryData(key, context.previous)
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['products'] })
     },
   })

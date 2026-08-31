@@ -152,6 +152,9 @@ export function ProductListPage() {
             <Button variant="outline" onClick={() => navigate('/produtos/categorias')}>
               Categorias
             </Button>
+            <Button variant="outline" onClick={() => navigate('/produtos/ordenar')}>
+              Organizar cardápio
+            </Button>
             <Button onClick={() => setIsCreating(true)}>Novo produto</Button>
           </div>
         )}

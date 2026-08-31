@@ -53,8 +53,13 @@ export interface ProductImportSummary {
 
 export interface ProductRepository {
   list(params: ProductListParams): Promise<ProductListResult>
-  /** Todos os produtos da loja, sem paginação — pra exportação de planilha. */
+  /** Todos os produtos da loja, sem paginação — pra exportação de planilha e organização do cardápio. */
   listAll(storeId: string): Promise<Product[]>
+  /**
+   * Grava a nova ordem (`sort_order` = posição na lista) dos produtos de UMA categoria.
+   * `categoryId = null` reordena os produtos sem categoria. Renumeração é por categoria (0..n).
+   */
+  reorderInCategory(storeId: string, categoryId: string | null, orderedIds: string[]): Promise<void>
   getById(id: string): Promise<Product | null>
   create(storeId: string, input: ProductInput): Promise<Product>
   update(id: string, input: ProductInput): Promise<Product>

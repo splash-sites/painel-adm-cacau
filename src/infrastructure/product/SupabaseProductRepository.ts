@@ -168,6 +168,31 @@ export class SupabaseProductRepository implements ProductRepository {
     return all
   }
 
+  async reorderInCategory(
+    storeId: string,
+    categoryId: string | null,
+    orderedIds: string[],
+  ): Promise<void> {
+    // Upsert em lote precisa do row inteiro (products tem várias colunas NOT NULL — upsert
+    // parcial falha no ON CONFLICT DO UPDATE, mesmo caso de promotions/categories).
+    let fetch = supabase.from('products').select('*').eq('store_id', storeId)
+    fetch = categoryId === null ? fetch.is('category_id', null) : fetch.eq('category_id', categoryId)
+
+    const { data, error: fetchError } = await fetch
+    if (fetchError) throw new Error(fetchError.message)
+
+    const rowById = new Map((data as Record<string, unknown>[]).map((row) => [row.id as string, row]))
+    const payload = orderedIds.map((id, index) => {
+      const row = rowById.get(id)
+      if (!row) throw new Error('Produto não encontrado nessa categoria')
+      return { ...row, sort_order: index }
+    })
+    if (payload.length === 0) return
+
+    const { error } = await supabase.from('products').upsert(payload)
+    if (error) throw new Error(error.message)
+  }
+
   async getById(id: string): Promise<Product | null> {
     const { data, error } = await supabase.from('products').select(PRODUCT_SELECT).eq('id', id).single()
     if (error || !data) return null
