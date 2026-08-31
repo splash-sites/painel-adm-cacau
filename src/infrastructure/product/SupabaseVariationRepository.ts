@@ -17,6 +17,7 @@ interface VariationGroupRow {
   name: string
   active: boolean
   price_mode: VariationPriceMode
+  sort_order: number
 }
 
 interface VariationOptionRow {
@@ -26,6 +27,7 @@ interface VariationOptionRow {
   price: number
   lover_price: number | null
   active: boolean
+  sort_order: number
 }
 
 interface ProductVariationGroupRow {
@@ -35,7 +37,14 @@ interface ProductVariationGroupRow {
 }
 
 function toVariationGroup(row: VariationGroupRow): VariationGroup {
-  return { id: row.id, storeId: row.store_id, name: row.name, active: row.active, priceMode: row.price_mode }
+  return {
+    id: row.id,
+    storeId: row.store_id,
+    name: row.name,
+    active: row.active,
+    priceMode: row.price_mode,
+    sortOrder: row.sort_order,
+  }
 }
 
 function toVariationOption(row: VariationOptionRow): VariationOption {
@@ -46,6 +55,7 @@ function toVariationOption(row: VariationOptionRow): VariationOption {
     price: row.price,
     loverPrice: row.lover_price,
     active: row.active,
+    sortOrder: row.sort_order,
   }
 }
 
@@ -57,18 +67,33 @@ export class SupabaseVariationRepository implements VariationRepository {
   async listGroups(storeId: string): Promise<VariationGroup[]> {
     const { data, error } = await supabase
       .from('variation_groups')
-      .select('id, store_id, name, active, price_mode')
+      .select('id, store_id, name, active, price_mode, sort_order')
       .eq('store_id', storeId)
-      .order('name')
+      .order('sort_order')
+      .order('name') // desempate estável se 2 grupos ficarem com o mesmo sort_order
 
     if (error) throw new Error(error.message)
     return (data as VariationGroupRow[]).map(toVariationGroup)
   }
 
   async createGroup(storeId: string, input: VariationGroupInput): Promise<VariationGroup> {
+    const { data: existing, error: fetchError } = await supabase
+      .from('variation_groups')
+      .select('sort_order')
+      .eq('store_id', storeId)
+
+    if (fetchError) throw new Error(fetchError.message)
+    const sortOrder = (existing ?? []).reduce((max, row) => Math.max(max, row.sort_order), -1) + 1
+
     const { data, error } = await supabase
       .from('variation_groups')
-      .insert({ store_id: storeId, name: input.name, active: input.active, price_mode: input.priceMode })
+      .insert({
+        store_id: storeId,
+        name: input.name,
+        active: input.active,
+        price_mode: input.priceMode,
+        sort_order: sortOrder,
+      })
       .select()
       .single()
 
@@ -90,18 +115,48 @@ export class SupabaseVariationRepository implements VariationRepository {
     if (error) throw new Error(error.message)
   }
 
+  async reorderGroups(storeId: string, orderedGroupIds: string[]): Promise<void> {
+    // Upsert em lote precisa do row inteiro (name/active/price_mode são NOT NULL — upsert parcial
+    // falha no ON CONFLICT DO UPDATE, mesmo cuidado já documentado em product_addon_groups).
+    const { data, error: fetchError } = await supabase
+      .from('variation_groups')
+      .select('id, store_id, name, active, price_mode, sort_order')
+      .eq('store_id', storeId)
+
+    if (fetchError) throw new Error(fetchError.message)
+
+    const rowById = new Map((data as VariationGroupRow[]).map((row) => [row.id, row]))
+    const payload = orderedGroupIds.map((id, index) => {
+      const row = rowById.get(id)
+      if (!row) throw new Error('Grupo de variação não encontrado nessa loja')
+      return { ...row, sort_order: index }
+    })
+
+    const { error } = await supabase.from('variation_groups').upsert(payload)
+    if (error) throw new Error(error.message)
+  }
+
   async listOptions(groupId: string): Promise<VariationOption[]> {
     const { data, error } = await supabase
       .from('variation_options')
-      .select('id, group_id, name, price, lover_price, active')
+      .select('id, group_id, name, price, lover_price, active, sort_order')
       .eq('group_id', groupId)
-      .order('name')
+      .order('sort_order')
+      .order('name') // desempate estável se 2 opções ficarem com o mesmo sort_order
 
     if (error) throw new Error(error.message)
     return (data as VariationOptionRow[]).map(toVariationOption)
   }
 
   async createOption(groupId: string, input: VariationOptionInput): Promise<VariationOption> {
+    const { data: existing, error: fetchError } = await supabase
+      .from('variation_options')
+      .select('sort_order')
+      .eq('group_id', groupId)
+
+    if (fetchError) throw new Error(fetchError.message)
+    const sortOrder = (existing ?? []).reduce((max, row) => Math.max(max, row.sort_order), -1) + 1
+
     const { data, error } = await supabase
       .from('variation_options')
       .insert({
@@ -110,6 +165,7 @@ export class SupabaseVariationRepository implements VariationRepository {
         price: input.price,
         lover_price: input.loverPrice,
         active: input.active,
+        sort_order: sortOrder,
       })
       .select()
       .single()
@@ -129,6 +185,26 @@ export class SupabaseVariationRepository implements VariationRepository {
 
   async deleteOption(id: string): Promise<void> {
     const { error } = await supabase.from('variation_options').delete().eq('id', id)
+    if (error) throw new Error(error.message)
+  }
+
+  async reorderOptions(groupId: string, orderedOptionIds: string[]): Promise<void> {
+    // Mesmo cuidado de reorderGroups — upsert em lote precisa do row inteiro.
+    const { data, error: fetchError } = await supabase
+      .from('variation_options')
+      .select('id, group_id, name, price, lover_price, active, sort_order')
+      .eq('group_id', groupId)
+
+    if (fetchError) throw new Error(fetchError.message)
+
+    const rowById = new Map((data as VariationOptionRow[]).map((row) => [row.id, row]))
+    const payload = orderedOptionIds.map((id, index) => {
+      const row = rowById.get(id)
+      if (!row) throw new Error('Variação não encontrada nesse grupo')
+      return { ...row, sort_order: index }
+    })
+
+    const { error } = await supabase.from('variation_options').upsert(payload)
     if (error) throw new Error(error.message)
   }
 

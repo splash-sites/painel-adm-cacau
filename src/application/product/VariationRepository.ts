@@ -23,11 +23,15 @@ export interface VariationRepository {
   createGroup(storeId: string, input: VariationGroupInput): Promise<VariationGroup>
   updateGroup(id: string, input: VariationGroupInput): Promise<void>
   deleteGroup(id: string): Promise<void>
+  /** Grava a ordem global dos grupos (tela /produtos/variacoes) — índice no array vira sort_order. */
+  reorderGroups(storeId: string, orderedGroupIds: string[]): Promise<void>
 
   listOptions(groupId: string): Promise<VariationOption[]>
   createOption(groupId: string, input: VariationOptionInput): Promise<VariationOption>
   updateOption(id: string, input: VariationOptionInput): Promise<void>
   deleteOption(id: string): Promise<void>
+  /** Grava a ordem das opções dentro do grupo — índice no array vira sort_order. */
+  reorderOptions(groupId: string, orderedOptionIds: string[]): Promise<void>
 
   listProductVariationGroups(productId: string): Promise<ProductVariationGroup[]>
   linkGroupToProduct(productId: string, variationGroupId: string): Promise<void>

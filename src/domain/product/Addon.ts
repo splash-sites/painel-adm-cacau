@@ -3,6 +3,8 @@ export interface AddonGroup {
   storeId: string
   name: string
   active: boolean
+  /** Ordem de exibição global do grupo, nas telas de gerenciar adicional (/produtos/adicionais). */
+  sortOrder: number
 }
 
 export interface AddonOption {
@@ -13,6 +15,8 @@ export interface AddonOption {
   /** Preço pra cliente do clube lover — opcional, null = mesmo preço de `price`. */
   loverPrice: number | null
   active: boolean
+  /** Ordem de exibição da opção dentro do grupo — é isso que o cliente vê no seletor do cardápio. */
+  sortOrder: number
 }
 
 export type AddonSelectionType = 'single' | 'multiple'

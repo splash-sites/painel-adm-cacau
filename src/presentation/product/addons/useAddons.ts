@@ -53,6 +53,18 @@ export function useDeleteAddonGroup() {
   })
 }
 
+export function useReorderAddonGroups() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ storeId, orderedGroupIds }: { storeId: string; orderedGroupIds: string[] }) =>
+      addonRepository.reorderGroups(storeId, orderedGroupIds),
+    onSuccess: (_, { storeId }) => {
+      queryClient.invalidateQueries({ queryKey: ['addon-groups', storeId] })
+    },
+  })
+}
+
 export function useAddonOptionList(groupId: string) {
   return useQuery({
     queryKey: ['addon-options', groupId],
@@ -83,6 +95,18 @@ export function useDeleteAddonOption() {
 
   return useMutation({
     mutationFn: ({ id }: { id: string; groupId: string }) => addonRepository.deleteOption(id),
+    onSuccess: (_, { groupId }) => {
+      queryClient.invalidateQueries({ queryKey: ['addon-options', groupId] })
+    },
+  })
+}
+
+export function useReorderAddonOptions() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ groupId, orderedOptionIds }: { groupId: string; orderedOptionIds: string[] }) =>
+      addonRepository.reorderOptions(groupId, orderedOptionIds),
     onSuccess: (_, { groupId }) => {
       queryClient.invalidateQueries({ queryKey: ['addon-options', groupId] })
     },

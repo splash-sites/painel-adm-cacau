@@ -1012,6 +1012,38 @@ Entrada na UI: botão "Categorias" na toolbar de `/produtos` (ao lado de "Varia�
 
 **Achado numa varredura de segurança posterior (rodada de revisão do lote Categoria+CRÍTICO+ALTO), corrigido**: `products.category_id` não tinha garantia nenhuma de pertencer à mesma loja do produto no banco — só a UI restringia (`Combobox` só oferece categoria da própria loja via `useCategoryList(storeId)`), então um `store_admin` chamando a API REST direto (fora da UI) conseguiria setar `category_id` de outra loja no próprio produto, vazando o nome dessa categoria alheia via o join `categories(name)`. Fix: trigger `products_category_store_check` (`before insert or update on products`) rejeita `category_id` cuja `categories.store_id` não bata com `products.store_id`. **Testado ao vivo via REST direto** (mesma técnica já usada pra validar RLS neste projeto — 2 lojas reais, Capão da Canoa e Torres): PATCH de produto pra categoria da própria loja → `200`; PATCH pra categoria de loja diferente → `400`, `{"code":"P0001", "message":"category_id não pertence à mesma loja do produto"}`. Confirmado bloqueado, não só ausência de bug.
 
+## Feature: Ordem de grupos e opções de adicional/variação (implementada)
+Task: "drag and drop pra escolher a ordem que aparecem no cardápio as variações e adicionais". Levantamento antes de codar achou que **metade já existia**: a ordem dos grupos vinculados a um produto específico (`product_addon_groups.sortOrder`/`product_variation_groups.sortOrder`) já era arrastável dentro do `ProductModal`. O que faltava de verdade, confirmado direto no código (`AddonGroup`/`VariationGroup`/`AddonOption`/`VariationOption` sem nenhuma coluna de ordem): **ordem global dos grupos** nas telas `/produtos/adicionais`/`/produtos/variacoes`, e **ordem das opções dentro de cada grupo** — isso nunca teve controle nenhum, opções sempre apareciam em ordem alfabética fixa. Confirmado com o usuário via pergunta fechada antes de implementar (queria os dois, não só o que faltava).
+
+**Schema (criado, com backfill):**
+```
+addon_groups.sort_order        integer not null default 0
+variation_groups.sort_order    integer not null default 0
+addon_options.sort_order       integer not null default 0
+variation_options.sort_order   integer not null default 0
+```
+Backfill via `row_number() over (partition by store_id/group_id order by name)` — mantém a ordem alfabética que já era a ordem exibida antes da migration (`.order('name')`), zero embaralhada visual na primeira carga depois de aplicar.
+
+**Camadas (mesmo padrão de `MenuOrderPage`/`SortableList`, dnd-kit):**
+```
+domain/product/Addon.ts, Variation.ts        -- AddonGroup/VariationGroup/AddonOption/VariationOption ganham sortOrder
+application/product/AddonRepository.ts, VariationRepository.ts -- + reorderGroups(storeId, orderedIds) / reorderOptions(groupId, orderedIds)
+infrastructure/.../SupabaseAddonRepository.ts, SupabaseVariationRepository.ts
+  -- list() passa a .order('sort_order').order('name') (desempate estável); create() calcula
+     sort_order automático (max+1, mesmo padrão de linkGroupToProduct); reorder busca a linha
+     inteira antes do upsert em lote (mesmo cuidado de sempre — NOT NULL quebra upsert parcial)
+presentation/product/addons/useAddons.ts, variations/useVariations.ts -- + useReorderAddonGroups/Options, useReorderVariationGroups/Options
+presentation/product/addons/AddonGroupListPage.tsx, variations/VariationGroupListPage.tsx
+  -- tabela virou linhas div (SortableItem exige wrapper <div>, incompatível com <tr>/<table> —
+     mesma solução que MenuOrderPage já usou pra isso), alça de arrastar (GripVertical) + expandir/editar/excluir
+presentation/product/addons/AddonOptionsPanel.tsx, variations/VariationOptionsPanel.tsx
+  -- lista de opção também virou div (era <ul>/<li>, mesmo motivo), arrastável dentro do grupo
+```
+
+**Testado ao vivo, os 4 fluxos, com dado real (não só type-check)**: criar 3 grupos de adicional (A, B, C) → arrastar o 3º pro topo → recarregar a página → ordem persistida (`C, A, B`). Repetido idêntico pras opções dentro de um grupo (`Opção Z` arrastada pro topo → recarrega → persiste). Repetido os dois de novo pro lado de Variação (grupo + opção). 4 confirmações, todas batendo, zero erro de console. Dado de teste excluído depois (delete do grupo cascateia as opções).
+
+**Onde isso importa pro cardápio**: a ordem dos grupos por produto já valia antes; o que é novo de ponta a ponta é a ordem das **opções dentro do grupo** (ex: lista de sabores) — isso sim é o que o cliente literalmente vê no seletor. Storefront (fora daqui) precisa ler `addon_options.sort_order`/`variation_options.sort_order` pra respeitar a ordem — não confirmado se já lê, avisar quem mexe lá.
+
 ## Ajuste 1 — navegação entre Produtos/Adicionais/Variações (implementado)
 Nas telas `/produtos/adicionais` e `/produtos/variacoes` não tinha como voltar pra Produtos nem trocar entre as duas sem usar o sidebar. As duas telas ganharam toolbar com botão "Produtos" (ícone `ArrowLeft` do lucide-react — projeto usa Radix + lucide-react, não shadcn, apesar da semelhança visual) + botão pra trocar pra seção irmã (Adicionais ↔ Variações), mesmo padrão replicado em Categorias (`CategoryListPage.tsx`).
 

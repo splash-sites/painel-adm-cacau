@@ -49,6 +49,18 @@ export function useDeleteVariationGroup() {
   })
 }
 
+export function useReorderVariationGroups() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ storeId, orderedGroupIds }: { storeId: string; orderedGroupIds: string[] }) =>
+      variationRepository.reorderGroups(storeId, orderedGroupIds),
+    onSuccess: (_, { storeId }) => {
+      queryClient.invalidateQueries({ queryKey: ['variation-groups', storeId] })
+    },
+  })
+}
+
 export function useVariationOptionList(groupId: string) {
   return useQuery({
     queryKey: ['variation-options', groupId],
@@ -79,6 +91,18 @@ export function useDeleteVariationOption() {
 
   return useMutation({
     mutationFn: ({ id }: { id: string; groupId: string }) => variationRepository.deleteOption(id),
+    onSuccess: (_, { groupId }) => {
+      queryClient.invalidateQueries({ queryKey: ['variation-options', groupId] })
+    },
+  })
+}
+
+export function useReorderVariationOptions() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ groupId, orderedOptionIds }: { groupId: string; orderedOptionIds: string[] }) =>
+      variationRepository.reorderOptions(groupId, orderedOptionIds),
     onSuccess: (_, { groupId }) => {
       queryClient.invalidateQueries({ queryKey: ['variation-options', groupId] })
     },

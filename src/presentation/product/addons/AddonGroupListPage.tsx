@@ -1,21 +1,23 @@
-import { Fragment, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, ChevronDown, ChevronRight, Pencil, Trash2 } from 'lucide-react'
+import { ArrowLeft, ChevronDown, ChevronRight, GripVertical, Pencil, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useEffectiveStoreId } from '../../storeContext/useEffectiveStoreId'
 import type { AddonGroup } from '../../../domain/product/Addon'
 import { Button } from '../../ui/Button'
 import { ConfirmModal } from '../../ui/ConfirmModal'
-import { cardClass, tableCardClass, tableHeaderCellClass, tableRowClass } from '../../ui/styles'
+import { SortableItem, SortableList } from '../../ui/SortableList'
+import { cardClass, tableCardClass } from '../../ui/styles'
 import { AddonGroupModal } from './AddonGroupModal'
 import { AddonOptionsPanel } from './AddonOptionsPanel'
-import { useAddonGroupList, useDeleteAddonGroup } from './useAddons'
+import { useAddonGroupList, useDeleteAddonGroup, useReorderAddonGroups } from './useAddons'
 
 export function AddonGroupListPage() {
   const storeId = useEffectiveStoreId()
   const navigate = useNavigate()
   const { data: groups, isLoading, error } = useAddonGroupList(storeId ?? '')
   const deleteGroup = useDeleteAddonGroup()
+  const reorderGroups = useReorderAddonGroups()
   const [expandedGroupId, setExpandedGroupId] = useState<string | null>(null)
   const [editingGroup, setEditingGroup] = useState<AddonGroup | null>(null)
   const [deletingGroup, setDeletingGroup] = useState<AddonGroup | null>(null)
@@ -32,6 +34,14 @@ export function AddonGroupListPage() {
     }
   }
 
+  function handleReorder(nextIds: string[]) {
+    if (!storeId) return
+    reorderGroups.mutate(
+      { storeId, orderedGroupIds: nextIds },
+      { onError: (e) => toast.error(e instanceof Error ? e.message : 'Falha ao reordenar grupos') },
+    )
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -39,6 +49,7 @@ export function AddonGroupListPage() {
           <h2 className="font-display text-2xl md:text-3xl text-accent">Adicionais</h2>
           <p className="font-body text-sm text-foreground/60">
             Grupos reutilizáveis de adicionais — vincule cada um aos produtos dentro do cadastro do produto.
+            Arraste pra reordenar como aparecem no cardápio.
           </p>
         </div>
         {storeId && (
@@ -67,72 +78,69 @@ export function AddonGroupListPage() {
 
       {groups && groups.length > 0 && (
         <div className={tableCardClass}>
-          <table className="w-full text-left font-body">
-            <thead>
-              <tr className="h-11">
-                <th className={`${tableHeaderCellClass} w-10 pl-6`}></th>
-                <th className={tableHeaderCellClass}>Nome</th>
-                <th className={`${tableHeaderCellClass} pr-6`}></th>
-              </tr>
-            </thead>
-            <tbody>
+          <SortableList ids={groups.map((group) => group.id)} onReorder={handleReorder}>
+            <div className="divide-y divide-secondary/10">
               {groups.map((group) => {
                 const isExpanded = expandedGroupId === group.id
                 return (
-                  <Fragment key={group.id}>
-                    <tr className={tableRowClass}>
-                      <td className="py-3 pl-6">
-                        <button
-                          type="button"
-                          aria-label={isExpanded ? `Recolher ${group.name}` : `Expandir ${group.name}`}
-                          onClick={() => setExpandedGroupId(isExpanded ? null : group.id)}
-                          className="rounded-md p-1 text-foreground/50 hover:bg-secondary/10 hover:text-foreground"
-                        >
-                          {isExpanded ? (
-                            <ChevronDown className="h-4 w-4" />
-                          ) : (
-                            <ChevronRight className="h-4 w-4" />
-                          )}
-                        </button>
-                      </td>
-                      <td className="py-3">
-                        <span className={group.active ? '' : 'text-foreground/40 line-through'}>
-                          {group.name}
-                        </span>
-                      </td>
-                      <td className="py-3 pr-6 text-right">
-                        <div className="flex items-center justify-end gap-1">
+                  <SortableItem key={group.id} id={group.id}>
+                    {({ setActivatorNodeRef, attributes, listeners }) => (
+                      <div>
+                        <div className="flex items-center gap-1 py-1 pr-4">
                           <button
                             type="button"
-                            aria-label={`Editar ${group.name}`}
-                            onClick={() => setEditingGroup(group)}
-                            className="rounded-md p-1.5 text-foreground/50 hover:bg-secondary/10 hover:text-foreground"
+                            ref={setActivatorNodeRef}
+                            {...attributes}
+                            {...listeners}
+                            aria-label={`Arrastar ${group.name}`}
+                            className="shrink-0 cursor-grab touch-none rounded-md p-1.5 text-foreground/40 hover:bg-secondary/10 hover:text-foreground active:cursor-grabbing"
                           >
-                            <Pencil className="h-4 w-4" />
+                            <GripVertical className="h-4 w-4" />
                           </button>
                           <button
                             type="button"
-                            aria-label={`Excluir ${group.name}`}
-                            onClick={() => setDeletingGroup(group)}
-                            className="rounded-md p-1.5 text-foreground/50 hover:bg-red-700/10 hover:text-red-700"
+                            aria-label={isExpanded ? `Recolher ${group.name}` : `Expandir ${group.name}`}
+                            onClick={() => setExpandedGroupId(isExpanded ? null : group.id)}
+                            className="shrink-0 rounded-md p-1.5 text-foreground/50 hover:bg-secondary/10 hover:text-foreground"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            {isExpanded ? (
+                              <ChevronDown className="h-4 w-4" />
+                            ) : (
+                              <ChevronRight className="h-4 w-4" />
+                            )}
                           </button>
+                          <span
+                            className={`flex-1 py-2 font-body ${group.active ? '' : 'text-foreground/40 line-through'}`}
+                          >
+                            {group.name}
+                          </span>
+                          <div className="flex shrink-0 items-center gap-1">
+                            <button
+                              type="button"
+                              aria-label={`Editar ${group.name}`}
+                              onClick={() => setEditingGroup(group)}
+                              className="rounded-md p-1.5 text-foreground/50 hover:bg-secondary/10 hover:text-foreground"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </button>
+                            <button
+                              type="button"
+                              aria-label={`Excluir ${group.name}`}
+                              onClick={() => setDeletingGroup(group)}
+                              className="rounded-md p-1.5 text-foreground/50 hover:bg-red-700/10 hover:text-red-700"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          </div>
                         </div>
-                      </td>
-                    </tr>
-                    {isExpanded && (
-                      <tr>
-                        <td colSpan={3} className="p-0">
-                          <AddonOptionsPanel groupId={group.id} />
-                        </td>
-                      </tr>
+                        {isExpanded && <AddonOptionsPanel groupId={group.id} />}
+                      </div>
                     )}
-                  </Fragment>
+                  </SortableItem>
                 )
               })}
-            </tbody>
-          </table>
+            </div>
+          </SortableList>
         </div>
       )}
 

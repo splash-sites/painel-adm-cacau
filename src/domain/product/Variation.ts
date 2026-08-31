@@ -7,6 +7,8 @@ export interface VariationGroup {
   active: boolean
   /** 'additive' soma a opção escolhida em cima do preço base (0 = neutro, ex: intensidade). 'replace' faz a opção virar o preço final (ex: tamanho). Config do grupo, não do produto. */
   priceMode: VariationPriceMode
+  /** Ordem de exibição global do grupo, nas telas de gerenciar variação (/produtos/variacoes). */
+  sortOrder: number
 }
 
 export interface VariationOption {
@@ -17,6 +19,8 @@ export interface VariationOption {
   /** Preço pra cliente do clube lover — opcional, null = mesmo preço de `price`. */
   loverPrice: number | null
   active: boolean
+  /** Ordem de exibição da opção dentro do grupo — é isso que o cliente vê no seletor do cardápio. */
+  sortOrder: number
 }
 
 /** Vínculo produto↔grupo — sempre single-select e sempre obrigatório, sem config extra (diferente do adicional). */

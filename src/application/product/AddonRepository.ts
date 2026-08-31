@@ -22,11 +22,15 @@ export interface AddonRepository {
   createGroup(storeId: string, input: AddonGroupInput): Promise<AddonGroup>
   updateGroup(id: string, input: AddonGroupInput): Promise<void>
   deleteGroup(id: string): Promise<void>
+  /** Grava a ordem global dos grupos (tela /produtos/adicionais) — índice no array vira sort_order. */
+  reorderGroups(storeId: string, orderedGroupIds: string[]): Promise<void>
 
   listOptions(groupId: string): Promise<AddonOption[]>
   createOption(groupId: string, input: AddonOptionInput): Promise<AddonOption>
   updateOption(id: string, input: AddonOptionInput): Promise<void>
   deleteOption(id: string): Promise<void>
+  /** Grava a ordem das opções dentro do grupo — índice no array vira sort_order. */
+  reorderOptions(groupId: string, orderedOptionIds: string[]): Promise<void>
 
   listProductAddonGroups(productId: string): Promise<ProductAddonGroup[]>
   linkGroupToProduct(productId: string, addonGroupId: string, input: ProductAddonGroupInput): Promise<void>
