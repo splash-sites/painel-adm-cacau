@@ -1062,6 +1062,7 @@ BAIXO:
 22. `VITE_STOREFRONT_URL` ausente gera link "Ver cardápio" como `undefined/slug` (botão de QR Code já valida essa env, o link normal não).
 23. `AdminUserRepository.list()` sem paginação — única listagem do app sem `.range()` que não é bounded por loja.
 24. Desconto de promoção aceita valor `0` e ainda mostra badge "0% OFF"/"R$0 OFF" — trocar `.min(0)` por `.positive()` em `promotionSchema.ts`.
+25. Busca de produto (`ProductListPage`) é sensível a acento — `ilike` só ignora caixa, então "cafe" não acha "café". Correção proposta e adiada por decisão do usuário: extensão `unaccent` + coluna gerada `products.search_blob` (`f_unaccent(lower(external_code || ' ' || name))`) com índice `gin_trgm_ops`, e o client normaliza (NFD + strip diacríticos + lower) o termo antes do `.ilike('search_blob', ...)`. De brinde resolveria o item 13 (wildcard à esquerda sem índice).
 
 ## Varredura de CRUDs + concorrência (pedido do usuário: "10 usuários simultâneos")
 Pedido explícito: testar todo CRUD do app ao vivo (não confiar só em type-check) e dar feedback sobre volume de requisição pensando em uso concorrente. Testado via Playwright com instrumentação de rede própria (log de toda request `/rest/v1`/`/rpc`/`/auth/v1`/`/functions/v1`, com fase e duração) contra o Supabase de dev real, conta `julia@gmail.com`.
