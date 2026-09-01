@@ -70,7 +70,11 @@ export function CopyCatalogModal({
       setResult(summary)
       setPassword('')
       setPhase('done')
-      toast.success('Catálogo copiado.')
+      if (summary.imagesCopied < summary.imageCount || summary.imageErrors > 0) {
+        toast.warning('Catálogo copiado, mas faltaram fotos — copie de novo pra terminar.')
+      } else {
+        toast.success('Catálogo copiado.')
+      }
     } catch (error) {
       setPassword('')
       toast.error(error instanceof Error ? error.message : 'Falha ao copiar catálogo')
@@ -194,20 +198,48 @@ export function CopyCatalogModal({
               <p>{result.updated} produto(s) atualizado(s)</p>
               <p>{result.skipped} produto(s) pulado(s) (já existiam)</p>
               <p className="mt-2">
-                {result.imagesCopied} foto(s) copiada(s)
-                {result.imageErrors > 0 && ` · ${result.imageErrors} falharam`}
+                {result.imagesCopied} de {result.imageCount} foto(s) copiada(s)
+                {result.imageErrors > 0 && ` · ${result.imageErrors} com erro`}
               </p>
             </div>
-            {result.imageErrors > 0 && (
-              <p className="font-body text-sm text-amber-700">
-                Algumas fotos não copiaram — rode de novo ou suba manualmente nos produtos afetados.
-              </p>
+
+            {result.imagesCopied < result.imageCount || result.imageErrors > 0 ? (
+              <>
+                <p className="font-body text-sm text-amber-700">
+                  Faltaram {Math.max(result.imageCount - result.imagesCopied, result.imageErrors)}{' '}
+                  foto(s) — conexão lenta ou tempo esgotado. Digite a senha e copie de novo: só as
+                  que faltam são processadas.
+                </p>
+                <div className="space-y-1">
+                  <Label htmlFor="copy-catalog-password-retry">Sua senha</Label>
+                  <Input
+                    id="copy-catalog-password-retry"
+                    type="password"
+                    autoComplete="current-password"
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                  />
+                </div>
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={onClose}>
+                    Fechar
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={runCopy}
+                    disabled={!password || copyCatalog.isPending}
+                  >
+                    {copyCatalog.isPending ? 'Copiando...' : 'Copiar fotos que faltaram'}
+                  </Button>
+                </DialogFooter>
+              </>
+            ) : (
+              <DialogFooter>
+                <Button type="button" onClick={onClose}>
+                  Fechar
+                </Button>
+              </DialogFooter>
             )}
-            <DialogFooter>
-              <Button type="button" onClick={onClose}>
-                Fechar
-              </Button>
-            </DialogFooter>
           </div>
         )}
       </DialogContent>

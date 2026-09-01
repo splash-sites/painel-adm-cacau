@@ -22,7 +22,6 @@ create table if not exists catalog_copy_log (
 
 alter table catalog_copy_log enable row level security;
 
--- só super_admin lê; ninguém insere direto — só a RPC (security definer)
 drop policy if exists "super_admin lê log de cópia de catálogo" on catalog_copy_log;
 create policy "super_admin lê log de cópia de catálogo"
   on catalog_copy_log for select
@@ -30,12 +29,15 @@ create policy "super_admin lê log de cópia de catálogo"
 
 -- ----------------------------------------------------------------------------
 -- 2. RPC copy_catalog
---    - security definer, search_path fixo
+--    - security definer, search_path fixo, statement_timeout folgado (catálogo grande)
 --    - NÃO usa auth.uid(): recebe p_actor da Edge Function (que valida o JWT)
 --    - revoke de authenticated + grant só service_role => não é chamável direto
 --    - pg_advisory_xact_lock por loja destino (achado #4)
 --    - grava catalog_copy_log em execução real (achado #5)
---    A assinatura mudou em relação à v1 (ganhou p_actor) — daí o drop antes.
+--    - re-emite a foto de qualquer produto cujo image_url no destino ainda não seja
+--      local ('/product-images/<to_store>/...') — re-rodar "Copiar catálogo" termina
+--      as fotos que não copiaram por lentidão/timeout (achado #27, auto-cura)
+--    Assinatura mudou em relação à v1 (ganhou p_actor) — daí o drop antes.
 -- ----------------------------------------------------------------------------
 drop function if exists copy_catalog(uuid, uuid, boolean, boolean);
 drop function if exists copy_catalog(uuid, uuid, uuid, boolean, boolean);
@@ -51,6 +53,7 @@ returns jsonb
 language plpgsql
 security definer
 set search_path = public
+set statement_timeout = '180s'
 as $$
 declare
   v_role         text;
@@ -67,9 +70,12 @@ declare
   v_to_cat_id    uuid;
   v_to_prod_id   uuid;
   v_to_group_id  uuid;
+  v_to_image_url text;
+  v_cur_img      text;
+  v_local_pat    text;
 begin
-  -- actor tem que ser super_admin (achado #2 — a senha é revalidada na Edge Function,
-  -- e a RPC só é invocável por service_role, então este é o único caminho)
+  v_local_pat := '%/product-images/' || p_to_store::text || '/%';
+
   select role into v_role from profiles where id = p_actor;
   if v_role is distinct from 'super_admin' then
     raise exception 'Apenas super_admin pode copiar catálogo' using errcode = '42501';
@@ -78,7 +84,6 @@ begin
     raise exception 'Origem e destino não podem ser a mesma loja' using errcode = '22023';
   end if;
 
-  -- serializa cópias concorrentes pro mesmo destino (evita categoria/grupo duplicado)
   if not p_dry_run then
     perform pg_advisory_xact_lock(hashtext(p_to_store::text));
   end if;
@@ -94,7 +99,6 @@ begin
       continue;
     end if;
 
-    -- categoria da origem -> acha-ou-cria no destino por nome (sem caixa)
     v_from_cat  := (select name from categories where id = r_prod.category_id);
     v_to_cat_id := null;
     if v_from_cat is not null then
@@ -111,18 +115,23 @@ begin
       end if;
     end if;
 
-    if not v_exists and r_prod.image_url is not null and r_prod.image_url <> '' then
-      v_image_count := v_image_count + 1;
-    end if;
-
+    -- dry-run: só conta. Estima fotos a copiar (origem tem foto E a do destino não é local)
     if p_dry_run then
       if v_exists then v_updated := v_updated + 1; else v_created := v_created + 1; end if;
+      if r_prod.image_url is not null and r_prod.image_url <> '' then
+        if not v_exists then
+          v_image_count := v_image_count + 1;
+        else
+          select image_url into v_cur_img
+          from products where store_id = p_to_store and external_code = r_prod.external_code;
+          if v_cur_img is null or v_cur_img not like v_local_pat then
+            v_image_count := v_image_count + 1;
+          end if;
+        end if;
+      end if;
       continue;
     end if;
 
-    -- upsert do produto no destino
-    -- stock 0 + track_stock false (cada loja conta o próprio); preço/custo/lover da origem;
-    -- image_url = url da origem, provisória (a Edge Function copia o arquivo e troca)
     insert into products (
       store_id, external_code, name, ncm, unit, category, category_id, description,
       image_url, stock_quantity, cost_price, price, lover_price, sort_order, active, track_stock,
@@ -148,15 +157,16 @@ begin
       sort_order  = excluded.sort_order,
       active      = excluded.active
       -- não mexe em image_url / stock_quantity / track_stock numa 2ª rodada
-    returning id into v_to_prod_id;
+    returning id, image_url into v_to_prod_id, v_to_image_url;
 
-    if v_exists then
-      v_updated := v_updated + 1;
-    else
-      v_created := v_created + 1;
-      if r_prod.image_url is not null and r_prod.image_url <> '' then
-        v_images := v_images || jsonb_build_object('product_id', v_to_prod_id, 'source_url', r_prod.image_url);
-      end if;
+    if v_exists then v_updated := v_updated + 1; else v_created := v_created + 1; end if;
+
+    -- precisa copiar a foto? origem tem foto E a do destino ainda não é local
+    -- (produto novo: image_url = url da origem; produto que ficou hotlinkado numa rodada anterior)
+    if r_prod.image_url is not null and r_prod.image_url <> ''
+       and (v_to_image_url is null or v_to_image_url not like v_local_pat) then
+      v_image_count := v_image_count + 1;
+      v_images := v_images || jsonb_build_object('product_id', v_to_prod_id, 'source_url', r_prod.image_url);
     end if;
 
     -- adicionais: acha-ou-cria grupo/opções por nome no destino, recria o vínculo com a config
@@ -228,7 +238,6 @@ begin
     end loop;
   end loop;
 
-  -- auditoria: só execução real (dry-run não grava)
   if not p_dry_run then
     insert into catalog_copy_log (actor_id, from_store, to_store, update_existing,
                                   created_count, updated_count, skipped_count, image_count)
@@ -252,7 +261,6 @@ grant  execute on function copy_catalog(uuid, uuid, uuid, boolean, boolean) to s
 
 -- Conferir que sobrou só 1 versão:
 --   select oid::regprocedure from pg_proc where proname = 'copy_catalog';
--- Deve retornar: copy_catalog(uuid,uuid,uuid,boolean,boolean)
 
 -- Consulta do log:
 --   select l.ran_at, p.full_name as quem, sf.name as de, st.name as para,
