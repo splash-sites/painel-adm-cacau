@@ -1064,6 +1064,55 @@ presentation/report/ReportsPage.tsx                   -- botão "Exportar planil
 
 **Testado ao vivo, ponta a ponta**: clique real em "Exportar planilha" → download efetivo → reaberto com `exceljs` pra conferir o conteúdo → nome da loja certo ("Cacau Show Capão da Canoa"), período certo ("Hoje"/"30 dias"), valores batendo com o que a tela mostra (loja de teste sem pedido no período, então tudo zerado nos dois — consistente, não é bug).
 
+## Feature: Copiar catálogo pra outra loja (implementada)
+Cliente com 2 lojas quase iguais (Cacau Show Torres / Capão) reclamou de cadastrar o catálogo 2x. Botão **"Copiar catálogo"** na toolbar de Produtos (`super_admin` only) que leva **produtos + fotos + categorias + adicionais + variações** de uma loja pra outra numa operação. É cópia independente, não vínculo vivo — re-executável pra sincronizar depois (idempotente). A planilha continua servindo pro cadastro em massa de texto; este botão cobre o que a planilha nunca levou (foto, adicional, variação).
+
+**Decisões (perguntas fechadas):**
+- **Destino = loja ativa da sidebar** (fixo, só mostrado no modal). Só a **origem** é escolhível (dropdown, exclui a atual). Menos erro que escolher as duas.
+- Produto que já existe no destino: **modal pergunta** — atualizar com dados da origem, ou pular.
+- Estoque no destino: **sempre `track_stock=false`, quantidade 0** (cada loja conta o próprio).
+- Preço/custo/lover: **copiados da origem sempre** (inclusive ao atualizar).
+- v1 leva tudo (produtos + fotos + categorias + adicionais + variações).
+
+**Arquitetura** (RPC no banco não dá 1 transação com Storage):
+```
+RPC copy_catalog(p_actor, p_from_store, p_to_store, p_update_existing, p_dry_run) -> jsonb
+  - security definer, search_path fixo. NÃO usa auth.uid() — recebe p_actor da Edge Function
+  - revoke execute from public/anon/authenticated; grant só to service_role
+    => a RPC NÃO é chamável direto por sessão autenticada, só pela Edge Function
+  - checa profiles.role de p_actor = 'super_admin'; rejeita from = to
+  - pg_advisory_xact_lock(hashtext(p_to_store)) — serializa cópias concorrentes pro mesmo destino
+  - loop nos produtos da origem: match por external_code; acha-ou-cria categoria/addon_group/
+    variation_group/opções por nome (lower(trim)); upsert do produto (stock 0, track_stock false,
+    image_url = url da origem provisória); recria product_addon_groups/product_variation_groups
+  - grava linha em catalog_copy_log (actor/from/to/update_existing/contagens/ran_at) — só quando não é dry_run
+  - retorna { dry_run, created, updated, skipped, image_count, images: [{product_id, source_url}] }
+    (images só pros recém-criados)
+
+Edge Function copy-catalog (Deno, deployada no Supabase):
+  - valida JWT do caller -> profiles.role super_admin (403 senão)
+  - se NÃO for dry_run: revalida a senha via signInWithPassword(email do caller) -> 401 "Senha incorreta"
+  - chama a RPC via client service_role, passando p_actor = user.id
+  - se não é dry_run: loop nas images -> valida o path extraído da source_url bate "<from_store>/<arquivo>"
+    (sem subpasta, sem "..") -> storage.copy pro caminho da loja destino -> update products.image_url
+  - retorna { dryRun, created, updated, skipped, imageCount, imagesCopied, imageErrors }
+
+catalog_copy_log (tabela de auditoria): RLS só select pra super_admin; ninguém insere direto (só a RPC security definer).
+```
+
+**Frontend:**
+```
+application/catalog/CatalogCopyRepository.ts        -- porta: copy({ fromStoreId, toStoreId, updateExisting, dryRun, password? })
+infrastructure/catalog/SupabaseCatalogCopyRepository.ts -- functions.invoke('copy-catalog'); erro real vem de error.context (FunctionsHttpError)
+presentation/catalog/useCopyCatalog.ts             -- mutation; invalida products/categories/addonGroups/variationGroups só quando NÃO é dry-run
+presentation/catalog/CopyCatalogModal.tsx          -- 3 fases: form (origem + updateExisting) -> preview (dry-run: "vai criar X / atualizar Y / pular Z" + senha) -> done (resumo). Não fecha enquanto isPending; limpa senha no catch
+presentation/product/ProductListPage.tsx           -- botão "Copiar catálogo" (só isSuperAdmin), modal com toStoreId = useEffectiveStoreId()
+```
+
+**Segurança (`security-sweep` rodado — zero CRÍTICO/ALTO)**: 4 MÉDIO + 1 BAIXO da varredura corrigidos nesta rodada — preview via dry-run antes de gravar (#1); senha virou portão real, `revoke` da RPC + `p_actor` (#2); validação de path do Storage contra `..` (#3); advisory lock contra corrida no acha-ou-cria (#4); modal não fecha durante a operação (#10). Pendências BAIXO no backlog abaixo (#6 `cost_price` visível pro store_admin do destino, #7 foto que falha deixa hotlink pra origem, #8 produto entra `active=true` antes da foto, #9 `signInWithPassword` repetido pode dar rate-limit). Informational: `copy_catalog` aceita qualquer par de lojas — não há tenant no schema, `super_admin` é global; se um dia entrarem super_admins por cliente, a RPC precisa checar que origem e destino têm o mesmo dono.
+
+**Testado ao vivo** entre "Loja Splash teste" e "Loja Splash teste 2": dry-run (só conta), cópia real (6 produtos + categoria + adicional + 1 foto), re-rodar não duplica (`created:0, skipped:6`), modo atualizar (`updated:6`), senha errada bloqueia, `store_admin` não vê o botão, `catalog_copy_log` recebeu a linha. RPC direto pelo SQL Editor sem impersonation dá `42501`.
+
 ## Ajuste 1 — navegação entre Produtos/Adicionais/Variações (implementado)
 Nas telas `/produtos/adicionais` e `/produtos/variacoes` não tinha como voltar pra Produtos nem trocar entre as duas sem usar o sidebar. As duas telas ganharam toolbar com botão "Produtos" (ícone `ArrowLeft` do lucide-react — projeto usa Radix + lucide-react, não shadcn, apesar da semelhança visual) + botão pra trocar pra seção irmã (Adicionais ↔ Variações), mesmo padrão replicado em Categorias (`CategoryListPage.tsx`).
 
@@ -1132,6 +1181,12 @@ BAIXO:
 23. `AdminUserRepository.list()` sem paginação — única listagem do app sem `.range()` que não é bounded por loja.
 24. Desconto de promoção aceita valor `0` e ainda mostra badge "0% OFF"/"R$0 OFF" — trocar `.min(0)` por `.positive()` em `promotionSchema.ts`.
 25. Busca de produto (`ProductListPage`) é sensível a acento — `ilike` só ignora caixa, então "cafe" não acha "café". Correção proposta e adiada por decisão do usuário: extensão `unaccent` + coluna gerada `products.search_blob` (`f_unaccent(lower(external_code || ' ' || name))`) com índice `gin_trgm_ops`, e o client normaliza (NFD + strip diacríticos + lower) o termo antes do `.ilike('search_blob', ...)`. De brinde resolveria o item 13 (wildcard à esquerda sem índice).
+
+**Copiar catálogo — BAIXO da varredura, adiados (ver "Feature: Copiar catálogo pra outra loja"):**
+26. `copy_catalog` copia `cost_price` da origem — `store_admin` da loja destino passa a enxergar os custos da origem nos próprios produtos. Ok se for o mesmo cliente. Opção: não copiar `cost_price` (ou só quando origem/destino têm o mesmo `store_admin`).
+27. Foto que falha copiar (`imageError`) deixa o `image_url` do produto no destino apontando pro Storage da loja de origem (hotlink — funciona por bucket público, quebra se a origem apagar). Modal já orienta re-rodar. Opção: gravar `image_url = null` no destino quando o `copy` falhar.
+28. Produtos entram no destino com `active` da origem — item ativo aparece no storefront do destino no intervalo entre a RPC e a cópia das fotos pela Edge Function (foto quebrada/hotlink por alguns segundos). Opção: forçar `active = false` na criação, super_admin ativa depois.
+29. Edge Function `copy-catalog` faz `signInWithPassword` na conta do próprio super_admin a cada execução real — sequência de senhas erradas pode disparar rate-limit do GoTrue e travar o login normal; cada acerto emite um refresh token nunca revogado. Efeito colateral de usar o fluxo de login como confirmação de senha. Opção: token de step-up emitido/verificado à parte.
 
 ## Varredura de CRUDs + concorrência (pedido do usuário: "10 usuários simultâneos")
 Pedido explícito: testar todo CRUD do app ao vivo (não confiar só em type-check) e dar feedback sobre volume de requisição pensando em uso concorrente. Testado via Playwright com instrumentação de rede própria (log de toda request `/rest/v1`/`/rpc`/`/auth/v1`/`/functions/v1`, com fase e duração) contra o Supabase de dev real, conta `julia@gmail.com`.

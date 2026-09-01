@@ -3,8 +3,10 @@ import { useNavigate } from 'react-router-dom'
 import { ChevronLeft, ChevronRight, Pencil, Search, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useEffectiveStoreId } from '../storeContext/useEffectiveStoreId'
+import { useAuth } from '../auth/useAuth'
 import { useStore } from '../store/useStores'
 import { useCategoryList } from '../category/useCategories'
+import { CopyCatalogModal } from '../catalog/CopyCatalogModal'
 import { useDeleteProduct, useExportProducts, useProductList } from './useProducts'
 import { isProductIncomplete } from '../../domain/product/isProductIncomplete'
 import type { Product } from '../../domain/product/Product'
@@ -55,6 +57,10 @@ export function ProductListPage() {
   const [deletingProduct, setDeletingProduct] = useState<Product | null>(null)
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [isCreating, setIsCreating] = useState(false)
+  const [isCopyingCatalog, setIsCopyingCatalog] = useState(false)
+
+  const { session } = useAuth()
+  const isSuperAdmin = session?.profile.role === 'super_admin'
 
   const search = useDebouncedValue(searchInput.trim(), 300)
   const categoryId = categoryFilter === 'all' ? undefined : categoryFilter
@@ -155,6 +161,11 @@ export function ProductListPage() {
             <Button variant="outline" onClick={() => navigate('/produtos/ordenar')}>
               Organizar cardápio
             </Button>
+            {isSuperAdmin && (
+              <Button variant="outline" onClick={() => setIsCopyingCatalog(true)}>
+                Copiar catálogo
+              </Button>
+            )}
             <Button onClick={() => setIsCreating(true)}>Novo produto</Button>
           </div>
         )}
@@ -364,6 +375,14 @@ export function ProductListPage() {
 
       {isCreating && storeId && (
         <ProductModal storeId={storeId} onClose={() => setIsCreating(false)} />
+      )}
+
+      {isCopyingCatalog && storeId && (
+        <CopyCatalogModal
+          toStoreId={storeId}
+          toStoreName={store?.name ?? 'esta loja'}
+          onClose={() => setIsCopyingCatalog(false)}
+        />
       )}
     </div>
   )
