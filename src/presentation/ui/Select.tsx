@@ -35,14 +35,17 @@ export function SelectContent({ className, children, ...props }: ComponentProps<
     <SelectPrimitive.Portal>
       <SelectPrimitive.Content
         className={cn(
-          'z-50 overflow-hidden rounded-lg border border-secondary/15 bg-background shadow-lg',
+          'z-50 max-h-[var(--radix-select-content-available-height)] min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-lg border border-secondary/15 bg-background shadow-lg',
           className,
         )}
         position="popper"
         sideOffset={6}
         {...props}
       >
-        <SelectPrimitive.Viewport className="scrollbar-hidden p-1">{children}</SelectPrimitive.Viewport>
+        {/* max-h + overflow-y-auto: lista maior que a tela rola em vez de estourar (sem scrollbar-hidden) */}
+        <SelectPrimitive.Viewport className="max-h-[var(--radix-select-content-available-height)] overflow-y-auto p-1">
+          {children}
+        </SelectPrimitive.Viewport>
       </SelectPrimitive.Content>
     </SelectPrimitive.Portal>
   )
