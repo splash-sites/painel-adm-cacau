@@ -228,7 +228,7 @@ stores        (id, name, slug, active, created_at,
                supports_dine_in boolean default true, supports_pickup boolean default true,
                supports_delivery boolean default false, reseller_enabled boolean default false)
 products      (id, store_id, external_code, name, ncm, unit, category, description, image_url,
-               stock_quantity, cost_price, price, lover_price, sort_order, active, track_stock, created_at,
+               stock_quantity, reseller_stock_quantity, cost_price, price, lover_price, sort_order, active, track_stock, created_at,
                available_dine_in, available_pickup, available_delivery, available_reseller boolean)
                -- unique (store_id, external_code) — chave de upsert na reimportação
                -- cost_price NUNCA é exposto ao storefront (ver "Importação de planilha")
@@ -278,7 +278,7 @@ promotions            (id, store_id, title, subtitle, badge_label, image_url, pr
 
 ## Canal de revendedor (`/atacado`)
 Mesma loja, mesmo preço, cadastro livre igual cliente comum — **não é um papel novo em `profiles`**, é só uma vitrine e um fluxo diferentes dentro do mesmo app do storefront. Slug sempre derivado do slug da loja (`{slug-da-loja}/atacado`), nunca um campo separado pra configurar — se a loja não tem `reseller_enabled = true`, essa rota simplesmente não existe pra ela. Catálogo filtra por `available_reseller` em vez de `available_retail`; pedido nasce com `sales_channel = 'reseller'` e não oferece `dine_in` como tipo.
-No dashboard de pedidos, o filtro por canal (varejo/atacado) é uma dimensão a mais, separada do filtro por tipo (local/retirada/delivery) já existente.
+**Correção (verificado no código):** o dashboard de pedidos **não tem** filtro por canal — o kanban mistura varejo e revendedor, só o badge "Revendedor" diferencia. O que existe é a aba **Revendedores** (`/revendedores`, ver "Feature: Aba Revendedores" mais abaixo), que lista só os pedidos `sales_channel='reseller'` e edita o estoque do canal.
 
 ## Tipo de cardápio no produto (`available_*`)
 Toggles no `ProductModal` e coluna "Tipo cardápio" na lista de produtos: **Cafeteria** (`available_dine_in`), **Para levar/entrega** (`available_pickup`), **Revendedor** (`available_reseller`). O storefront do colega unificou "para levar" e "entrega" num cardápio só, lendo `available_pickup` — então **`available_delivery` foi aposentado da UI do admin**: o toggle "Delivery" saiu do modal e o badge "Delivery" saiu da lista (`ProductModal.tsx`, `ProductListPage.tsx` `menuTypeLabel`). A coluna `available_delivery` **continua no banco** e no schema/form (`productSchema`, `emptyDefaults`) — produto que já tinha `true` mantém o valor, salvar no modal reescreve o que estava lá, produto novo nasce `false`. Se aparecer produto só com `delivery=true`/`pickup=false`, ele some do cardápio unificado e não dá mais pra ver isso pela tela — checar por SQL e marcar "Para levar/entrega". A importação de planilha escreve os 3 canais vivos, nunca `available_delivery`.
@@ -1063,6 +1063,41 @@ presentation/report/ReportsPage.tsx                   -- botão "Exportar planil
 **Achado BAIXO da varredura, corrigido**: o arquivo de preview que gerei pra aprovação (`relatorio-preview.xlsx`, dado real da loja — faturamento, nome de atendente) ficou solto na raiz do repo, sem `.gitignore` cobrindo `.xlsx` — um `git add -A` de rotina teria commitado dado real de cliente. Apagado, e `*.xlsx` entrou no `.gitignore`.
 
 **Testado ao vivo, ponta a ponta**: clique real em "Exportar planilha" → download efetivo → reaberto com `exceljs` pra conferir o conteúdo → nome da loja certo ("Cacau Show Capão da Canoa"), período certo ("Hoje"/"30 dias"), valores batendo com o que a tela mostra (loja de teste sem pedido no período, então tudo zerado nos dois — consistente, não é bug).
+
+## Feature: Aba Revendedores — estoque próprio + pedidos do canal (código pronto, SQL a aplicar)
+Pedido do usuário: revendedor tem **estoque separado** dos outros tipos de cardápio, e uma aba no painel pra ajustar esse estoque e ver os pedidos feitos pelas revendedoras via storefront.
+
+**Decisões (perguntas fechadas antes de codar):**
+- Estoque = **coluna nova** `products.reseller_stock_quantity` (`numeric not null default 0 check >= 0`), não tabela por canal. `stock_quantity` continua sendo o estoque "normal".
+- Baixa **automática** a cada pedido de revendedor, e **bloqueia** pedido acima do saldo.
+- **Controle de estoque do revendedor é independente do estoque normal**: `products.reseller_track_stock boolean not null default false`. Ligar/desligar é um Switch por produto na própria aba Revendedores — não depende de `products.track_stock`. Foi ajuste pedido depois do 1º teste (a versão inicial reaproveitava `track_stock`, e o campo de saldo ficava travado em produto sem estoque normal). Default `false` = nenhum produto bloqueia pedido de revendedor até alguém ligar.
+- Aba visível a `store_admin` e `super_admin`, **só se a loja tem `reseller_enabled`** (link no sidebar e página mostram aviso se a loja não atende revendedor).
+
+**Baixa de estoque = trigger no Postgres, não edição do `confirm_order`** (mesmo raciocínio do `assign_table_session`): `confirm_order` vive no repo do storefront e não está versionado aqui, e um trigger em `order_items` cobre qualquer origem de escrita (storefront, `add/update/remove_order_item` do admin) sem mudar RPC nenhuma. SQL versionado em `docs/supabase/reseller_stock.sql` (idempotente — rodar de novo o arquivo inteiro é seguro; 1ª versão já aplicada no SQL Editor, a versão com `reseller_track_stock` precisa rodar de novo):
+- `reseller_stock_apply(product, store, delta)` — `security definer`, `revoke` de public/anon/authenticated; baixa atômica (`UPDATE ... where saldo >= qtd`), `raise exception 'Estoque de revendedor insuficiente para "X"'` se não der. **`reseller_track_stock = false` nunca baixa nem bloqueia.**
+- trigger `order_items_reseller_stock` (insert / update of quantity / delete) — só pedido `sales_channel='reseller'`; editar quantidade ajusta pelo delta; remover item devolve.
+- trigger `orders_reseller_stock_restore` — cancelar pedido devolve tudo (cancelado é terminal, não existe voltar).
+
+**Camadas:**
+```
+domain/product/Product.ts                     -- + resellerStockQuantity
+application/product/ProductRepository.ts      -- + updateResellerStock(id, quantity) (só a coluna, nunca via ProductInput)
+infrastructure/product/SupabaseProductRepository.ts -- lê reseller_stock_quantity (?? 0 até o SQL rodar); reorderInCategory NÃO reescreve a coluna (trigger baixa por fora, upsert do row lido desfaria a baixa)
+application/order/OrderRepository.ts + SupabaseOrderRepository.ts -- OrderHistoryParams.salesChannel, filtro server-side em listHistory
+presentation/order/OrderHistoryPage.tsx        -- props salesChannel / embedded (reusada dentro da aba, sem duplicar tabela)
+presentation/reseller/ResellerPage.tsx         -- rota /revendedores, toggle Estoque | Pedidos
+presentation/reseller/ResellerStockPanel.tsx   -- produtos com available_reseller (useProductList menuType='reseller', server-side), busca + paginação
+presentation/reseller/ResellerStockRow.tsx     -- edita saldo inline (grava no blur/Enter, Esc reverte, valida >= 0)
+presentation/layout/AppLayout.tsx              -- link "Revendedores" só se store.resellerEnabled
+```
+
+**Lado do storefront no banco** (`docs/supabase/reseller_storefront.sql`, teste em `reseller_storefront_test.sql` — rollback no fim, não suja o banco): a view `public_products` ganhou `reseller_stock_quantity`/`reseller_track_stock` (só preenchidos em produto com `available_reseller`; produto de varejo devolve NULL) e `confirm_order` ganhou `p_sales_channel text default 'retail'` (a assinatura antiga foi dropada — não deixar sobrecarga solta). `reseller` nunca combina com `dine_in`, exige `stores.reseller_enabled` e só aceita produto com `available_reseller`. **A checagem de estoque NORMAL do `confirm_order` só vale pro varejo** — o revendedor tem estoque próprio (trigger). Itens entram ordenados por `product_id` (evita deadlock) e `quantity > 0` é validado. **Achado à parte (confirmado, corrigido):** `public_products` não é `security_invoker` (`reloptions` = null) e os grants padrão davam INSERT/UPDATE/DELETE pra `anon`/`authenticated` — como a view é simples (auto-atualizável), um UPDATE nela passava por cima da RLS de `products`. O `revoke` de escrita (só SELECT fica) está ativo na seção 3 de `reseller_storefront.sql`. A conferência achou o mesmo problema em `public_product_addon_groups`, `public_product_variation_groups`, `public_promotion_combo_items`, `public_promotions` e `public_stores` (esta última permitia, em tese, `UPDATE` de `active`/`reseller_enabled` de loja sem login) — `docs/supabase/public_views_readonly.sql` tira a escrita de todas. **Regra pra view pública nova: criar já com o `revoke` de escrita** (grants padrão do Supabase dão tudo a `anon`/`authenticated`). Não foi testado explorando de fato via API — a correção é baseada na configuração (view sem `security_invoker` + grants de escrita).
+
+**Pendente fora deste repo / a conferir:**
+- Storefront precisa tratar o erro `Estoque de revendedor insuficiente ...` do `confirm_order` (o trigger aborta a transação) e, idealmente, mostrar "esgotado". Pra ler o saldo, a view `public_products` precisa expor `reseller_stock_quantity` — se ela lista colunas explicitamente, recriar (query de checagem no fim do SQL).
+- **`security-sweep` rodado — zero CRÍTICO/ALTO.** Corrigidos no SQL: `quantity <= 0` no trigger (somaria no saldo), produto de outra loja baixando saldo (`reseller_stock_apply` agora recebe `store_id`), INSERT em pedido já cancelado; e `updateResellerStock` detecta 0 linhas afetadas (RLS negando não vira toast de sucesso). **Conferir no SQL Editor antes de considerar fechado** (RLS/constraints que não estão versionadas): policies de UPDATE de `products` (loja A não altera saldo da B — teste REST cross-tenant como o de `orders`), `check (quantity > 0)` em `order_items`, e se `confirm_order` valida que o produto é da loja do pedido. BAIXO deixados de fora: estorno usa itens atuais, não um ledger do que foi baixado (troca de `track_stock`/`product_id` no meio), corrida cancelar×editar quantidade sem `for share`, deadlock A,B×B,A (inserir itens ordenados por `product_id` no `confirm_order`), delete em cascata de pedido não estorna, sem trilha de auditoria da edição manual do saldo (mesma lacuna do item 7 do backlog).
+- Só o canal revendedor baixa estoque. Estoque normal (`stock_quantity`) continua sem nenhuma baixa automática (item 17 do backlog).
+- Planilha de importação/exportação **não** tem coluna de estoque do revendedor — só edição pela aba.
 
 ## Feature: Copiar catálogo pra outra loja (implementada)
 Cliente com 2 lojas quase iguais (Cacau Show Torres / Capão) reclamou de cadastrar o catálogo 2x. Botão **"Copiar catálogo"** na toolbar de Produtos (`super_admin` only) que leva **produtos + fotos + categorias + adicionais + variações** de uma loja pra outra numa operação. É cópia independente, não vínculo vivo — re-executável pra sincronizar depois (idempotente). A planilha continua servindo pro cadastro em massa de texto; este botão cobre o que a planilha nunca levou (foto, adicional, variação).
