@@ -152,7 +152,14 @@ export class SupabaseOrderRepository implements OrderRepository {
     return items
   }
 
-  async listHistory({ storeId, since, status, page, pageSize }: OrderHistoryParams): Promise<OrderHistoryResult> {
+  async listHistory({
+    storeId,
+    since,
+    status,
+    salesChannel,
+    page,
+    pageSize,
+  }: OrderHistoryParams): Promise<OrderHistoryResult> {
     const from = page * pageSize
     const to = from + pageSize - 1
 
@@ -163,6 +170,9 @@ export class SupabaseOrderRepository implements OrderRepository {
     }
     if (status) {
       query = query.eq('status', status)
+    }
+    if (salesChannel) {
+      query = query.eq('sales_channel', salesChannel)
     }
 
     const { data, error, count } = await query.order('created_at', { ascending: false }).range(from, to)

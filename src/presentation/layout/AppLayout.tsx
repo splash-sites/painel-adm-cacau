@@ -3,6 +3,7 @@ import { NavLink, Outlet } from 'react-router-dom'
 import { Toaster } from 'sonner'
 import { useAuth } from '../auth/useAuth'
 import { useOrderNotifications } from '../order/useOrderNotifications'
+import { useStore } from '../store/useStores'
 import { useEffectiveStoreId } from '../storeContext/useEffectiveStoreId'
 import { StoreSwitcher } from './StoreSwitcher'
 import { UserMenu } from './UserMenu'
@@ -17,6 +18,7 @@ export function AppLayout() {
   const isSuperAdmin = session?.profile.role === 'super_admin'
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const storeId = useEffectiveStoreId()
+  const { data: store } = useStore(storeId)
   useOrderNotifications(storeId)
 
   return (
@@ -56,6 +58,11 @@ export function AppLayout() {
             <NavLink to="/promocoes" className={linkClass} onClick={() => setSidebarOpen(false)}>
               Promoções
             </NavLink>
+            {store?.resellerEnabled && (
+              <NavLink to="/revendedores" className={linkClass} onClick={() => setSidebarOpen(false)}>
+                Revendedores
+              </NavLink>
+            )}
             <NavLink to="/atendentes" className={linkClass} onClick={() => setSidebarOpen(false)}>
               Atendentes
             </NavLink>

@@ -18,6 +18,7 @@ import { SettingsPage } from './presentation/settings/SettingsPage'
 import { ReportsPage } from './presentation/report/ReportsPage'
 import { AttendantListPage } from './presentation/attendant/AttendantListPage'
 import { PromotionListPage } from './presentation/promotion/PromotionListPage'
+import { ResellerPage } from './presentation/reseller/ResellerPage'
 
 function App() {
   return (
@@ -44,6 +45,7 @@ function App() {
           <Route path="/produtos/categorias" element={<CategoryListPage />} />
           <Route path="/atendentes" element={<AttendantListPage />} />
           <Route path="/promocoes" element={<PromotionListPage />} />
+          <Route path="/revendedores" element={<ResellerPage />} />
           <Route
             element={
               <ProtectedRoute requireRole="super_admin">

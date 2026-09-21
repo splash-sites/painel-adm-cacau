@@ -14,6 +14,10 @@ export interface Product {
   imageUrl: string | null
   trackStock: boolean
   stockQuantity: number
+  /** Saldo reservado ao canal revendedor — separado de stockQuantity. */
+  resellerStockQuantity: number
+  /** Liga/desliga próprio do canal revendedor — independe de trackStock (estoque normal). */
+  resellerTrackStock: boolean
   costPrice: number | null
   price: number
   loverPrice: number

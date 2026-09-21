@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import type { Order, OrderStatus } from '../../domain/order/Order'
+import type { Order, OrderStatus, SalesChannel } from '../../domain/order/Order'
 import { orderChannelLabel, statusLabel } from '../../domain/order/orderStatusRules'
 import { calculateOrderTotal } from '../../domain/order/orderPricing'
 import { useEffectiveStoreId } from '../storeContext/useEffectiveStoreId'
@@ -38,7 +38,14 @@ function formatDateTime(iso: string): string {
   })
 }
 
-export function OrderHistoryPage() {
+interface OrderHistoryPageProps {
+  /** Restringe a lista a um canal de venda — usado pela aba Revendedores, que embute esta mesma tela. */
+  salesChannel?: SalesChannel
+  /** Sem o título da página (quando embutida em outra tela que já tem o próprio). */
+  embedded?: boolean
+}
+
+export function OrderHistoryPage({ salesChannel, embedded = false }: OrderHistoryPageProps = {}) {
   const storeId = useEffectiveStoreId()
   const [period, setPeriod] = useState<HistoryPeriod>('30d')
   const [statusFilter, setStatusFilter] = useState<'all' | OrderStatus>('all')
@@ -47,7 +54,7 @@ export function OrderHistoryPage() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
 
   const status = statusFilter === 'all' ? undefined : statusFilter
-  const { data, isLoading, error } = useOrderHistory(storeId, period, status, page, pageSize)
+  const { data, isLoading, error } = useOrderHistory(storeId, period, status, page, pageSize, salesChannel)
 
   const totalPages = data ? Math.max(1, Math.ceil(data.total / pageSize)) : 1
 
@@ -69,12 +76,14 @@ export function OrderHistoryPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className="font-display text-2xl md:text-3xl text-accent">Histórico</h2>
-          <p className="font-body text-sm text-foreground/60">
-            Todos os pedidos da loja, em qualquer status — inclusive cancelado, com o motivo.
-          </p>
-        </div>
+        {!embedded && (
+          <div>
+            <h2 className="font-display text-2xl md:text-3xl text-accent">Histórico</h2>
+            <p className="font-body text-sm text-foreground/60">
+              Todos os pedidos da loja, em qualquer status — inclusive cancelado, com o motivo.
+            </p>
+          </div>
+        )}
 
         {storeId && (
           <div className="flex flex-wrap items-center gap-2">

@@ -22,6 +22,8 @@ function prod(id: string, name: string, categoryId: string | null, sortOrder: nu
     imageUrl: null,
     trackStock: false,
     stockQuantity: 0,
+    resellerStockQuantity: 0,
+    resellerTrackStock: false,
     costPrice: null,
     price: 0,
     loverPrice: 0,

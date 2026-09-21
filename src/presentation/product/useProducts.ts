@@ -72,6 +72,18 @@ export function useSaveProduct() {
   })
 }
 
+export function useUpdateResellerStock() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, trackStock, quantity }: { id: string; trackStock: boolean; quantity: number }) =>
+      productRepository.updateResellerStock(id, { trackStock, quantity }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] })
+    },
+  })
+}
+
 export function useDeleteProduct() {
   const queryClient = useQueryClient()
 

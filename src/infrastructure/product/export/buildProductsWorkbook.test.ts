@@ -18,6 +18,8 @@ const product: Product = {
   imageUrl: null,
   trackStock: true,
   stockQuantity: 50,
+  resellerStockQuantity: 0,
+  resellerTrackStock: false,
   costPrice: 2.3,
   price: 7,
   loverPrice: 6,

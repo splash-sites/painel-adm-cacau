@@ -17,6 +17,8 @@ function makeProduct(overrides: Partial<Product> = {}): Product {
     imageUrl: 'https://example.com/img.png',
     trackStock: false,
     stockQuantity: 0,
+    resellerStockQuantity: 0,
+    resellerTrackStock: false,
     costPrice: null,
     price: 10,
     loverPrice: 8,

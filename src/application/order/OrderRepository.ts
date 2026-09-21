@@ -1,4 +1,4 @@
-import type { Order, OrderStatus } from '../../domain/order/Order'
+import type { Order, OrderStatus, SalesChannel } from '../../domain/order/Order'
 
 export interface OrderListParams {
   storeId: string
@@ -31,6 +31,8 @@ export interface OrderHistoryParams {
   /** ISO datetime — omitido busca desde sempre (opção "Tudo" na tela de Histórico). */
   since?: string
   status?: OrderStatus
+  /** Filtra por canal de venda (varejo/revendedor) — dimensão separada de order_type. */
+  salesChannel?: SalesChannel
   page: number
   pageSize: number
 }

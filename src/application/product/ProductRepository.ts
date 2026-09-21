@@ -64,6 +64,8 @@ export interface ProductRepository {
   create(storeId: string, input: ProductInput): Promise<Product>
   update(id: string, input: ProductInput): Promise<Product>
   delete(id: string): Promise<void>
+  /** Só o controle e o saldo do canal revendedor — não passa por ProductInput pra nunca reescrever o resto do produto. */
+  updateResellerStock(id: string, values: { trackStock: boolean; quantity: number }): Promise<void>
   /**
    * Estado atual dos produtos que a importação vai tocar, indexado por `external_code`.
    * Usado pra decidir create vs update e pra manter as colunas cujas células vieram vazias.

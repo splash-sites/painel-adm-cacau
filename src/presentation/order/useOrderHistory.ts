@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { SupabaseOrderRepository } from '../../infrastructure/order/SupabaseOrderRepository'
 import { type OrderPeriod, sinceIsoForPeriod } from '../../domain/order/orderPeriod'
-import type { OrderStatus } from '../../domain/order/Order'
+import type { OrderStatus, SalesChannel } from '../../domain/order/Order'
 
 const orderRepository = new SupabaseOrderRepository()
 
@@ -18,12 +18,13 @@ export function useOrderHistory(
   status: OrderStatus | undefined,
   page: number,
   pageSize: number,
+  salesChannel?: SalesChannel,
 ) {
   const since = sinceIsoForHistory(period)
 
   return useQuery({
-    queryKey: ['order-history', storeId, period, status, page, pageSize],
-    queryFn: () => orderRepository.listHistory({ storeId, since, status, page, pageSize }),
+    queryKey: ['order-history', storeId, period, status, salesChannel, page, pageSize],
+    queryFn: () => orderRepository.listHistory({ storeId, since, status, salesChannel, page, pageSize }),
     enabled: !!storeId,
   })
 }

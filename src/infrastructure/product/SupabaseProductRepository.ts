@@ -44,6 +44,8 @@ interface ProductRow {
   image_url: string | null
   track_stock: boolean
   stock_quantity: number
+  reseller_stock_quantity: number
+  reseller_track_stock: boolean
   cost_price: number | null
   price: number
   lover_price: number
@@ -70,6 +72,9 @@ function toProduct(row: ProductRow): Product {
     imageUrl: row.image_url,
     trackStock: row.track_stock,
     stockQuantity: row.stock_quantity,
+    // ?? 0: a coluna é aditiva — antes do SQL de docs/supabase/reseller_stock.sql rodar, ela não vem no select('*').
+    resellerStockQuantity: row.reseller_stock_quantity ?? 0,
+    resellerTrackStock: row.reseller_track_stock ?? false,
     costPrice: row.cost_price,
     price: row.price,
     loverPrice: row.lover_price,
@@ -184,7 +189,11 @@ export class SupabaseProductRepository implements ProductRepository {
     const payload = orderedIds.map((id, index) => {
       const row = rowById.get(id)
       if (!row) throw new Error('Produto não encontrado nessa categoria')
-      return { ...row, sort_order: index }
+      // reseller_stock_quantity fica de fora: o saldo é baixado por trigger a cada pedido de
+      // revendedor, e reescrever o valor lido aqui poderia desfazer uma baixa feita no meio.
+      // A coluna tem default, então o upsert sem ela continua válido.
+      const { reseller_stock_quantity: _resellerStock, ...rest } = row
+      return { ...rest, sort_order: index }
     })
     if (payload.length === 0) return
 
@@ -225,6 +234,18 @@ export class SupabaseProductRepository implements ProductRepository {
       if (error.code === '23503') throw new ProductInUseError()
       throw new Error(error.message)
     }
+  }
+
+  async updateResellerStock(id: string, values: { trackStock: boolean; quantity: number }): Promise<void> {
+    // .select() pra detectar 0 linhas afetadas: RLS que nega o UPDATE volta 200 sem erro,
+    // e sem isso a tela avisaria "Estoque atualizado" sem ter gravado nada.
+    const { data, error } = await supabase
+      .from('products')
+      .update({ reseller_track_stock: values.trackStock, reseller_stock_quantity: values.quantity })
+      .eq('id', id)
+      .select('id')
+    if (error) throw new Error(error.message)
+    if (!data || data.length === 0) throw new Error('Não foi possível atualizar o estoque desse produto')
   }
 
   async searchActive(storeId: string, query: string): Promise<Product[]> {
