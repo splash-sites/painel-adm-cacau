@@ -463,6 +463,8 @@ presentation/order/OrderHistoryPage.tsx -- rota /historico: toggle de período (
 ```
 `OrderDetailsDrawer.tsx` ganhou um bloco "Motivo: ..." na linha do tempo, visível só quando `status === 'cancelled'` — primeira vez que esse dado aparece em algum lugar da UI.
 
+**Atualização (pedido do usuário, ao usar a aba Pedidos de Revendedores)**: `OrderDetailsDrawer.tsx` não tinha botão de Cancelar — só existia no `OrderCard.tsx` (kanban do Dashboard), então cancelar um pedido só dava pra fazer por lá, nunca pelo drawer de Histórico/Revendedores/mesa mesclada. Ganhou "Cancelar" embaixo de Avançar/Voltar etapa (`canCancel(order.status)`), abrindo o mesmo `CancelOrderModal` já usado no `OrderCard` — motivo obrigatório, mesma validação, mesmo texto de aviso. Como o drawer é compartilhado, o botão passou a existir também em Histórico e no card mesclado de mesa (`TableGroupCard`), não só em Revendedores — nenhum SQL/regra nova, só reusar o que já existia.
+
 Entrada na UI: link "Histórico" na sidebar (visível a `store_admin` e `super_admin`, logo abaixo de Dashboard — não é restrito a `super_admin` como Relatórios/Usuários, porque quem mais precisa consultar o motivo no dia a dia é a própria loja).
 
 **Sem SQL novo** — RLS de `orders` já cobre (`store_admin` só a própria loja, `super_admin` tudo), mesma política que Dashboard/Relatórios usam.

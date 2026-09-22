@@ -3,6 +3,7 @@ import { X } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Order } from '../../domain/order/Order'
 import {
+  canCancel,
   canEditItems,
   canRevert,
   getNextStatus,
@@ -14,6 +15,7 @@ import { calculateOrderTotal } from '../../domain/order/orderPricing'
 import { AcceptOrderModal } from '../attendant/AcceptOrderModal'
 import { Dialog, DialogClose, DialogSideContent } from '../ui/Dialog'
 import { buttonClass } from '../ui/styles'
+import { CancelOrderModal } from './CancelOrderModal'
 import { OrderItemsEditModal } from './OrderItemsEditModal'
 import { OrderItemsList } from './OrderItemsList'
 import {
@@ -46,6 +48,7 @@ export function OrderDetailsDrawer({ order, onClose }: { order: Order; onClose: 
   const nextStatus = getNextStatus(order.status, order.orderType)
   const [isEditingItems, setIsEditingItems] = useState(false)
   const [isAccepting, setIsAccepting] = useState(false)
+  const [isCancelling, setIsCancelling] = useState(false)
 
   return (
     <>
@@ -172,6 +175,15 @@ export function OrderDetailsDrawer({ order, onClose }: { order: Order; onClose: 
                   Voltar etapa
                 </button>
               )}
+              {canCancel(order.status) && (
+                <button
+                  type="button"
+                  onClick={() => setIsCancelling(true)}
+                  className={`w-full ${buttonClass('danger-ghost')}`}
+                >
+                  Cancelar
+                </button>
+              )}
             </div>
           </div>
         </DialogSideContent>
@@ -181,6 +193,22 @@ export function OrderDetailsDrawer({ order, onClose }: { order: Order; onClose: 
 
       {isAccepting && nextStatus && (
         <AcceptOrderModal order={order} nextStatus={nextStatus} onClose={() => setIsAccepting(false)} />
+      )}
+
+      {isCancelling && (
+        <CancelOrderModal
+          isPending={changeStatus.isPending}
+          onClose={() => setIsCancelling(false)}
+          onConfirm={(reason) =>
+            changeStatus.mutate(
+              { orderId: order.id, newStatus: 'cancelled', reason },
+              {
+                onSuccess: () => setIsCancelling(false),
+                onError: (error) => handleStatusMutationError(error, 'Falha ao cancelar pedido'),
+              },
+            )
+          }
+        />
       )}
     </>
   )
