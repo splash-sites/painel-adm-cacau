@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { SupabaseOrderRepository } from '../../infrastructure/order/SupabaseOrderRepository'
 import type { OrderItemSelection } from '../../application/order/OrderRepository'
 import type { OrderStatus } from '../../domain/order/Order'
+import { invalidateOrderQueries } from './invalidateOrderQueries'
 
 const orderRepository = new SupabaseOrderRepository()
 
@@ -32,7 +33,7 @@ export function useChangeOrderStatus() {
       reason?: string
     }) => orderRepository.changeStatus(orderId, newStatus, attendantId, reason),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['orders'] })
+      invalidateOrderQueries(queryClient)
     },
   })
 }
@@ -43,7 +44,7 @@ export function useRevertOrderStatus() {
   return useMutation({
     mutationFn: (orderId: string) => orderRepository.revertStatus(orderId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['orders'] })
+      invalidateOrderQueries(queryClient)
     },
   })
 }
@@ -64,7 +65,7 @@ export function useAddOrderItem() {
       selection?: OrderItemSelection
     }) => orderRepository.addItem(orderId, productId, quantity, selection),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['orders'] })
+      invalidateOrderQueries(queryClient)
     },
   })
 }
@@ -83,7 +84,7 @@ export function useUpdateOrderItem() {
       selection?: OrderItemSelection
     }) => orderRepository.updateItem(itemId, quantity, selection),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['orders'] })
+      invalidateOrderQueries(queryClient)
     },
   })
 }
@@ -96,7 +97,7 @@ export function useUpdateOrderItemQuantity() {
     mutationFn: ({ itemId, quantity }: { itemId: string; quantity: number }) =>
       orderRepository.updateItemQuantity(itemId, quantity),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['orders'] })
+      invalidateOrderQueries(queryClient)
     },
   })
 }
@@ -116,7 +117,7 @@ export function useFinalizeTableOrders() {
       }
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ['orders'] })
+      invalidateOrderQueries(queryClient)
     },
   })
 }
@@ -127,7 +128,7 @@ export function useRemoveOrderItem() {
   return useMutation({
     mutationFn: (itemId: string) => orderRepository.removeItem(itemId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['orders'] })
+      invalidateOrderQueries(queryClient)
     },
   })
 }

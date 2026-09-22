@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import type { Order, OrderStatus, SalesChannel } from '../../domain/order/Order'
+import type { OrderStatus, SalesChannel } from '../../domain/order/Order'
 import { orderChannelLabel, statusLabel } from '../../domain/order/orderStatusRules'
 import { calculateOrderTotal } from '../../domain/order/orderPricing'
 import { useEffectiveStoreId } from '../storeContext/useEffectiveStoreId'
@@ -51,10 +51,14 @@ export function OrderHistoryPage({ salesChannel, embedded = false }: OrderHistor
   const [statusFilter, setStatusFilter] = useState<'all' | OrderStatus>('all')
   const [page, setPage] = useState(0)
   const [pageSize, setPageSize] = useState<number>(10)
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null)
+  // Guarda só o id, não o Order inteiro: derivar da lista (abaixo) faz o drawer acompanhar o
+  // refetch depois de uma ação nele mesmo (avançar/voltar etapa, cancelar) — um snapshot
+  // parado mostraria o status de antes até o drawer fechar e abrir de novo.
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null)
 
   const status = statusFilter === 'all' ? undefined : statusFilter
   const { data, isLoading, error } = useOrderHistory(storeId, period, status, page, pageSize, salesChannel)
+  const selectedOrder = data?.items.find((order) => order.id === selectedOrderId) ?? null
 
   const totalPages = data ? Math.max(1, Math.ceil(data.total / pageSize)) : 1
 
@@ -172,7 +176,7 @@ export function OrderHistoryPage({ salesChannel, embedded = false }: OrderHistor
                   <td className="py-3 pr-6 text-right">
                     <button
                       type="button"
-                      onClick={() => setSelectedOrder(order)}
+                      onClick={() => setSelectedOrderId(order.id)}
                       className="text-sm text-foreground/70 hover:text-foreground"
                     >
                       Detalhes
@@ -228,7 +232,7 @@ export function OrderHistoryPage({ salesChannel, embedded = false }: OrderHistor
         </div>
       )}
 
-      {selectedOrder && <OrderDetailsDrawer order={selectedOrder} onClose={() => setSelectedOrder(null)} />}
+      {selectedOrder && <OrderDetailsDrawer order={selectedOrder} onClose={() => setSelectedOrderId(null)} />}
     </div>
   )
 }

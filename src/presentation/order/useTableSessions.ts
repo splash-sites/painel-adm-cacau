@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { SupabaseTableSessionRepository } from '../../infrastructure/order/SupabaseTableSessionRepository'
+import { invalidateOrderQueries } from './invalidateOrderQueries'
 
 const tableSessionRepository = new SupabaseTableSessionRepository()
 
@@ -17,7 +18,7 @@ export function useCloseTableSession() {
   return useMutation({
     mutationFn: (id: string) => tableSessionRepository.close(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['orders'] })
+      invalidateOrderQueries(queryClient)
       queryClient.invalidateQueries({ queryKey: ['tableSessions', 'open'] })
     },
   })

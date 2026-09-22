@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { SupabaseOrderRepository } from '../../infrastructure/order/SupabaseOrderRepository'
+import { invalidateOrderQueries } from './invalidateOrderQueries'
 import { notifyNewOrder } from './notifyNewOrder'
 import { useRealtimeConnection } from './useRealtimeConnection'
 
@@ -16,7 +17,7 @@ export function useOrderNotifications(storeId: string) {
     return orderRepository.subscribeToStoreOrders(
       storeId,
       (eventType) => {
-        queryClient.invalidateQueries({ queryKey: ['orders'] })
+        invalidateOrderQueries(queryClient)
         if (eventType === 'INSERT') {
           notifyNewOrder(storeId)
         }
