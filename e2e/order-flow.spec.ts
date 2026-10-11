@@ -3,12 +3,34 @@ import { expect, test } from '@playwright/test'
 const EMAIL = process.env.E2E_TEST_EMAIL
 const PASSWORD = process.env.E2E_TEST_PASSWORD
 
-test.skip(!EMAIL || !PASSWORD, 'E2E_TEST_EMAIL / E2E_TEST_PASSWORD não configurados em .env.local')
+// Conta de teste = store_admin da `loja-e2e` do staging (seed em supabase/seed.sql).
+const E2E_STORE_ID = '00000000-0000-4000-a000-000000000003'
+const E2E_PRODUCT_AGUA = '00000000-0000-4000-c000-0000000000e2'
 
-/**
- * Requer pelo menos 1 pedido em status "received" na loja da conta de teste
- * no momento em que o teste roda (o painel não cria pedidos, só o storefront/RPC faz isso).
- */
+test.skip(!EMAIL || !PASSWORD, 'E2E_TEST_EMAIL / E2E_TEST_PASSWORD não configurados em .env.staging.local')
+
+// O painel não cria pedido — cria 1 em "received" pela mesma RPC pública que o
+// cardápio usa, pra o teste não depender de pedido deixado por outro teste.
+test.beforeAll(async () => {
+  const response = await fetch(`${process.env.VITE_SUPABASE_URL}/rest/v1/rpc/confirm_order`, {
+    method: 'POST',
+    headers: {
+      apikey: process.env.VITE_SUPABASE_ANON_KEY!,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      p_store_id: E2E_STORE_ID,
+      p_order_type: 'pickup',
+      p_customer_name: 'Teste Playwright Painel',
+      p_customer_cpf: '11144477735',
+      p_customer_phone: '51999990000',
+      p_delivery_address: null,
+      p_items: [{ product_id: E2E_PRODUCT_AGUA, quantity: 1, note: null, addons: [], variations: [] }],
+    }),
+  })
+  if (!response.ok) throw new Error(`confirm_order falhou: ${response.status} ${await response.text()}`)
+})
+
 test('login e avanço de status refletem no kanban', async ({ page }) => {
   await page.goto('/login')
   await page.getByLabel('E-mail').fill(EMAIL!)
