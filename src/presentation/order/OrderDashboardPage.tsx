@@ -94,7 +94,7 @@ export function OrderDashboardPage() {
 
       {orders && (
         <div className="-mx-5 overflow-x-auto px-5 pb-2 md:-mx-7 md:px-7">
-          <div className="grid min-w-max auto-cols-[minmax(250px,1fr)] grid-flow-col gap-3.5 lg:min-w-0">
+          <div className="grid auto-cols-[min(300px,84vw)] grid-flow-col gap-3.5 lg:auto-cols-[minmax(232px,1fr)]">
             {SCREEN_COLUMNS.map((screenColumn) => {
               const count = screenColumn.keys.reduce((sum, key) => sum + columnOrdersFor(key).length, 0)
               const isNew = screenColumn.keys[0] === 'received'

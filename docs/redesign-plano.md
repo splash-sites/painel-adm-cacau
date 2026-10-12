@@ -90,3 +90,19 @@ O cupom impresso e a folha de QR das mesas não mudam, porque dependem do format
 - As duas branches `redesign` prontas, com um commit por etapa.
 - A página de comparação com os prints.
 - Uma lista curta do que ficou diferente do canvas e por quê.
+
+## Resultado (2026-10-12)
+
+Feito nas branches locais `redesign` dos dois repositórios, sem push.
+
+- Painel: base visual, menu lateral (unidade e usuário no rodapé), login e primeiro acesso, quadro de pedidos, janelas de aceitar, cancelar, Cacau Lover e detalhes, abas do catálogo e todas as outras telas com a paleta e os textos novos.
+- Cardápio: entrada da loja e da mesa, lista com miniatura e abas, produto em etapas, sacola, seus dados, confirmar, acompanhamento em linha do tempo, meus pedidos e revenda.
+- Testes: unitários, lint e build limpos nos dois apps. E2E no staging: cardápio 5/5, painel 4/4 (ajustados aos textos novos).
+
+Diferenças em relação ao canvas:
+
+- Quadro de pedidos com 5 colunas (Novos, Em preparo, Prontos, Entregues, Finalizados) em vez de 4: a coluna Finalizados continua existindo e a tela rola na horizontal quando não cabe.
+- Sem "preparo médio" no topo do quadro e sem horário em cada etapa do acompanhamento: o painel e a função `get_order_status` não trazem esses dados hoje.
+- Entrada da loja sem foto, endereço e horário (dependem da migration que ficou fora do escopo). No lugar da foto, blocos nas cores da marca.
+- Produto em etapas sem "Sem cobertura extra": como adicional é opcional, basta seguir sem marcar nada.
+- Janelas de editar itens, editar produto e editar promoção ganharam a paleta nova, mas mantêm o layout antigo.

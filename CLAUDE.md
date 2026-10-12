@@ -121,7 +121,7 @@ React 19 + Vite 8 + TypeScript `strict` · Tailwind v4 (`@tailwindcss/vite`, tok
 "Todos" = `super_admin` (qualquer loja, pelo seletor da sidebar) e `store_admin` (só a dele).
 
 ### Regras deste app
-- **Dashboard**: atualização por Realtime em `orders` + refetch a cada 30s (fallback) + banner quando o Realtime cai. Pedido novo: toast + som + notificação do navegador, cada um ligável por loja. Cards com altura fixa; CPF/telefone formatados só na exibição (banco guarda só dígitos — trigger `sanitize_order_contact_fields`).
+- **Dashboard** ("Pedidos de hoje"): colunas Novos, Em preparo, Prontos (junta "Saiu pra entrega" e "Pronto para retirada", cada uma com seu `data-testid` `kanban-column-*`), Entregues e Finalizados; rola na horizontal quando não cabe. Atualização por Realtime em `orders` + refetch a cada 30s (fallback) + banner quando o Realtime cai. Pedido novo: toast + som + notificação do navegador, cada um ligável por loja. CPF/telefone formatados só na exibição (banco guarda só dígitos — trigger `sanitize_order_contact_fields`).
 - **Aceitar pedido** abre `AcceptOrderModal` (escolher/criar atendente) e imprime o cupom (`printOrderReceipt`, 72mm, `window.print()` na impressora padrão do Windows; impressão sem diálogo = atalho do Chrome com `--kiosk-printing`, passo a passo no histórico).
 - **Finalizar** (card, detalhes, mesa e "Finalizar tudo"): se o preço Lover do pedido é menor, abre `FinalizeLoverModal` ("Cliente é Cacau Lover?", uma pergunta só pra mesa inteira); senão finaliza direto. Card/detalhes mostram "Lover R$ X" abaixo do total até a resposta (`LoverTotalHint`); o cupom imprime a linha do Lover.
 - **Coluna "Entregue"** junta pedidos da mesma mesa num card só (`TableGroupCard`) com "Finalizar tudo". Fechar comanda é manual (`close_table_session`, só com todos os pedidos finalizados/cancelados).
@@ -135,9 +135,10 @@ React 19 + Vite 8 + TypeScript `strict` · Tailwind v4 (`@tailwindcss/vite`, tok
 - **Reordenar com upsert em lote**: mandar a linha inteira (upsert só com PK + `sort_order` quebra por `NOT NULL`).
 
 ### Identidade visual
-- Paleta (tokens no `@theme`): `background #F0ECD2` / `foreground #030404` · `primary #CF9047` (CTA) · `secondary #7B431B` · `accent #2C120B` (superfícies escuras).
-- Status usam cor funcional do Tailwind, não a de marca: `received`/`preparing` âmbar · `out_for_delivery`/`delivered` azul · `finalized` verde · `cancelled` vermelho.
-- Fontes: `--font-display` **Sora** (títulos, nome de produto) · `--font-body` **Inter**. Escala de tamanho só a do Tailwind.
+- Identidade **Ganache** (redesenho 2026-10-12, canvas no Claude Design; design system "Splash Pedidos"). Painel em **tema claro**: tokens no `@theme` — `canvas #f7f3f0` (fundo), `surface #fff` (cards), `surface-2 #efe8e2` (menu lateral), `ink #2a1a14` (texto e botão principal), `muted`/`faint` (texto secundário), `caramel #e8a75c` (marca, foco), `lover #9a5a1c` (preço Lover e links), `line`/`line-strong` (bordas). Os nomes antigos (`background`, `primary`, `secondary`, `accent`…) apontam pra paleta nova; código novo usa os nomes novos.
+- Status: espera em caramelo (`wait`/`wait-soft`), a caminho/entregue em azul (`info`), finalizado em verde (`success`), cancelado em vermelho (`danger`). Classes em `orderCardFormat.ts`.
+- Fontes: `--font-display` **Bricolage Grotesque** (títulos, nome do cliente no card) · `--font-body` **Figtree**. Números de preço com `tabular-nums`.
+- Menu lateral: itens no topo; no rodapé a unidade (seletor pro `super_admin`), uma linha e o usuário com o cargo (menu com "Sair"). Botão do card diz o que faz (`nextActionLabel`: "Aceitar pedido", "Pronto pra retirada", "Entregue", "Finalizar"). Textos sem travessão e sem "(s)".
 - Responsivo até mobile em toda tela; motion só onde explica mudança; numeração 1/2/3 só em sequência real.
 
 ### Cuidados técnicos (bugs já corrigidos — não reintroduzir)
