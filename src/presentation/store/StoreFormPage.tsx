@@ -73,7 +73,7 @@ export function StoreFormPage() {
           <Input
             id="whatsappNumber"
             inputMode="tel"
-            placeholder="+55 (51) 99999-9999"
+            placeholder="+55 (51) 9 9999-9999"
             {...whatsappField}
             onChange={(event) => {
               event.target.value = maskWhatsapp(event.target.value)

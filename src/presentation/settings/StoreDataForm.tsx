@@ -65,7 +65,7 @@ export function StoreDataForm({ store }: { store: Store }) {
         <Input
           id="store-whatsapp"
           inputMode="tel"
-          placeholder="+55 (51) 99999-9999"
+          placeholder="+55 (51) 9 9999-9999"
           {...whatsappField}
           onChange={(event) => {
             event.target.value = maskWhatsapp(event.target.value)
