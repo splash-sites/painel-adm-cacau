@@ -119,7 +119,7 @@ export function AdminUserListPage() {
                       >
                         <Pencil className="h-4 w-4" />
                       </button>
-                      {admin.id !== session?.profile.id && (
+                      {admin.role !== 'super_admin' && admin.id !== session?.profile.id && (
                         <button
                           type="button"
                           aria-label={`Excluir ${admin.fullName ?? 'usuário'}`}

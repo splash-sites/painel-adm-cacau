@@ -1263,3 +1263,14 @@ Pedido explícito: testar todo CRUD do app ao vivo (não confiar só em type-che
 - Índice em `store_id` (e composto, ex: `(store_id, status)`) em toda tabela filtrada por loja.
 - Paginação obrigatória em listagem. Code-splitting por rota.
 - Adicionar loja nova = uma linha em `stores`, sem migration nem deploy.
+
+---
+
+# Registros depois do arquivamento
+
+## 2026-10-11 — Edge Functions versionadas e publicadas no staging
+- As 5 Edge Functions só existiam no Supabase da produção (só `copy-catalog` tinha cópia em `docs/supabase/`). Código copiado à mão do dashboard da produção (a conta do CLI não tem acesso ao projeto de produção, 403) e commitado sem alteração em `supabase/functions/` como ponto de partida fiel. `verify_jwt` ligado nas 5 (conferido no dashboard), registrado em `supabase/config.toml`.
+- Staging não tinha nenhuma Edge Function: criar/editar/excluir usuário e copiar catálogo quebravam no Preview. Publicadas com `supabase functions deploy --use-api`.
+- Bug achado em `setup-first-admin`: o trigger `handle_new_user` cria o perfil (`customer`) assim que o login nasce, e a função fazia `insert` no mesmo `id` (chave duplicada → apagava o usuário → 500). Na produção não aparece porque já existe super_admin e a função para antes. Corrigido pra `upsert`, igual a `create-admin-user`.
+- Decidido: super_admin não pode **excluir** outro super_admin (desativar já era bloqueado). Checagem na função `delete-admin-user` e lixeira escondida na tela. Editar nome/e-mail/senha de outro super_admin continua permitido (é o único jeito de resetar senha pelo painel).
+- Testado no staging: sem login → 401 nas 5; `store_admin` → 403 nas 4 de admin; `setup-first-admin` com super_admin existente → 403; super_admin cria, edita (senha antiga para de funcionar) e exclui `store_admin` pela tela; excluir outro super_admin chamando a função direto → 403; `copy-catalog` em simulação → 200.

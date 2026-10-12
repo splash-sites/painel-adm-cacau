@@ -45,7 +45,8 @@ Deno.serve(async (req) => {
     })
     if (createError) return json({ error: createError.message }, 400)
 
-    const { error: profileError } = await admin.from('profiles').insert({
+    // upsert: o trigger handle_new_user já criou o perfil (como 'customer') ao criar o login
+    const { error: profileError } = await admin.from('profiles').upsert({
       id: created.user.id,
       full_name: fullName,
       email,
@@ -53,7 +54,6 @@ Deno.serve(async (req) => {
       store_id: null,
       active: true,
     })
-
 
     if (profileError) {
       await admin.auth.admin.deleteUser(created.user.id)

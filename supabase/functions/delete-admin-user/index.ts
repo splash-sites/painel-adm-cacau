@@ -49,6 +49,17 @@ Deno.serve(async (req) => {
       return json({ error: 'Apenas super_admin pode excluir usuários' }, 403)
     }
 
+    const { data: targetProfile, error: targetProfileError } = await admin
+      .from('profiles')
+      .select('role')
+      .eq('id', userId)
+      .maybeSingle()
+
+    if (targetProfileError) return json({ error: targetProfileError.message }, 500)
+    if (targetProfile?.role === 'super_admin') {
+      return json({ error: 'Não é possível excluir outro administrador' }, 403)
+    }
+
     // Apaga o profile explicitamente antes (não depende de cascade existir).
     const { error: profileDeleteError } = await admin.from('profiles').delete().eq('id', userId)
     if (profileDeleteError) {

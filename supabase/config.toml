@@ -1,0 +1,18 @@
+# Só a configuração das Edge Functions (deploy com `supabase functions deploy --project-ref <ref>`).
+# verify_jwt igual ao da produção (conferido no dashboard em 2026-10-11): todas ligadas.
+project_id = "splash-pedidos"
+
+[functions.setup-first-admin]
+verify_jwt = true
+
+[functions.create-admin-user]
+verify_jwt = true
+
+[functions.update-admin-user]
+verify_jwt = true
+
+[functions.delete-admin-user]
+verify_jwt = true
+
+[functions.copy-catalog]
+verify_jwt = true

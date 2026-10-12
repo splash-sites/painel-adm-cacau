@@ -18,3 +18,12 @@ psql "$STAGING_DB_URL" -v ON_ERROR_STOP=1 --single-transaction -f supabase/stagi
 (acrescentar cada migration nova, em ordem). Os logins do Auth sobrevivem, mas os perfis somem — repromover: `update public.profiles set role = 'super_admin' where email = 'super@teste.local'` (super), `role = 'store_admin', store_id = <loja>` pra `lojab@teste.local` (loja-b) e `e2e@teste.local` (loja-e2e). Se o perfil não existir, `insert` com o id de `auth.users`.
 
 Conferir se staging e produção estão iguais: `pg_dump --schema-only --schema=public` dos dois e `diff` (só as linhas `\restrict`/`\unrestrict` mudam).
+
+## Edge Functions (`functions/`)
+`setup-first-admin`, `create-admin-user`, `update-admin-user`, `delete-admin-user`, `copy-catalog`. `config.toml` guarda só o `verify_jwt` de cada uma (todas `true`, igual à produção). Mesmo fluxo do banco: muda o arquivo, publica no staging, testa, depois produção.
+```bash
+npx supabase@2.120.0 login        # uma vez (no PowerShell: npx.cmd)
+npx supabase@2.120.0 functions deploy --project-ref nybqhftspmnptxrgjmvr --use-api            # staging, todas
+npx supabase@2.120.0 functions deploy <nome> --project-ref <ref> --use-api                    # uma só
+```
+A conta do CLI hoje só acessa o staging. Produção (`ybvgjserzbbxgufbsscg`): logar com a conta dona dela, ou colar o `index.ts` no editor do dashboard (Edge Functions → função → Code → Deploy).
