@@ -8,12 +8,11 @@ import { Button } from '../ui/Button'
 import { Input } from '../ui/Input'
 import { useDebouncedValue } from '../ui/useDebouncedValue'
 import { printTableQrCodes } from './printTableQrCodes'
-import { settingsCardClass, SettingsCardTitle } from './SettingsCard'
 
 const MAX_TABLES = 100
 
-/** Card largo de Configurações: gera e imprime um QR Code por mesa. */
-export function TableQrCard({ store }: { store: Store }) {
+/** Seção "Mesas e QR Code" de Configurações: gera e imprime um QR Code por mesa. */
+export function TableQrSection({ store }: { store: Store }) {
   const [tableFrom, setTableFrom] = useState('1')
   const [tableTo, setTableTo] = useState('10')
   const [isGenerating, setIsGenerating] = useState(false)
@@ -56,7 +55,7 @@ export function TableQrCard({ store }: { store: Store }) {
   }
 
   return (
-    <article className={`${settingsCardClass} lg:col-span-2`}>
+    <div>
       <div className="flex flex-col gap-4">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
         <div className="flex shrink-0 items-center gap-3">
@@ -73,10 +72,7 @@ export function TableQrCard({ store }: { store: Store }) {
           )}
         </div>
         <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <SettingsCardTitle>Mesas e QR Code</SettingsCardTitle>
-          <p className="text-sm text-muted">
-            Um QR por mesa, para imprimir e colar. O cliente escaneia e o pedido já entra na conta da mesa.
-          </p>
+          <p className="text-[15px]">Imprima e cole na mesa. O cliente escaneia e o pedido já entra na conta da mesa.</p>
           <p className={`text-[13px] font-semibold ${rangeOk ? 'text-lover' : 'text-danger'}`}>
             {tableCount === 0
               ? '"Da mesa" precisa ser menor ou igual a "até"'
@@ -115,6 +111,6 @@ export function TableQrCard({ store }: { store: Store }) {
           </Button>
         </div>
       </div>
-    </article>
+    </div>
   )
 }

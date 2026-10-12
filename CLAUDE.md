@@ -114,7 +114,7 @@ React 19 + Vite 8 + TypeScript `strict` · Tailwind v4 (`@tailwindcss/vite`, tok
 | `/promocoes` | Carrossel, combo e desconto | todos |
 | `/revendedores` | Estoque e pedidos do canal revenda (só se `reseller_enabled`) | todos |
 | `/atendentes` | Quem prepara o pedido | todos |
-| `/configuracoes` | Cards: Loja (dados em janela), Como o cliente pede (canais ligam e desligam na hora), Aviso de pedido novo, Mesas e QR Code, Fechar a loja | todos |
+| `/configuracoes` | Submenu à esquerda (com resumo de cada seção) e uma seção por vez à direita: Loja, Como o cliente pede (canais ligam e desligam na hora), Aviso de pedido novo, Mesas e QR Code, Fechar ou excluir. Seção aberta fica no endereço (`?secao=`) | todos |
 | `/usuarios`, `/relatorios`, `/lojas/nova` | Usuários, relatórios, criar loja | só `super_admin` |
 | `/cadastro` | Criar o primeiro `super_admin` (só funciona uma vez) | público |
 
