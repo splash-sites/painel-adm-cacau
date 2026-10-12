@@ -80,8 +80,8 @@ node scripts/check-shared-rules.mjs   # confere se o bloco "Regras compartilhada
 - Combo/desconto: promoção = produto principal + itens extras (`promotion_combo_items`) + desconto opcional (percentual ou valor fixo), validado dentro de `confirm_order`. Desconto vale também sobre o Lover.
 
 ### Estoque
-- **Varejo**: chave por produto `track_stock`. **Decidido (a implementar):** ligada = conta unidades (pedido desconta, cancelamento devolve, recusa pedido acima do saldo); desligada = ignora estoque. **Hoje** a chave ligada só bloqueia quando o saldo já é 0 — não desconta.
-- **Revenda (atacado)**: estoque próprio (`reseller_stock_quantity`, chave `reseller_track_stock`), desconta e devolve sozinho por trigger. Já funciona.
+- **Varejo**: chave por produto `track_stock`. Ligada = conta unidades em `stock_quantity`: pedido desconta, editar item ajusta, remover item ou cancelar devolve, pedido acima do saldo é recusado (`Estoque insuficiente para "X"`) — triggers `order_items_retail_stock_ins_upd`/`_del` e `orders_retail_stock_restore`, só pedido `sales_channel = 'retail'`. Cada item guarda quanto descontou (`order_items.retail_stock_debited`) e só isso volta: pedido feito com o controle desligado não devolve nada. Desligada = ignora estoque. (Staging desde 2026-10-11; produção pendente — backlog.)
+- **Revenda (atacado)**: estoque próprio (`reseller_stock_quantity`, chave `reseller_track_stock`), mesma regra, triggers `order_items_reseller_stock`/`orders_reseller_stock_restore`. Um canal nunca mexe no saldo do outro.
 
 ### Canais e cardápio
 - Tipos de pedido: `dine_in` (mesa/cafeteria), `pickup` (retirada), `delivery` (entrega). Loja liga cada um em `stores.supports_*`.

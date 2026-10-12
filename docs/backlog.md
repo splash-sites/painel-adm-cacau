@@ -6,15 +6,19 @@ Prioridade: **P0** = risco pra produção/dado real · **P1** = regra de negóci
 Origem: revisão + teste ponta a ponta no staging em 2026-10-11, mais o backlog da auditoria anterior (itens com "(aud. N)" = número no relatório original, ver histórico).
 
 ## P0 — risco pra produção
+- [ ] **Aplicar na produção** `20261011140000_retail_stock_tracking.sql` + `20261011150000_retail_stock_debited.sql`, nessa ordem e na mesma ida (estoque do varejo, testado no staging 2026-10-11) **junto com o deploy do cardápio** (limite de quantidade no varejo). Avisar a loja antes: os 33 produtos de Torres com `track_stock` ligado passam a descontar de verdade — conferir saldos.
 - [ ] **Plano do Supabase**: produção no plano grátis pausa sozinha após ~7 dias sem uso (aconteceu em 2026-10-08). Avaliar Pro (não pausa, backup diário).
 
 ## P1 — regra decidida, falta implementar
-- [ ] **Estoque do varejo** (decidido 2026-10-11): com `track_stock` ligado, pedido desconta, cancelamento devolve, pedido acima do saldo é recusado (hoje só recusa com saldo 0 e nunca desconta). Mesmo padrão do trigger da revenda (`order_items_reseller_stock`). Cobrir edição de item no painel (add/update/remove) e cancelamento. Cardápio: limitar quantidade ao saldo e tratar o erro.
 - [ ] **Cacau Lover no fechamento** (decidido 2026-10-11): ao avançar pra `finalized`, painel pergunta "Cliente é Cacau Lover?". Gravar no pedido (`orders.is_lover`) e congelar o preço Lover nos itens (`order_items.lover_unit_price`, e nos adicionais/variações) no `confirm_order`. Relatórios somam pelo preço que valeu.
 - [ ] **Cancelar exige motivo na função**: `change_order_status` ainda aceita cancelar sem `p_reason`. Travar quando o painel em produção já mandar motivo.
 - [ ] **Tirar transições antigas**: `change_order_status` ainda aceita `out_for_delivery → finalized` e `preparing → finalized` (mesa), deixadas por compatibilidade com o front antigo. Remover quando a produção estiver com o fluxo `delivered`.
 
 ## P2 — correção / qualidade
+- [ ] Anônimo consegue esgotar o estoque do varejo com pedidos falsos (`confirm_order` + saldo visível em `public_products`). Mesmo risco que a revenda já tinha. Saídas: teto de quantidade por item/pedido no `confirm_order`, limite de pedidos `received` por CPF/telefone por loja numa janela, rate limit. (security-sweep 2026-10-11, MÉDIO)
+- [ ] store_admin pode dar UPDATE/DELETE direto em `orders`/`order_items` pela API (políticas ALL): trocar `product_id`, mover item entre pedidos, tirar pedido de `cancelled`, trocar `sales_channel` — estoque e status fora das RPCs, sem auditoria. Trigger `BEFORE UPDATE` recusando essas mudanças, ou deixar só as RPCs. (security-sweep 2026-10-11, BAIXO)
+- [ ] `products.stock_quantity` sem `check (>= 0)` (a revenda tem). Limpar os 3 negativos de Torres e adicionar `not valid` + `validate`. Avaliar se o saldo exato deve ficar público em `public_products`. (security-sweep 2026-10-11, BAIXO)
+- [ ] Cardápio: modal de combo (carrossel de promoções) não limita a quantidade ao saldo (avulso limita). Acima do saldo o banco recusa e o carrinho se ajusta, mas o cliente só descobre na confirmação.
 - [ ] Funções/triggers do banco sem `search_path` fixo (ex: `check_product_category_store` usa `categories` sem schema): dependem do search_path de quem chama — quebraram a reconstrução do banco do zero até o seed definir o search_path. Fixar `set search_path = public` nas funções (migration).
 - [ ] Apagar a versão antiga `add_order_item(uuid, uuid, integer)` (sobra; qualquer chamada de 3 argumentos dá erro de ambiguidade).
 - [ ] `delete-admin-user` apaga `profiles` antes do login (`auth.users`): se o 2º passo falhar, sobra login sem perfil. Inverter a ordem (apagar só o login; o perfil cai por cascade) e tratar o erro de FK de pedido.
