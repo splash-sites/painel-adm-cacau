@@ -6,13 +6,12 @@ Prioridade: **P0** = risco pra produção/dado real · **P1** = regra de negóci
 Origem: revisão + teste ponta a ponta no staging em 2026-10-11, mais o backlog da auditoria anterior (itens com "(aud. N)" = número no relatório original, ver histórico).
 
 ## P0 — risco pra produção
+- [ ] **Aplicar na produção** `20261011180000_status_rules_tightening.sql` (cancelar exige motivo + finalizar só de "Entregue"). Independe do release: o painel da `main` já manda motivo e já usa "Entregue".
 - [ ] **Aplicar na produção** `20261011160000_order_item_pricing_and_lover.sql` + `20261011170000_lover_pricing_hardening.sql` (preço do item unificado + Cacau Lover, testado no staging 2026-10-11) **antes** do release do painel: o painel novo lê as colunas novas (`is_lover`, `lover_unit_price`, `lover_price`) e quebra contra banco sem elas. Banco novo com painel antigo funciona (só continua com o total errado em combo com variação).
 - [ ] **Aplicar na produção** `20261011140000_retail_stock_tracking.sql` + `20261011150000_retail_stock_debited.sql`, nessa ordem e na mesma ida (estoque do varejo, testado no staging 2026-10-11) **junto com o deploy do cardápio** (limite de quantidade no varejo). Avisar a loja antes: os 33 produtos de Torres com `track_stock` ligado passam a descontar de verdade — conferir saldos.
 - [ ] **Plano do Supabase**: produção no plano grátis pausa sozinha após ~7 dias sem uso (aconteceu em 2026-10-08). Avaliar Pro (não pausa, backup diário).
 
 ## P1 — regra decidida, falta implementar
-- [ ] **Cancelar exige motivo na função**: `change_order_status` ainda aceita cancelar sem `p_reason`. Travar quando o painel em produção já mandar motivo.
-- [ ] **Tirar transições antigas**: `change_order_status` ainda aceita `out_for_delivery → finalized` e `preparing → finalized` (mesa), deixadas por compatibilidade com o front antigo. Remover quando a produção estiver com o fluxo `delivered`.
 
 ## P2 — correção / qualidade
 - [ ] Escrita direta em `orders`/`order_items`/`order_item_addons`/`order_item_variations` liberada pro store_admin (políticas ALL + GRANT ALL): dá pra mudar `unit_price`, `lover_unit_price`, `is_lover` e afins pela API, mexendo no faturamento dos Relatórios sem registro. Front só escreve por RPC. Saída: RPCs de edição viram SECURITY DEFINER com checagem de papel/loja, depois `revoke insert, update, delete` dessas tabelas de anon/authenticated. Registrar quem marcou Lover. (security-sweep 2026-10-11, MÉDIO, anterior ao Lover)

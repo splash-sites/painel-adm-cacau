@@ -70,7 +70,8 @@ node scripts/check-shared-rules.mjs   # confere se o bloco "Regras compartilhada
 - `delivered` = entregue fisicamente. `finalized` = pago/fechado pela atendente (orientação de uso, o sistema não confere pagamento).
 - Aceitar (`received → preparing`) **exige atendente**; o atendente fica gravado no pedido.
 - Toda transição passa por `change_order_status`/`revert_order_status` e grava em `order_status_history` (quem e quando). O status inicial também entra no histórico, na hora em que o pedido nasce (trigger `orders_initial_status_history`). Voltar etapa só até `delivered`. Editar itens só em `received`.
-- Cancelar pede motivo na tela (`orders.cancellation_reason`); a função ainda aceita sem motivo — travar é backlog.
+- **Cancelar exige motivo** — na tela e no banco (`change_order_status` recusa motivo vazio; grava em `orders.cancellation_reason`).
+- `finalized` só a partir de `delivered` (o banco não aceita mais pular "Entregue", nem na mesa).
 - Pedido de mesa entra sozinho na comanda aberta da mesa (trigger `assign_table_session`); a comanda fecha manual, pelo painel.
 
 ### Preço
