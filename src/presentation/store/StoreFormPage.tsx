@@ -10,6 +10,7 @@ import { Input } from '../ui/Input'
 import { Label } from '../ui/Label'
 import { cardClass } from '../ui/styles'
 import { useSaveStore } from './useStores'
+import { maskWhatsapp } from '../../domain/store/whatsappMask'
 
 const emptyDefaults: CreateStoreFormInput = {
   name: '',
@@ -34,6 +35,7 @@ export function StoreFormPage() {
     control,
     formState: { errors, isSubmitting },
   } = useForm<CreateStoreFormInput>({ resolver: zodResolver(createStoreSchema), defaultValues: emptyDefaults })
+  const { onChange: onWhatsappChange, ...whatsappField } = register('whatsappNumber')
 
   async function onSubmit(input: CreateStoreFormInput) {
     setSubmitError(null)
@@ -67,10 +69,17 @@ export function StoreFormPage() {
 
         <div className="space-y-1">
           <Label htmlFor="whatsappNumber">WhatsApp</Label>
-          <p className="text-sm font-body text-muted">
-            Só números, com DDI e DDD (ex: 5551999998888). É o número que o cliente chama pelo WhatsApp.
-          </p>
-          <Input id="whatsappNumber" placeholder="5551999998888" {...register('whatsappNumber')} />
+          <p className="text-sm font-body text-muted">Com DDI e DDD. É o número que o cliente chama pelo WhatsApp.</p>
+          <Input
+            id="whatsappNumber"
+            inputMode="tel"
+            placeholder="+55 (51) 99999-9999"
+            {...whatsappField}
+            onChange={(event) => {
+              event.target.value = maskWhatsapp(event.target.value)
+              onWhatsappChange(event)
+            }}
+          />
           {errors.whatsappNumber && <p className="text-sm text-danger">{errors.whatsappNumber.message}</p>}
         </div>
 
