@@ -6,15 +6,14 @@ Prioridade: **P0** = risco pra produção/dado real · **P1** = regra de negóci
 Origem: revisão + teste ponta a ponta no staging em 2026-10-11, mais o backlog da auditoria anterior (itens com "(aud. N)" = número no relatório original, ver histórico).
 
 ## P0 — risco pra produção
+- [ ] **Aplicar na produção** `20261011130000_order_initial_status_history.sql` e `20261011131000_public_option_groups_sort_order.sql` (testadas no staging 2026-10-11).
 - [ ] **Plano do Supabase**: produção no plano grátis pausa sozinha após ~7 dias sem uso (aconteceu em 2026-10-08). Avaliar Pro (não pausa, backup diário).
 
 ## P1 — regra decidida, falta implementar
 - [ ] **Estoque do varejo** (decidido 2026-10-11): com `track_stock` ligado, pedido desconta, cancelamento devolve, pedido acima do saldo é recusado (hoje só recusa com saldo 0 e nunca desconta). Mesmo padrão do trigger da revenda (`order_items_reseller_stock`). Cobrir edição de item no painel (add/update/remove) e cancelamento. Cardápio: limitar quantidade ao saldo e tratar o erro.
 - [ ] **Cacau Lover no fechamento** (decidido 2026-10-11): ao avançar pra `finalized`, painel pergunta "Cliente é Cacau Lover?". Gravar no pedido (`orders.is_lover`) e congelar o preço Lover nos itens (`order_items.lover_unit_price`, e nos adicionais/variações) no `confirm_order`. Relatórios somam pelo preço que valeu.
-- [ ] **Status inicial no histórico**: `confirm_order` não grava `received` em `order_status_history` (o tempo de preparo fica sem ponto de partida).
 - [ ] **Cancelar exige motivo na função**: `change_order_status` ainda aceita cancelar sem `p_reason`. Travar quando o painel em produção já mandar motivo.
 - [ ] **Tirar transições antigas**: `change_order_status` ainda aceita `out_for_delivery → finalized` e `preparing → finalized` (mesa), deixadas por compatibilidade com o front antigo. Remover quando a produção estiver com o fluxo `delivered`.
-- [ ] **Ordem das opções no cardápio**: views `public_product_addon_groups`/`public_product_variation_groups` ordenam opções por `id`; trocar por `sort_order` (a ordem arrastada no painel não chega ao cliente).
 
 ## P2 — correção / qualidade
 - [ ] Funções/triggers do banco sem `search_path` fixo (ex: `check_product_category_store` usa `categories` sem schema): dependem do search_path de quem chama — quebraram a reconstrução do banco do zero até o seed definir o search_path. Fixar `set search_path = public` nas funções (migration).

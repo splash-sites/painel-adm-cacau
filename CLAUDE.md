@@ -69,7 +69,7 @@ node scripts/check-shared-rules.mjs   # confere se o bloco "Regras compartilhada
 - `out_for_delivery` aparece como "Saiu pra entrega" (entrega) ou "Pronto pra retirada" (retirada) — mesmo valor no banco, rótulo muda pelo tipo.
 - `delivered` = entregue fisicamente. `finalized` = pago/fechado pela atendente (orientação de uso, o sistema não confere pagamento).
 - Aceitar (`received → preparing`) **exige atendente**; o atendente fica gravado no pedido.
-- Toda transição passa por `change_order_status`/`revert_order_status` e grava em `order_status_history` (quem e quando). Voltar etapa só até `delivered`. Editar itens só em `received`.
+- Toda transição passa por `change_order_status`/`revert_order_status` e grava em `order_status_history` (quem e quando). O status inicial também entra no histórico, na hora em que o pedido nasce (trigger `orders_initial_status_history`). Voltar etapa só até `delivered`. Editar itens só em `received`.
 - Cancelar pede motivo na tela (`orders.cancellation_reason`); a função ainda aceita sem motivo — travar é backlog.
 - Pedido de mesa entra sozinho na comanda aberta da mesa (trigger `assign_table_session`); a comanda fecha manual, pelo painel.
 
@@ -88,7 +88,7 @@ node scripts/check-shared-rules.mjs   # confere se o bloco "Regras compartilhada
 - No cardápio, retirada e entrega são **um cardápio só**, filtrado por `available_pickup`. `available_delivery` está aposentado (fica no banco, ninguém usa).
 - **Revenda** (`/:slug/atacado`, só se `stores.reseller_enabled`): filtra por `available_reseller`, pedido com `sales_channel = 'reseller'`, só retirada (nunca mesa).
 - Mesa via QR: `/:slug/mesa/:numero` (gerado em Configurações do painel com `VITE_STOREFRONT_URL`).
-- Ordem no cardápio: categorias, produtos e grupos de adicional/variação por `sort_order`, definida no painel. **Exceção (bug, backlog):** as opções dentro de cada grupo saem ordenadas por `id` nas views `public_product_addon_groups`/`public_product_variation_groups` — a ordem arrastada no painel não chega ao cardápio.
+- Ordem no cardápio: categorias, produtos, grupos de adicional/variação e as opções dentro de cada grupo, todos por `sort_order`, definida no painel.
 
 ### Git, deploy e verificação
 - `main` = produção (deploy automático na Vercel). `dev` = dia a dia (Preview Deployment). Release: `git checkout main && git merge dev && git tag vX.Y.Z && git push origin main --tags`. Hotfix: branch da `main` → merge na `main` **e** na `dev`.
