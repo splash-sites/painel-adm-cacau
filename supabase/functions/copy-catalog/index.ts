@@ -1,16 +1,3 @@
-// ============================================================================
-// Edge Function: copy-catalog  (ver CLAUDE.md, "Feature: Copiar catálogo pra outra loja")
-// Cópia de referência — o que roda de verdade está no Supabase (Edge Functions).
-// Ao alterar lá, atualize este arquivo e commite junto.
-//
-// Fluxo:
-//   1. valida JWT do caller -> profiles.role = 'super_admin' (403 senão)
-//   2. execução real (dryRun=false): revalida a senha via signInWithPassword (401 "Senha incorreta")
-//   3. chama a RPC copy_catalog via client SERVICE_ROLE, passando p_actor = user.id
-//      (a RPC só aceita service_role — não é chamável direto por sessão autenticada)
-//   4. execução real: copia os arquivos de foto pro caminho da loja destino, validando
-//      o path contra "<from_store>/<arquivo>" (sem subpasta, sem "..")
-// ============================================================================
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
@@ -84,7 +71,7 @@ Deno.serve(async (req) => {
     if (pwErr) return json({ error: 'Senha incorreta' }, 401)
   }
 
-  // 3. RPC via service_role; actor passado explícito
+  // 3. RPC via service_role (só service_role tem execute); actor passado explícito
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY)
   const { data: result, error: rpcErr } = await admin.rpc('copy_catalog', {
     p_actor: user.id,
@@ -118,7 +105,7 @@ Deno.serve(async (req) => {
       continue
     }
     const fromPath = decodeURIComponent(img.source_url.slice(idx + marker.length))
-    // exige "<loja-origem>/<arquivo>" — sem subpasta, sem ".." (achado #3)
+    // exige "<loja-origem>/<arquivo>" — sem subpasta, sem ".."
     const rest = fromPath.startsWith(safePrefix) ? fromPath.slice(safePrefix.length) : null
     if (rest === null || rest.length === 0 || rest.includes('/') || rest.includes('..')) {
       payload.imageErrors++

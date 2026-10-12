@@ -37,3 +37,6 @@ playwright/.cache
 *.njsproj
 *.sln
 *.sw?
+
+# Supabase CLI (estado local: projeto linkado, versão do CLI)
+supabase/.temp/
