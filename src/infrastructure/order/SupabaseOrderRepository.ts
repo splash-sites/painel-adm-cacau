@@ -27,6 +27,7 @@ interface OrderItemAddonRow {
   addon_option_id: string | null
   name: string
   price: number
+  lover_price: number | null
   quantity: number
 }
 
@@ -35,6 +36,7 @@ interface OrderItemVariationRow {
   variation_option_id: string | null
   name: string
   price: number
+  lover_price: number | null
   price_mode: VariationPriceMode
 }
 
@@ -43,6 +45,7 @@ interface OrderItemRow {
   product_id: string
   quantity: number
   unit_price: number
+  lover_unit_price: number | null
   notes: string | null
   promotion_id: string | null
   products: { name: string } | null
@@ -69,6 +72,7 @@ interface OrderRow {
   attendant_id: string | null
   attendants: { name: string } | null
   cancellation_reason: string | null
+  is_lover: boolean | null
 }
 
 function toOrder(row: OrderRow): Order {
@@ -90,12 +94,14 @@ function toOrder(row: OrderRow): Order {
     attendantId: row.attendant_id,
     attendantName: row.attendants?.name ?? null,
     cancellationReason: row.cancellation_reason,
+    isLover: row.is_lover,
     items: row.order_items.map((item) => ({
       id: item.id,
       productId: item.product_id,
       productName: item.products?.name ?? '—',
       quantity: item.quantity,
       unitPrice: item.unit_price,
+      loverUnitPrice: item.lover_unit_price,
       notes: item.notes,
       promotionId: item.promotion_id,
       addons: item.order_item_addons.map((addon) => ({
@@ -103,6 +109,7 @@ function toOrder(row: OrderRow): Order {
         addonOptionId: addon.addon_option_id,
         name: addon.name,
         price: addon.price,
+        loverPrice: addon.lover_price,
         quantity: addon.quantity,
       })),
       variations: item.order_item_variations.map((variation) => ({
@@ -110,6 +117,7 @@ function toOrder(row: OrderRow): Order {
         variationOptionId: variation.variation_option_id,
         name: variation.name,
         price: variation.price,
+        loverPrice: variation.lover_price,
         priceMode: variation.price_mode,
       })),
     })),
@@ -123,7 +131,7 @@ function startOfTodayIso(): string {
 }
 
 const ORDER_SELECT =
-  '*, attendants(name), order_items(id, product_id, quantity, unit_price, notes, promotion_id, products(name), order_item_addons(id, addon_option_id, name, price, quantity), order_item_variations(id, variation_option_id, name, price, price_mode))'
+  '*, attendants(name), order_items(id, product_id, quantity, unit_price, lover_unit_price, notes, promotion_id, products(name), order_item_addons(id, addon_option_id, name, price, lover_price, quantity), order_item_variations(id, variation_option_id, name, price, lover_price, price_mode))'
 
 /** Teto de linhas por request do Postgrest (`max-rows` do projeto Supabase, default 1000) — list()/listStatusHistory()
  * fazem loop nesse tamanho pra nunca truncar em silêncio (ex: Relatórios de 30 dias numa loja com bastante pedido). */
@@ -189,6 +197,11 @@ export class SupabaseOrderRepository implements OrderRepository {
       p_attendant_id: attendantId ?? null,
       p_reason: reason ?? null,
     })
+    if (error) throw new Error(error.message)
+  }
+
+  async setLover(orderId: string, isLover: boolean): Promise<void> {
+    const { error } = await supabase.rpc('set_order_lover', { p_order_id: orderId, p_is_lover: isLover })
     if (error) throw new Error(error.message)
   }
 

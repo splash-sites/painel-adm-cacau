@@ -1,12 +1,15 @@
+import { useState } from 'react'
 import { toast } from 'sonner'
 import type { Order } from '../../domain/order/Order'
 import { canRevert, getNextStatus } from '../../domain/order/orderStatusRules'
-import { calculateOrderTotal } from '../../domain/order/orderPricing'
+import { calculateOrderTotal, needsLoverQuestion } from '../../domain/order/orderPricing'
 import { cn } from '../ui/cn'
 import { buttonClass } from '../ui/styles'
+import { FinalizeLoverModal } from './FinalizeLoverModal'
+import { LoverTotalHint } from './LoverTotalHint'
 import { OrderItemsList } from './OrderItemsList'
 import { formatCpf, formatCurrency, formatName, formatPhone, whatsAppLink } from './orderCardFormat'
-import { useChangeOrderStatus, useFinalizeTableOrders, useRevertOrderStatus } from './useOrders'
+import { useChangeOrderStatus, useFinalizeOrders, useRevertOrderStatus } from './useOrders'
 
 function handleError(error: unknown, fallback: string) {
   toast.error(error instanceof Error ? error.message : fallback)
@@ -16,7 +19,9 @@ function handleError(error: unknown, fallback: string) {
 export function TableGroupCard({ orders }: { orders: Order[] }) {
   const changeStatus = useChangeOrderStatus()
   const revertStatus = useRevertOrderStatus()
-  const finalizeAll = useFinalizeTableOrders()
+  const finalizeAll = useFinalizeOrders()
+  // Pergunta do Lover aberta pra 1 pedido da mesa ou pra mesa inteira ("Finalizar tudo").
+  const [loverQuestionFor, setLoverQuestionFor] = useState<Order[] | null>(null)
   const tableNumber = orders[0].tableNumber
   const grandTotal = orders.reduce((sum, order) => sum + calculateOrderTotal(order), 0)
 
@@ -69,6 +74,7 @@ export function TableGroupCard({ orders }: { orders: Order[] }) {
                     Subtotal
                   </span>
                   <span className="font-semibold">{formatCurrency(calculateOrderTotal(order))}</span>
+                  <LoverTotalHint order={order} />
                 </div>
                 <div className="flex flex-wrap items-center justify-end gap-3">
                   {canRevert(order.status) && (
@@ -89,10 +95,12 @@ export function TableGroupCard({ orders }: { orders: Order[] }) {
                     <button
                       type="button"
                       onClick={() =>
-                        changeStatus.mutate(
-                          { orderId: order.id, newStatus: nextStatus },
-                          { onError: (error) => handleError(error, 'Falha ao avançar etapa') },
-                        )
+                        needsLoverQuestion([order], nextStatus)
+                          ? setLoverQuestionFor([order])
+                          : changeStatus.mutate(
+                              { orderId: order.id, newStatus: nextStatus },
+                              { onError: (error) => handleError(error, 'Falha ao avançar etapa') },
+                            )
                       }
                       disabled={changeStatus.isPending}
                       className={cn(buttonClass('primary'), 'whitespace-nowrap px-3 py-1.5 text-sm')}
@@ -117,13 +125,15 @@ export function TableGroupCard({ orders }: { orders: Order[] }) {
         <button
           type="button"
           onClick={() =>
-            finalizeAll.mutate(
-              orders.map((order) => order.id),
-              {
-                onSuccess: () => toast.success('Mesa finalizada.'),
-                onError: (error) => handleError(error, 'Falha ao finalizar mesa'),
-              },
-            )
+            needsLoverQuestion(orders, 'finalized')
+              ? setLoverQuestionFor(orders)
+              : finalizeAll.mutate(
+                  { orderIds: orders.map((order) => order.id), isLover: null },
+                  {
+                    onSuccess: () => toast.success('Mesa finalizada.'),
+                    onError: (error) => handleError(error, 'Falha ao finalizar mesa'),
+                  },
+                )
           }
           disabled={finalizeAll.isPending}
           className={`w-full ${buttonClass('primary')}`}
@@ -131,6 +141,14 @@ export function TableGroupCard({ orders }: { orders: Order[] }) {
           Finalizar tudo
         </button>
       </div>
+
+      {loverQuestionFor && (
+        <FinalizeLoverModal
+          orders={loverQuestionFor}
+          onClose={() => setLoverQuestionFor(null)}
+          onFinalized={() => loverQuestionFor.length > 1 && toast.success('Mesa finalizada.')}
+        />
+      )}
     </div>
   )
 }

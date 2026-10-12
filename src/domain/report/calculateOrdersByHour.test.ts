@@ -21,6 +21,7 @@ function makeOrder(overrides: Partial<Order> = {}): Order {
     attendantId: null,
     attendantName: null,
     cancellationReason: null,
+    isLover: null,
     items: [],
     ...overrides,
   }

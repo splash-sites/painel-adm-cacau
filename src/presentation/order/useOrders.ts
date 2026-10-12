@@ -102,14 +102,21 @@ export function useUpdateOrderItemQuantity() {
   })
 }
 
-/** Bulk pra "Finalizar tudo" do card mesclado de mesa — cada avanço passa pelo change_order_status de sempre, só a orquestração é client-side. */
-export function useFinalizeTableOrders() {
+/**
+ * Finaliza 1 ou N pedidos (N = "Finalizar tudo" da mesa). isLover = resposta do "Cliente é Cacau Lover?"
+ * (null = não perguntado, pedido sem diferença de preço) — gravado antes do avanço, que passa pelo
+ * change_order_status de sempre. Orquestração client-side.
+ */
+export function useFinalizeOrders() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (orderIds: string[]) => {
+    mutationFn: async ({ orderIds, isLover }: { orderIds: string[]; isLover: boolean | null }) => {
       const results = await Promise.allSettled(
-        orderIds.map((orderId) => orderRepository.changeStatus(orderId, 'finalized')),
+        orderIds.map(async (orderId) => {
+          if (isLover !== null) await orderRepository.setLover(orderId, isLover)
+          await orderRepository.changeStatus(orderId, 'finalized')
+        }),
       )
       const failed = results.filter((result): result is PromiseRejectedResult => result.status === 'rejected')
       if (failed.length > 0) {

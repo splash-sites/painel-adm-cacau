@@ -11,11 +11,13 @@ import {
   orderChannelLabel,
   statusLabel,
 } from '../../domain/order/orderStatusRules'
-import { calculateOrderTotal } from '../../domain/order/orderPricing'
+import { calculateOrderTotal, needsLoverQuestion } from '../../domain/order/orderPricing'
 import { AcceptOrderModal } from '../attendant/AcceptOrderModal'
 import { Dialog, DialogClose, DialogSideContent } from '../ui/Dialog'
 import { buttonClass } from '../ui/styles'
 import { CancelOrderModal } from './CancelOrderModal'
+import { FinalizeLoverModal } from './FinalizeLoverModal'
+import { LoverTotalHint } from './LoverTotalHint'
 import { OrderItemsEditModal } from './OrderItemsEditModal'
 import { OrderItemsList } from './OrderItemsList'
 import {
@@ -48,6 +50,7 @@ export function OrderDetailsDrawer({ order, onClose }: { order: Order; onClose: 
   const nextStatus = getNextStatus(order.status, order.orderType)
   const [isEditingItems, setIsEditingItems] = useState(false)
   const [isAccepting, setIsAccepting] = useState(false)
+  const [isFinalizingLover, setIsFinalizingLover] = useState(false)
   const [isCancelling, setIsCancelling] = useState(false)
 
   return (
@@ -140,7 +143,10 @@ export function OrderDetailsDrawer({ order, onClose }: { order: Order; onClose: 
 
             <div className="flex items-center justify-between border-t border-secondary/10 pt-4">
               <span className="text-sm text-foreground/50">Total</span>
-              <span className="text-lg font-semibold">{formatCurrency(calculateOrderTotal(order))}</span>
+              <span className="text-right">
+                <span className="block text-lg font-semibold">{formatCurrency(calculateOrderTotal(order))}</span>
+                <LoverTotalHint order={order} />
+              </span>
             </div>
 
             <div className="space-y-2">
@@ -150,10 +156,12 @@ export function OrderDetailsDrawer({ order, onClose }: { order: Order; onClose: 
                   onClick={() =>
                     needsAttendantToAdvance(order.status)
                       ? setIsAccepting(true)
-                      : changeStatus.mutate(
-                          { orderId: order.id, newStatus: nextStatus },
-                          { onError: (error) => handleStatusMutationError(error, 'Falha ao avançar etapa') },
-                        )
+                      : needsLoverQuestion([order], nextStatus)
+                        ? setIsFinalizingLover(true)
+                        : changeStatus.mutate(
+                            { orderId: order.id, newStatus: nextStatus },
+                            { onError: (error) => handleStatusMutationError(error, 'Falha ao avançar etapa') },
+                          )
                   }
                   disabled={changeStatus.isPending}
                   className={`w-full ${buttonClass('primary')}`}
@@ -194,6 +202,7 @@ export function OrderDetailsDrawer({ order, onClose }: { order: Order; onClose: 
       {isAccepting && nextStatus && (
         <AcceptOrderModal order={order} nextStatus={nextStatus} onClose={() => setIsAccepting(false)} />
       )}
+      {isFinalizingLover && <FinalizeLoverModal orders={[order]} onClose={() => setIsFinalizingLover(false)} />}
 
       {isCancelling && (
         <CancelOrderModal

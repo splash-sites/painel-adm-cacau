@@ -1,7 +1,5 @@
 import type { Order, OrderStatus } from '../../domain/order/Order'
-import { calculateItemTotal } from '../../domain/product/addonPricing'
-import { applyVariationsToUnitPrice } from '../../domain/product/variationPricing'
-import { calculateOrderTotal } from '../../domain/order/orderPricing'
+import { calculateItemRegularTotal, calculateOrderTotal } from '../../domain/order/orderPricing'
 
 export const BADGE_COLOR: Record<string, string> = {
   Cafeteria: 'bg-accent text-accent-foreground',
@@ -69,9 +67,5 @@ export function whatsAppLink(order: Order): string {
 }
 
 export function itemTotal(item: Order['items'][number]): number {
-  return calculateItemTotal(
-    applyVariationsToUnitPrice(item.unitPrice, item.variations),
-    item.quantity,
-    item.addons,
-  )
+  return calculateItemRegularTotal(item)
 }

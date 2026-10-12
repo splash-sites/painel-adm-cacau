@@ -51,6 +51,8 @@ export interface OrderRepository {
    * reason só é exigido (e só faz efeito) na transição pra "cancelled" — ver needsReasonToCancel.
    */
   changeStatus(orderId: string, newStatus: OrderStatus, attendantId?: string, reason?: string): Promise<void>
+  /** Marca se o cliente é Cacau Lover (painel pergunta ao finalizar) — muda o preço que vale nos Relatórios. */
+  setLover(orderId: string, isLover: boolean): Promise<void>
   revertStatus(orderId: string): Promise<void>
   addItem(orderId: string, productId: string, quantity: number, selection?: OrderItemSelection): Promise<void>
   /** Atualiza quantidade e reescreve por completo a variação/adicional do item (não é um patch parcial). */

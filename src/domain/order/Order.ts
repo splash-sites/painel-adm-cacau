@@ -11,6 +11,8 @@ export interface OrderItemAddon {
   addonOptionId: string | null
   name: string
   price: number
+  /** Preço Lover congelado. null = pedido anterior ao Lover (vale price). */
+  loverPrice: number | null
   quantity: number
 }
 
@@ -20,6 +22,7 @@ export interface OrderItemVariation {
   variationOptionId: string | null
   name: string
   price: number
+  loverPrice: number | null
   priceMode: VariationPriceMode
 }
 
@@ -28,7 +31,10 @@ export interface OrderItem {
   productId: string
   productName: string
   quantity: number
+  /** Preço da unidade já com as variações (e com o desconto do combo, se for combo) — nunca reaplicar variação em cima. */
   unitPrice: number
+  /** Mesma convenção do unitPrice, no preço Lover. null = pedido anterior ao Lover (vale unitPrice). */
+  loverUnitPrice: number | null
   notes: string | null
   addons: OrderItemAddon[]
   variations: OrderItemVariation[]
@@ -67,4 +73,6 @@ export interface Order {
   attendantName: string | null
   /** Preenchido só na transição pra "cancelled" (loja ou cliente) — null pra qualquer outro status. */
   cancellationReason: string | null
+  /** Cliente é Cacau Lover? Perguntado ao finalizar. null = não perguntado (vale o preço normal). */
+  isLover: boolean | null
 }

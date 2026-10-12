@@ -1,5 +1,5 @@
 import type { Order } from '../../domain/order/Order'
-import { calculateOrderTotal } from '../../domain/order/orderPricing'
+import { calculateOrderLoverTotal, calculateOrderTotal, hasLoverPrice } from '../../domain/order/orderPricing'
 import { orderChannelLabel } from '../../domain/order/orderStatusRules'
 import { formatCpf, formatCurrency, formatName, formatPhone, itemTotal } from './orderCardFormat'
 
@@ -97,6 +97,12 @@ export function OrderReceipt({
         <span>Total</span>
         <span>{formatCurrency(total)}</span>
       </div>
+      {hasLoverPrice(order) && order.isLover === null && (
+        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <span>Cacau Lover</span>
+          <span>{formatCurrency(calculateOrderLoverTotal(order))}</span>
+        </div>
+      )}
 
       <Divider />
 

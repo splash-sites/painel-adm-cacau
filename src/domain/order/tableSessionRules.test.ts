@@ -20,6 +20,7 @@ function makeOrder(overrides: Partial<Order> & { status: OrderStatus }): Order {
     attendantId: null,
     attendantName: null,
     cancellationReason: null,
+    isLover: null,
     items: [],
     ...overrides,
   }
@@ -54,14 +55,14 @@ describe('groupOrdersByTableSession', () => {
         id: 'a',
         status: 'preparing',
         items: [
-          { id: 'i1', productId: 'p1', productName: 'Café', quantity: 2, unitPrice: 10, notes: null, addons: [], variations: [], promotionId: null },
+          { id: 'i1', productId: 'p1', productName: 'Café', quantity: 2, unitPrice: 10, loverUnitPrice: null, notes: null, addons: [], variations: [], promotionId: null },
         ],
       }),
       makeOrder({
         id: 'b',
         status: 'received',
         items: [
-          { id: 'i2', productId: 'p2', productName: 'Bolo', quantity: 1, unitPrice: 15, notes: null, addons: [], variations: [], promotionId: null },
+          { id: 'i2', productId: 'p2', productName: 'Bolo', quantity: 1, unitPrice: 15, loverUnitPrice: null, notes: null, addons: [], variations: [], promotionId: null },
         ],
       }),
       makeOrder({ id: 'c', status: 'finalized', tableSessionId: 'session-2', tableNumber: '9' }),

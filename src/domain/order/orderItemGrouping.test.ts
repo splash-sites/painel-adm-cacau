@@ -8,6 +8,7 @@ function makeItem(overrides: Partial<OrderItem> & { id: string }): OrderItem {
     productName: 'Produto',
     quantity: 1,
     unitPrice: 10,
+    loverUnitPrice: null,
     notes: null,
     addons: [],
     variations: [],

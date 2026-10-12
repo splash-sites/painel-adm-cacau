@@ -11,10 +11,12 @@ import {
   orderChannelLabel,
   statusLabel,
 } from '../../domain/order/orderStatusRules'
-import { calculateOrderTotal } from '../../domain/order/orderPricing'
+import { calculateOrderTotal, needsLoverQuestion } from '../../domain/order/orderPricing'
 import { AcceptOrderModal } from '../attendant/AcceptOrderModal'
 import { buttonClass } from '../ui/styles'
 import { CancelOrderModal } from './CancelOrderModal'
+import { FinalizeLoverModal } from './FinalizeLoverModal'
+import { LoverTotalHint } from './LoverTotalHint'
 import { OrderDetailsDrawer } from './OrderDetailsDrawer'
 import { OrderItemsEditModal } from './OrderItemsEditModal'
 import { OrderItemsList } from './OrderItemsList'
@@ -41,6 +43,7 @@ export function OrderCard({ order }: { order: Order }) {
   const [isEditingItems, setIsEditingItems] = useState(false)
   const [isCancelling, setIsCancelling] = useState(false)
   const [isAccepting, setIsAccepting] = useState(false)
+  const [isFinalizingLover, setIsFinalizingLover] = useState(false)
   const [isDetailsOpen, setIsDetailsOpen] = useState(false)
 
   return (
@@ -132,6 +135,7 @@ export function OrderCard({ order }: { order: Order }) {
         <div>
           <span className="block text-xs font-medium uppercase tracking-wide text-foreground/50">Total</span>
           <span className="text-lg font-semibold">{formatCurrency(calculateOrderTotal(order))}</span>
+          <LoverTotalHint order={order} />
         </div>
         {nextStatus && (
           <button
@@ -139,7 +143,9 @@ export function OrderCard({ order }: { order: Order }) {
             onClick={() =>
               needsAttendantToAdvance(order.status)
                 ? setIsAccepting(true)
-                : changeStatus.mutate(
+                : needsLoverQuestion([order], nextStatus)
+                  ? setIsFinalizingLover(true)
+                  : changeStatus.mutate(
                     { orderId: order.id, newStatus: nextStatus },
                     { onError: (error) => handleStatusMutationError(error, 'Falha ao avançar etapa') },
                   )
@@ -204,6 +210,7 @@ export function OrderCard({ order }: { order: Order }) {
       {isAccepting && nextStatus && (
         <AcceptOrderModal order={order} nextStatus={nextStatus} onClose={() => setIsAccepting(false)} />
       )}
+      {isFinalizingLover && <FinalizeLoverModal orders={[order]} onClose={() => setIsFinalizingLover(false)} />}
 
       {isCancelling && (
         <CancelOrderModal

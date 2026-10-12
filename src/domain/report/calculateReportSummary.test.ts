@@ -9,6 +9,7 @@ function makeItem(overrides: Partial<OrderItem> = {}): OrderItem {
     productName: 'Capuccino',
     quantity: 1,
     unitPrice: 8,
+    loverUnitPrice: null,
     notes: null,
     addons: [],
     variations: [],
@@ -36,6 +37,7 @@ function makeOrder(overrides: Partial<Order> = {}): Order {
     attendantId: null,
     attendantName: null,
     cancellationReason: null,
+    isLover: null,
     items: [makeItem()],
     ...overrides,
   }
@@ -166,7 +168,7 @@ describe('calculateReportSummary', () => {
           makeItem({
             quantity: 2,
             unitPrice: 8,
-            addons: [{ id: 'ad1', addonOptionId: 'opt1', name: 'Morango', price: 9, quantity: 1 }],
+            addons: [{ id: 'ad1', addonOptionId: 'opt1', name: 'Morango', price: 9, loverPrice: null, quantity: 1 }],
           }),
         ],
       }),
