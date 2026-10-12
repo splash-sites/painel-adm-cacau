@@ -44,7 +44,9 @@ export function AppLayout() {
           sidebarOpen ? 'flex' : 'hidden'
         } md:flex w-full md:w-56 shrink-0 flex-col gap-5 bg-surface-2 px-3.5 py-5 md:h-full md:overflow-y-auto`}
       >
-        <span className="hidden px-2 font-display text-[22px] font-bold md:block">Splash</span>
+        <div className="hidden border-b border-line-strong px-2 pb-4 md:block">
+          <span className="font-display text-[22px] font-bold">Splash</span>
+        </div>
         <nav aria-label="Menu" className="flex flex-col gap-0.5">
           <NavLink to="/" end className={linkClass} onClick={close}>
             Pedidos
