@@ -6,7 +6,6 @@ Prioridade: **P0** = risco pra produção/dado real · **P1** = regra de negóci
 Origem: revisão + teste ponta a ponta no staging em 2026-10-11, mais o backlog da auditoria anterior (itens com "(aud. N)" = número no relatório original, ver histórico).
 
 ## P0 — risco pra produção
-- [ ] **Commitar a base do banco**: `supabase/migrations/20261011000000_baseline_from_prod.sql` + `supabase/seed.sql` (ainda não versionados).
 - [ ] **Plano do Supabase**: produção no plano grátis pausa sozinha após ~7 dias sem uso (aconteceu em 2026-10-08). Avaliar Pro (não pausa, backup diário).
 
 ## P1 — regra decidida, falta implementar
