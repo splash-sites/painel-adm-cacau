@@ -52,7 +52,7 @@ export function AttendantModal({
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-md">
         <DialogTitle>{attendant ? 'Editar atendente' : 'Novo atendente'}</DialogTitle>
-        <DialogDescription>Quem prepara o pedido — sem login, só nome.</DialogDescription>
+        <DialogDescription>Quem prepara os pedidos. Só o nome, sem login.</DialogDescription>
 
         <form
           onSubmit={(event) => {
@@ -65,7 +65,7 @@ export function AttendantModal({
           <div className="space-y-1">
             <Label htmlFor={nameId}>Nome</Label>
             <Input id={nameId} {...register('name')} />
-            {errors.name && <p className="text-sm text-red-600">{errors.name.message}</p>}
+            {errors.name && <p className="text-sm text-danger">{errors.name.message}</p>}
           </div>
 
           <label className="flex items-center gap-2 font-body">

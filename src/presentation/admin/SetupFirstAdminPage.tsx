@@ -6,7 +6,7 @@ import {
   setupFirstAdminSchema,
   type SetupFirstAdminInput,
 } from '../../application/admin/setupFirstAdminSchema'
-import { buttonClass, cardClass, inputClass } from '../ui/styles'
+import { AuthSplitLayout, authButtonClass, authInputClass, authLabelClass } from '../auth/AuthSplitLayout'
 import { useSetupFirstAdmin } from './useCreateAdmin'
 
 export function SetupFirstAdminPage() {
@@ -31,67 +31,66 @@ export function SetupFirstAdminPage() {
     }
   }
 
+  const intro =
+    'Esta tela só funciona uma vez, para criar a conta de quem vai administrar o sistema. Depois, novos usuários são criados dentro do painel, em "Usuários".'
+
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-secondary/5 text-foreground p-4">
-        <div className={`w-full max-w-sm space-y-4 text-center ${cardClass}`}>
-          <h1 className="font-display text-2xl text-accent">Conta criada</h1>
-          <p className="font-body">Já pode entrar com o e-mail e senha que você cadastrou.</p>
-          <button type="button" onClick={() => navigate('/login')} className={buttonClass('primary')}>
-            Ir pro login
+      <AuthSplitLayout title="Primeiro acesso" description={intro}>
+        <div className="flex flex-col gap-4">
+          <h2 className="font-display text-[28px] font-bold">Conta criada</h2>
+          <p>Já pode entrar com o e-mail e a senha que você cadastrou.</p>
+          <button type="button" onClick={() => navigate('/login')} className={authButtonClass}>
+            Ir para o login
           </button>
         </div>
-      </div>
+      </AuthSplitLayout>
     )
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-secondary/5 text-foreground p-4">
-      <form onSubmit={handleSubmit(onSubmit)} className={`w-full max-w-sm space-y-5 ${cardClass}`} noValidate>
-        <div className="space-y-1">
-          <h1 className="font-display text-2xl text-accent">Configuração inicial</h1>
-          <p className="text-sm font-body text-foreground/70">
-            Cria a primeira conta super_admin. Só funciona uma vez — depois disso, novos usuários se
-            cadastram logado, em "Usuários".
-          </p>
-        </div>
+    <AuthSplitLayout title="Primeiro acesso" description={intro}>
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4" noValidate>
+        <h2 className="font-display text-[28px] font-bold">Criar administrador</h2>
 
-        <div className="space-y-1">
-          <label htmlFor="fullName" className="text-sm font-body">
-            Nome
-          </label>
-          <input id="fullName" className={inputClass} {...register('fullName')} />
-          {errors.fullName && <p className="text-sm text-red-600">{errors.fullName.message}</p>}
-        </div>
+        <label htmlFor="fullName" className={authLabelClass}>
+          Seu nome
+          <input id="fullName" autoComplete="name" className={authInputClass} {...register('fullName')} />
+          {errors.fullName && <span className="text-sm text-danger">{errors.fullName.message}</span>}
+        </label>
 
-        <div className="space-y-1">
-          <label htmlFor="email" className="text-sm font-body">
-            E-mail
-          </label>
-          <input id="email" type="email" autoComplete="email" className={inputClass} {...register('email')} />
-          {errors.email && <p className="text-sm text-red-600">{errors.email.message}</p>}
-        </div>
+        <label htmlFor="email" className={authLabelClass}>
+          E-mail
+          <input id="email" type="email" autoComplete="email" className={authInputClass} {...register('email')} />
+          {errors.email && <span className="text-sm text-danger">{errors.email.message}</span>}
+        </label>
 
-        <div className="space-y-1">
-          <label htmlFor="password" className="text-sm font-body">
-            Senha
-          </label>
+        <label htmlFor="password" className={authLabelClass}>
+          Senha
           <input
             id="password"
             type="password"
             autoComplete="new-password"
-            className={inputClass}
+            className={authInputClass}
             {...register('password')}
           />
-          {errors.password && <p className="text-sm text-red-600">{errors.password.message}</p>}
-        </div>
+          {errors.password ? (
+            <span className="text-sm text-danger">{errors.password.message}</span>
+          ) : (
+            <span className="text-[13px]">Pelo menos 6 caracteres.</span>
+          )}
+        </label>
 
-        {submitError && <p className="text-sm text-red-600">{submitError}</p>}
+        {submitError && (
+          <p role="alert" className="text-sm text-danger">
+            {submitError}
+          </p>
+        )}
 
-        <button type="submit" disabled={isSubmitting} className={`w-full ${buttonClass('primary')}`}>
+        <button type="submit" disabled={isSubmitting} className={authButtonClass}>
           {isSubmitting ? 'Criando...' : 'Criar conta'}
         </button>
       </form>
-    </div>
+    </AuthSplitLayout>
   )
 }

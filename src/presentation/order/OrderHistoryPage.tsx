@@ -82,16 +82,16 @@ export function OrderHistoryPage({ salesChannel, embedded = false }: OrderHistor
       <div className="flex flex-wrap items-center justify-between gap-3">
         {!embedded && (
           <div>
-            <h2 className="font-display text-2xl md:text-3xl text-accent">Histórico</h2>
-            <p className="font-body text-sm text-foreground/60">
-              Todos os pedidos da loja, em qualquer status — inclusive cancelado, com o motivo.
+            <h2 className="font-display text-[28px] font-bold leading-tight tracking-tight text-ink">Histórico</h2>
+            <p className="font-body text-sm text-muted">
+              Todos os pedidos da loja, inclusive os cancelados, com o motivo.
             </p>
           </div>
         )}
 
         {storeId && (
           <div className="flex flex-wrap items-center gap-2">
-            <div className="flex gap-1 rounded-lg bg-secondary/10 p-1">
+            <div className="flex gap-1 rounded-lg bg-surface-2 p-1">
               {(Object.keys(PERIOD_LABEL) as HistoryPeriod[]).map((key) => (
                 <button
                   key={key}
@@ -99,8 +99,8 @@ export function OrderHistoryPage({ salesChannel, embedded = false }: OrderHistor
                   onClick={() => handlePeriodChange(key)}
                   className={`rounded-md px-3 py-1.5 text-sm font-body transition ${
                     period === key
-                      ? 'bg-background text-foreground shadow-sm'
-                      : 'text-foreground/60 hover:text-foreground'
+                      ? 'bg-surface text-ink shadow-sm'
+                      : 'text-muted hover:text-ink'
                   }`}
                 >
                   {PERIOD_LABEL[key]}
@@ -127,11 +127,11 @@ export function OrderHistoryPage({ salesChannel, embedded = false }: OrderHistor
 
       {!storeId && <p className="font-body">Selecione uma loja pra ver o histórico.</p>}
       {isLoading && <p className="font-body">Carregando...</p>}
-      {error != null && <p className="font-body text-red-600">Erro ao carregar histórico</p>}
+      {error != null && <p className="font-body text-danger">Erro ao carregar histórico</p>}
 
       {data && data.items.length === 0 && (
         <div className={cardClass}>
-          <p className="font-body text-foreground/70">Nenhum pedido encontrado nesse filtro.</p>
+          <p className="font-body text-muted">Nenhum pedido encontrado nesse filtro.</p>
         </div>
       )}
 
@@ -170,14 +170,14 @@ export function OrderHistoryPage({ salesChannel, embedded = false }: OrderHistor
                     </span>
                   </td>
                   <td className="py-3 whitespace-nowrap">{formatCurrency(calculateOrderTotal(order))}</td>
-                  <td className="py-3 max-w-[220px] truncate text-foreground/70">
+                  <td className="py-3 max-w-[220px] truncate text-muted">
                     {order.cancellationReason ?? '—'}
                   </td>
                   <td className="py-3 pr-6 text-right">
                     <button
                       type="button"
                       onClick={() => setSelectedOrderId(order.id)}
-                      className="text-sm text-foreground/70 hover:text-foreground"
+                      className="text-sm text-muted hover:text-ink"
                     >
                       Detalhes
                     </button>
@@ -187,11 +187,11 @@ export function OrderHistoryPage({ salesChannel, embedded = false }: OrderHistor
             </tbody>
           </table>
 
-          <div className="flex h-11 items-center justify-end gap-6 border-t border-secondary/15 px-6 font-body text-sm">
+          <div className="flex h-11 items-center justify-end gap-6 border-t border-line px-6 font-body text-sm">
             <div className="flex items-center gap-2">
-              <span className="text-foreground/60">Linhas por página:</span>
+              <span className="text-muted">Linhas por página:</span>
               <Select value={String(pageSize)} onValueChange={handlePageSizeChange}>
-                <SelectTrigger className="w-auto gap-1.5 border-none py-1 text-sm hover:bg-secondary/10">
+                <SelectTrigger className="w-auto gap-1.5 border-none py-1 text-sm hover:bg-surface-2">
                   <SelectValue>{pageSize}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
@@ -204,7 +204,7 @@ export function OrderHistoryPage({ salesChannel, embedded = false }: OrderHistor
               </Select>
             </div>
 
-            <span className="text-foreground/60">
+            <span className="text-muted">
               {page * pageSize + 1}–{Math.min((page + 1) * pageSize, data.total)} de {data.total}
             </span>
 
@@ -214,7 +214,7 @@ export function OrderHistoryPage({ salesChannel, embedded = false }: OrderHistor
                 aria-label="Página anterior"
                 disabled={page === 0}
                 onClick={() => setPage((current) => current - 1)}
-                className="rounded-md p-1.5 text-foreground/50 hover:bg-secondary/10 hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
+                className="rounded-md p-1.5 text-muted hover:bg-surface-2 hover:text-ink disabled:pointer-events-none disabled:opacity-40"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
@@ -223,7 +223,7 @@ export function OrderHistoryPage({ salesChannel, embedded = false }: OrderHistor
                 aria-label="Próxima página"
                 disabled={page + 1 >= totalPages}
                 onClick={() => setPage((current) => current + 1)}
-                className="rounded-md p-1.5 text-foreground/50 hover:bg-secondary/10 hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
+                className="rounded-md p-1.5 text-muted hover:bg-surface-2 hover:text-ink disabled:pointer-events-none disabled:opacity-40"
               >
                 <ChevronRight className="h-4 w-4" />
               </button>

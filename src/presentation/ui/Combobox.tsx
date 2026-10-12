@@ -43,9 +43,9 @@ export function Combobox({
           ref={triggerRef}
           type="button"
           className={cn(
-            'flex w-full items-center justify-between gap-2 rounded-lg border border-secondary/25 bg-background px-3 py-2 text-left font-body text-foreground/60 transition',
-            'hover:bg-secondary/5',
-            'focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/40',
+            'flex w-full items-center justify-between gap-2 rounded-xl border-[1.5px] border-line-strong bg-surface px-3.5 py-2.5 text-left font-body text-[15px] text-muted transition',
+            'hover:bg-canvas',
+            'focus-visible:outline-none focus-visible:border-ink focus-visible:ring-2 focus-visible:ring-caramel/50',
             className,
           )}
         >
@@ -59,16 +59,16 @@ export function Combobox({
       <PopoverPrimitive.Content
         align="start"
         sideOffset={6}
-        className="z-[100] w-[320px] overflow-hidden rounded-lg border border-secondary/15 bg-background shadow-lg"
+        className="z-[100] w-[320px] overflow-hidden rounded-2xl border border-line bg-surface shadow-[0_12px_32px_-12px_rgba(42,26,20,0.25)]"
       >
         <CommandPrimitive className="w-full" shouldFilter={!onQueryChange}>
           <CommandPrimitive.Input
             placeholder={placeholder}
             onValueChange={onQueryChange}
-            className="w-full border-b border-secondary/15 bg-transparent px-3 py-2 font-body text-sm text-foreground placeholder:text-foreground/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/40"
+            className="w-full border-b border-line bg-transparent px-3.5 py-2.5 font-body text-sm text-ink placeholder:text-faint focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-caramel/50"
           />
           <CommandPrimitive.List className="scrollbar-hidden max-h-60 overflow-y-auto p-1">
-            <CommandPrimitive.Empty className="px-2.5 py-2 font-body text-sm text-foreground/50">
+            <CommandPrimitive.Empty className="px-2.5 py-2 font-body text-sm text-muted">
               {emptyLabel}
             </CommandPrimitive.Empty>
             {options.map((option) => (
@@ -79,7 +79,7 @@ export function Combobox({
                   onSelect(option.value)
                   handleOpenChange(false)
                 }}
-                className="flex cursor-pointer select-none items-center rounded-md px-2.5 py-2 font-body text-sm outline-none data-[selected=true]:bg-primary/10"
+                className="flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 font-body text-sm outline-none data-[selected=true]:bg-surface-2"
               >
                 {option.label}
               </CommandPrimitive.Item>

@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useNavigate } from 'react-router-dom'
 import { loginSchema, type LoginInput } from '../../application/auth/loginSchema'
-import { inputClass } from '../ui/styles'
+import { AuthSplitLayout, authButtonClass, authInputClass, authLabelClass } from './AuthSplitLayout'
 import { useAuth } from './useAuth'
 
 export function LoginPage() {
@@ -29,49 +29,42 @@ export function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="w-full max-w-sm space-y-5 rounded-2xl bg-white p-8 shadow-lg"
-        noValidate
-      >
-        <div>
-          <h1 className="font-display text-3xl text-accent">Splash Pedidos</h1>
-          <p className="text-sm font-body text-foreground/50">Painel administrativo</p>
-        </div>
+    <AuthSplitLayout
+      title="Os pedidos da loja num lugar só."
+      description="Cardápio, quadro de pedidos e relatórios de cada loja."
+    >
+      <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-[18px]" noValidate>
+        <h2 className="font-display text-[30px] font-bold">Entrar</h2>
 
-        <div className="space-y-1">
-          <label htmlFor="email" className="text-sm font-body">
-            E-mail
-          </label>
-          <input id="email" type="email" autoComplete="email" className={inputClass} {...register('email')} />
-          {errors.email && <p className="text-sm text-red-600">{errors.email.message}</p>}
-        </div>
+        <label htmlFor="email" className={authLabelClass}>
+          E-mail
+          <input id="email" type="email" autoComplete="email" className={authInputClass} {...register('email')} />
+          {errors.email && <span className="text-sm text-danger">{errors.email.message}</span>}
+        </label>
 
-        <div className="space-y-1">
-          <label htmlFor="password" className="text-sm font-body">
-            Senha
-          </label>
+        <label htmlFor="password" className={authLabelClass}>
+          Senha
           <input
             id="password"
             type="password"
             autoComplete="current-password"
-            className={inputClass}
+            className={authInputClass}
             {...register('password')}
           />
-          {errors.password && <p className="text-sm text-red-600">{errors.password.message}</p>}
-        </div>
+          {errors.password && <span className="text-sm text-danger">{errors.password.message}</span>}
+        </label>
 
-        {authError && <p className="text-sm text-red-600">{authError}</p>}
+        {authError && (
+          <p role="alert" className="text-sm text-danger">
+            {authError}
+          </p>
+        )}
 
-        <button
-          type="submit"
-          disabled={isSubmitting}
-          className="w-full rounded-lg bg-accent px-4 py-2.5 font-medium font-body text-accent-foreground transition hover:brightness-110 disabled:opacity-50 disabled:pointer-events-none"
-        >
+        <button type="submit" disabled={isSubmitting} className={authButtonClass}>
           {isSubmitting ? 'Entrando...' : 'Entrar'}
         </button>
+        <p className="text-[13px] text-muted">Esqueceu a senha? Peça para o administrador da sua loja.</p>
       </form>
-    </div>
+    </AuthSplitLayout>
   )
 }

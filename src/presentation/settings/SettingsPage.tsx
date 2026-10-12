@@ -96,11 +96,11 @@ export function SettingsPage() {
 
   return (
     <div className="space-y-6">
-      <h2 className="font-display text-2xl md:text-3xl text-accent">Configurações</h2>
+      <h2 className="font-display text-[28px] font-bold leading-tight tracking-tight text-ink">Configurações</h2>
 
       {!storeId && (
         <div className={cardClass}>
-          <p className="font-body text-foreground/70">Selecione uma loja pra ver as configurações dela.</p>
+          <p className="font-body text-muted">Selecione uma loja pra ver as configurações dela.</p>
         </div>
       )}
 
@@ -109,7 +109,7 @@ export function SettingsPage() {
       <div className={`${cardClass} space-y-4`}>
         <div>
           <h3 className="font-body font-medium">Alerta de pedido novo</h3>
-          <p className="text-sm font-body text-foreground/60">
+          <p className="text-sm font-body text-muted">
             Toast, som e notificação do navegador quando chegar pedido novo no dashboard.
           </p>
         </div>
@@ -125,11 +125,11 @@ export function SettingsPage() {
         <div className="flex items-center justify-between gap-3">
           <div>
             <p className="font-body">Notificação do navegador</p>
-            <p className="text-sm font-body text-foreground/60">
+            <p className="text-sm font-body text-muted">
               {permission === 'denied'
-                ? 'Bloqueada nas configurações do navegador — precisa liberar por lá antes de ativar aqui.'
+                ? 'Bloqueado nas configurações do navegador. Libere por lá antes de ligar aqui.'
                 : permission === 'default'
-                  ? 'O navegador ainda não deu permissão — ligar o botão ao lado abre o pedido de permissão.'
+                  ? 'O navegador ainda não deu permissão. Ao ligar, ele pergunta.'
                   : `Status: ${permissionLabel}`}
             </p>
           </div>
@@ -143,12 +143,12 @@ export function SettingsPage() {
 
       {store && (
         <div className={`${cardClass} space-y-3`}>
-          <h3 className="font-body font-medium text-red-700">Zona de risco</h3>
-          <p className="text-sm font-body text-foreground/60">
-            Desativar fecha a loja (para de aceitar pedido) sem apagar nada. Excluir remove a loja
-            permanentemente — só funciona se não tiver produto, pedido ou usuário vinculado.
+          <h3 className="font-body font-medium text-danger">Zona de risco</h3>
+          <p className="text-sm font-body text-muted">
+            Desativar fecha a loja para pedidos sem apagar nada. Excluir apaga a loja de vez, e só funciona
+            se ela não tiver produto, pedido nem usuário.
           </p>
-          {deleteError && <p className="text-sm text-red-600">{deleteError}</p>}
+          {deleteError && <p className="text-sm text-danger">{deleteError}</p>}
           <div className="flex gap-3">
             <Button
               variant="outline"
@@ -257,7 +257,7 @@ function StoreDataForm({ store }: { store: Store }) {
       return
     }
     if (numbers.length > 100) {
-      toast.error('Intervalo grande demais — gera no máximo 100 mesa por vez.')
+      toast.error('Dá para gerar até 100 mesas por vez.')
       return
     }
     setIsGeneratingQr(true)
@@ -290,29 +290,29 @@ function StoreDataForm({ store }: { store: Store }) {
     <form onSubmit={handleSubmit(onSubmitStore)} className={`space-y-5 ${cardClass}`} noValidate>
       <div>
         <h3 className="font-body font-medium">Dados da loja</h3>
-        <p className="text-sm font-body text-foreground/60">Nome e link do cardápio que o cliente vê.</p>
+        <p className="text-sm font-body text-muted">Nome e link do cardápio que o cliente vê.</p>
       </div>
 
       <div className="space-y-1">
         <Label htmlFor="name">Nome da unidade</Label>
         <Input id="name" {...register('name')} />
-        {errors.name && <p className="text-sm text-red-600">{errors.name.message}</p>}
+        {errors.name && <p className="text-sm text-danger">{errors.name.message}</p>}
       </div>
 
       <div className="space-y-1">
         <Label htmlFor="slug">Slug</Label>
-        <p className="text-sm font-body text-foreground/60">
+        <p className="text-sm font-body text-muted">
           Parte do endereço do cardápio (sem espaço, sem acento): cardapio.splashpedidos/
           <span className="font-medium">seu-slug</span>
         </p>
         <Input id="slug" {...register('slug')} />
-        {errors.slug && <p className="text-sm text-red-600">{errors.slug.message}</p>}
+        {errors.slug && <p className="text-sm text-danger">{errors.slug.message}</p>}
         {slug && (
           <a
             href={`${import.meta.env.VITE_STOREFRONT_URL}/${slug}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-block text-sm text-secondary hover:text-primary transition-colors"
+            className="inline-block text-sm text-lover hover:text-lover transition-colors"
           >
             Ver cardápio →
           </a>
@@ -321,17 +321,17 @@ function StoreDataForm({ store }: { store: Store }) {
 
       <div className="space-y-1">
         <Label htmlFor="whatsappNumber">WhatsApp</Label>
-        <p className="text-sm font-body text-foreground/60">
-          Só números, com DDI e DDD (ex: 5551999998888) — usado no link do WhatsApp com o cliente.
+        <p className="text-sm font-body text-muted">
+          Só números, com DDI e DDD (ex: 5551999998888). É o número que o cliente chama pelo WhatsApp.
         </p>
         <Input id="whatsappNumber" placeholder="5551999998888" {...register('whatsappNumber')} />
-        {errors.whatsappNumber && <p className="text-sm text-red-600">{errors.whatsappNumber.message}</p>}
+        {errors.whatsappNumber && <p className="text-sm text-danger">{errors.whatsappNumber.message}</p>}
       </div>
 
-      <fieldset className="space-y-2 rounded-lg bg-secondary/5 p-3">
+      <fieldset className="space-y-2 rounded-lg bg-canvas p-3">
         <legend className="text-sm font-body mb-1 px-1">Canais</legend>
-        <p className="text-sm font-body text-foreground/60 px-1 pb-1">
-          Onde essa loja recebe pedido — desmarcado some da tela de novo pedido nesse canal.
+        <p className="text-sm font-body text-muted px-1 pb-1">
+          Como o cliente pode pedir nesta loja. O que estiver desmarcado não aparece no cardápio.
         </p>
         <label className="flex items-center gap-2 font-body">
           <Controller
@@ -375,20 +375,19 @@ function StoreDataForm({ store }: { store: Store }) {
     {slug && supportsDineIn && (
       <div className={`${cardClass} space-y-5`}>
         <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-secondary">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-tile text-lover">
             <QrCode className="h-5 w-5" />
           </div>
           <div>
             <h3 className="font-display font-semibold">QR Code de mesa</h3>
-            <p className="text-sm font-body text-foreground/60">
-              Gera 1 QR Code por mesa, já com o número preenchido no cardápio — pra imprimir e colar
-              na mesa. Cliente escaneia e todo pedido feito ali entra automaticamente na mesma comanda
-              enquanto ela estiver aberta.
+            <p className="text-sm font-body text-muted">
+              Um QR Code por mesa, já com o número da mesa, para imprimir e colar. O cliente escaneia e
+              todo pedido feito ali entra na mesma comanda enquanto ela estiver aberta.
             </p>
           </div>
         </div>
 
-        <div className="grid gap-5 rounded-xl border border-secondary/10 bg-secondary/5 p-5 sm:grid-cols-[1fr_auto] sm:items-center">
+        <div className="grid gap-5 rounded-xl border border-line bg-canvas p-5 sm:grid-cols-[1fr_auto] sm:items-center">
           <div>
             <div className="flex flex-wrap items-end gap-3">
               <div className="space-y-1">
@@ -402,7 +401,7 @@ function StoreDataForm({ store }: { store: Store }) {
                   onChange={(event) => setTableFrom(event.target.value)}
                 />
               </div>
-              <span className="pb-2 text-sm text-foreground/40">até</span>
+              <span className="pb-2 text-sm text-faint">até</span>
               <div className="space-y-1">
                 <Label htmlFor="tableTo">Até a mesa</Label>
                 <Input
@@ -418,14 +417,14 @@ function StoreDataForm({ store }: { store: Store }) {
 
             <p
               className={`mt-3 flex items-center gap-1.5 text-sm font-medium ${
-                tableCount > 0 && tableCount <= 100 ? 'text-secondary' : 'text-red-600'
+                tableCount > 0 && tableCount <= 100 ? 'text-lover' : 'text-danger'
               }`}
             >
               {tableCount > 0 && tableCount <= 100 && <Check className="h-3.5 w-3.5 shrink-0" />}
               {tableCount === 0
-                ? 'Intervalo inválido — "Da mesa" precisa ser menor ou igual a "Até a mesa"'
+                ? '"Da mesa" precisa ser menor ou igual a "Até a mesa"'
                 : tableCount > 100
-                  ? `Intervalo grande demais (${tableCount}) — gera no máximo 100 mesa por vez`
+                  ? `São ${tableCount} mesas. Dá para gerar até 100 por vez`
                   : `Gera ${tableCount} QR Code${tableCount === 1 ? '' : 's'} (mesa ${tableFrom} até ${tableTo})`}
             </p>
 
@@ -445,9 +444,9 @@ function StoreDataForm({ store }: { store: Store }) {
               <img
                 src={qrPreviewUrl}
                 alt={`QR Code da mesa ${tableFrom}`}
-                className="h-24 w-24 rounded-lg border border-secondary/15 bg-white p-1.5"
+                className="h-24 w-24 rounded-lg border border-line bg-white p-1.5"
               />
-              <p className="mt-1.5 text-xs text-foreground/50">Mesa {tableFrom}</p>
+              <p className="mt-1.5 text-xs text-muted">Mesa {tableFrom}</p>
             </div>
           )}
         </div>

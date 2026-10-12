@@ -4,7 +4,7 @@ import { toast } from 'sonner'
 import type { Order, OrderStatus } from '../../domain/order/Order'
 import { Button } from '../ui/Button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogTitle } from '../ui/Dialog'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/Select'
+import { initials } from '../ui/initials'
 import { printOrderReceipt } from '../order/printOrderReceipt'
 import { useChangeOrderStatus } from '../order/useOrders'
 import { useStore } from '../store/useStores'
@@ -46,47 +46,63 @@ export function AcceptOrderModal({
   return (
     <>
       <Dialog open onOpenChange={(open) => !open && onClose()}>
-        <DialogContent className="max-w-sm">
-          <DialogTitle>Quem vai preparar?</DialogTitle>
-          <DialogDescription>Aceitar o pedido exige vincular um atendente.</DialogDescription>
+        <DialogContent className="max-w-[440px]">
+          <div className="flex flex-col gap-1">
+            <DialogTitle>Quem vai preparar?</DialogTitle>
+            <DialogDescription>O cupom sai na impressora assim que você aceitar.</DialogDescription>
+          </div>
 
           {activeAttendants.length > 0 && (
-            <Select
-              value={attendantId}
-              onValueChange={(id) => {
-                setAttendantId(id)
-                setAttendantName(activeAttendants.find((attendant) => attendant.id === id)?.name ?? '')
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione o atendente" />
-              </SelectTrigger>
-              <SelectContent>
-                {activeAttendants.map((attendant) => (
-                  <SelectItem key={attendant.id} value={attendant.id}>
-                    {attendant.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div role="radiogroup" aria-label="Atendente" className="flex max-h-72 flex-col gap-2 overflow-y-auto">
+              {activeAttendants.map((attendant) => {
+                const checked = attendant.id === attendantId
+                return (
+                  <label
+                    key={attendant.id}
+                    className={`flex cursor-pointer items-center gap-3 rounded-[14px] border-[1.5px] px-3.5 py-3 transition-colors ${
+                      checked ? 'border-ink bg-chosen' : 'border-line-strong hover:bg-canvas'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="attendant"
+                      value={attendant.id}
+                      checked={checked}
+                      onChange={() => {
+                        setAttendantId(attendant.id)
+                        setAttendantName(attendant.name)
+                      }}
+                      className="h-[18px] w-[18px] accent-ink"
+                    />
+                    <span
+                      aria-hidden="true"
+                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[13px] font-semibold ${
+                        checked ? 'bg-caramel text-ink' : 'bg-tile text-lover'
+                      }`}
+                    >
+                      {initials(attendant.name)}
+                    </span>
+                    <span className="font-semibold">{attendant.name}</span>
+                  </label>
+                )
+              })}
+            </div>
           )}
 
-          {activeAttendants.length === 0 && (
-            <p className="text-sm font-body text-foreground/60">Nenhum atendente cadastrado ainda.</p>
-          )}
+          {activeAttendants.length === 0 && <p className="text-sm text-muted">Nenhum atendente cadastrado ainda.</p>}
 
           <button
             type="button"
             onClick={() => setIsCreatingAttendant(true)}
-            className="flex w-fit items-center gap-1.5 text-sm font-body text-primary hover:underline"
+            className="flex w-fit items-center gap-1.5 text-sm font-semibold text-lover hover:underline"
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-4 w-4" aria-hidden="true" />
             Novo atendente
           </button>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>
-              Cancelar
+              Voltar
             </Button>
             <Button type="button" onClick={handleConfirm} disabled={!attendantId || changeStatus.isPending}>
               {changeStatus.isPending ? 'Aceitando...' : 'Aceitar pedido'}

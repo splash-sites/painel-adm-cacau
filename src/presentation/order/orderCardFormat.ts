@@ -2,29 +2,29 @@ import type { Order, OrderStatus } from '../../domain/order/Order'
 import { calculateItemRegularTotal, calculateOrderTotal } from '../../domain/order/orderPricing'
 
 export const BADGE_COLOR: Record<string, string> = {
-  Cafeteria: 'bg-accent text-accent-foreground',
-  'Retirar no local': 'bg-secondary text-secondary-foreground',
-  Delivery: 'bg-red-700 text-white',
-  Revendedor: 'bg-secondary/15 text-secondary',
+  Cafeteria: 'bg-surface-2 text-ink',
+  'Retirar no local': 'bg-surface-2 text-ink',
+  Delivery: 'bg-info-soft text-info',
+  Revendedor: 'bg-wait-soft text-wait',
 }
 
-/** Banda de status do card — tom suave, paleta funcional (5 marrons da marca ficam indistinguíveis aqui). */
+/** Cor do status: espera em caramelo, a caminho em azul, fechado em verde. */
 export const STATUS_BAND_CLASS: Record<OrderStatus, string> = {
-  received: 'bg-amber-50 text-amber-800',
-  preparing: 'bg-amber-50 text-amber-800',
-  out_for_delivery: 'bg-blue-50 text-blue-800',
-  delivered: 'bg-blue-50 text-blue-800',
-  finalized: 'bg-green-50 text-green-800',
-  cancelled: 'bg-secondary/10 text-foreground/60',
+  received: 'bg-wait-soft text-wait',
+  preparing: 'bg-wait-soft text-wait',
+  out_for_delivery: 'bg-info-soft text-info',
+  delivered: 'bg-info-soft text-info',
+  finalized: 'bg-success-soft text-success',
+  cancelled: 'bg-surface-2 text-muted',
 }
 
 export const STATUS_DOT_CLASS: Record<OrderStatus, string> = {
-  received: 'bg-amber-500',
-  preparing: 'bg-amber-500',
-  out_for_delivery: 'bg-blue-500',
-  delivered: 'bg-blue-500',
-  finalized: 'bg-green-500',
-  cancelled: 'bg-foreground/30',
+  received: 'bg-caramel',
+  preparing: 'bg-caramel',
+  out_for_delivery: 'bg-info',
+  delivered: 'bg-info',
+  finalized: 'bg-success',
+  cancelled: 'bg-faint',
 }
 
 export function formatCurrency(value: number): string {

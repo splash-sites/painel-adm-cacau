@@ -92,7 +92,7 @@ export function ProductImportPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="font-display text-2xl md:text-3xl text-accent">Importar planilha de estoque</h2>
+        <h2 className="font-display text-[28px] font-bold leading-tight tracking-tight text-ink">Importar planilha de estoque</h2>
         <button type="button" onClick={() => navigate('/produtos')} className={buttonClass('outline')}>
           Voltar pra produtos
         </button>
@@ -106,10 +106,10 @@ export function ProductImportPage() {
 
       {storeId && (
         <div className={`flex items-center justify-between gap-3 ${cardClass}`}>
-          <p className="font-body text-sm text-foreground/70">
+          <p className="font-body text-sm text-muted">
             {fileName ? (
               <>
-                Arquivo: <span className="font-medium text-foreground">{fileName}</span>
+                Arquivo: <span className="font-medium text-ink">{fileName}</span>
               </>
             ) : (
               'Nenhum arquivo selecionado.'
@@ -127,17 +127,17 @@ export function ProductImportPage() {
         </div>
       )}
 
-      {parseError && <p className="font-body text-red-600">{parseError}</p>}
+      {parseError && <p className="font-body text-danger">{parseError}</p>}
 
       {importResult && (
-        <p className="font-body text-green-700">
-          Importado: {importResult.created} produto(s) criado(s), {importResult.updated} atualizado(s).
+        <p className="font-body text-success">
+          Importação concluída: {importResult.created} {importResult.created === 1 ? 'produto novo' : 'produtos novos'} e {importResult.updated} {importResult.updated === 1 ? 'atualizado' : 'atualizados'}.
         </p>
       )}
 
       {preview && (
         <div className="space-y-3">
-          <p className="font-body text-xs text-foreground/50 md:hidden">
+          <p className="font-body text-xs text-muted md:hidden">
             Arraste a tabela para o lado para ver todas as colunas.
           </p>
           {/* `tableCardClass` traz `overflow-hidden` (pros cantos arredondados), então o scroll
@@ -168,8 +168,8 @@ export function ProductImportPage() {
                         <span
                           className={`rounded-full text-xs px-2.5 py-1 ${
                             row.action === 'create'
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-amber-100 text-amber-800'
+                              ? 'bg-success-soft text-success'
+                              : 'bg-wait-soft text-wait'
                           }`}
                         >
                           {actionLabel[row.action]}
@@ -196,17 +196,17 @@ export function ProductImportPage() {
       )}
 
       {preview && (
-        <div className="sticky bottom-0 z-10 -mx-6 -mb-6 flex flex-wrap items-center justify-between gap-3 border-t border-secondary/20 bg-background px-6 py-4 shadow-[0_-4px_12px_-4px_rgba(0,0,0,0.12)]">
-          <p className="font-body text-sm text-foreground/70">
+        <div className="sticky bottom-0 z-10 -mx-6 -mb-6 flex flex-wrap items-center justify-between gap-3 border-t border-line-strong bg-surface px-6 py-4 shadow-[0_-4px_12px_-4px_rgba(0,0,0,0.12)]">
+          <p className="font-body text-sm text-muted">
             {preview.rows.filter((row) => row.action === 'create').length} para criar,{' '}
             {preview.rows.filter((row) => row.action === 'update').length} para atualizar
-            {preview.skippedCount > 0 && `, ${preview.skippedCount} linha(s) ignorada(s) (sem código/descrição)`}
-            {preview.duplicateCount > 0 && `, ${preview.duplicateCount} código(s) duplicado(s) no arquivo (última linha vence)`}
+            {preview.skippedCount > 0 && `, ${preview.skippedCount} ${preview.skippedCount === 1 ? 'linha ignorada' : 'linhas ignoradas'} (sem código ou descrição)`}
+            {preview.duplicateCount > 0 && `, ${preview.duplicateCount} ${preview.duplicateCount === 1 ? 'código repetido' : 'códigos repetidos'} no arquivo (vale a última linha)`}
             .
             {preview.newCategoryNames.length > 0 && (
               <>
                 <br />
-                Categoria(s) que serão criadas: {preview.newCategoryNames.join(', ')}.
+                Categorias novas: {preview.newCategoryNames.join(', ')}.
               </>
             )}
             <br />

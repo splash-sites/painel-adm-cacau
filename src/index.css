@@ -1,20 +1,62 @@
 @import "tailwindcss";
 
 @theme {
-  --color-background: #F0ECD2;
-  --color-foreground: #030404;
+  /* Identidade Ganache, tema claro do painel (design system "Splash Pedidos"). */
+  --color-canvas: #f7f3f0;
+  --color-surface: #ffffff;
+  --color-surface-2: #efe8e2;
+  --color-tile: #f1e7de;
+  --color-line: #ece4dd;
+  --color-line-strong: #e2d8d0;
+  --color-ink: #2a1a14;
+  --color-muted: #7a6a60;
+  --color-faint: #76675e;
+  --color-caramel: #e8a75c;
+  --color-lover: #9a5a1c;
+  --color-chosen: #fdf6ee;
+  --color-wait: #8a4b12;
+  --color-wait-soft: #fbead6;
+  --color-success: #2d6a45;
+  --color-success-soft: #e3f0e7;
+  --color-info: #2f5d8f;
+  --color-info-soft: #e6eef7;
+  --color-danger: #a3322a;
+  --color-danger-soft: #fbefed;
 
-  --color-primary: #CF9047;
-  --color-primary-foreground: #030404;
+  /* Nomes antigos, apontando pra paleta nova (usados em todo o painel). */
+  --color-background: #ffffff;
+  --color-foreground: #2a1a14;
+  --color-primary: #2a1a14;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #6b4a3a;
+  --color-secondary-foreground: #ffffff;
+  --color-accent: #2a1a14;
+  --color-accent-foreground: #ffffff;
 
-  --color-secondary: #7B431B;
-  --color-secondary-foreground: #F0ECD2;
+  --color-red-50: #fbefed;
+  --color-red-100: #f6dcd8;
+  --color-red-600: #a3322a;
+  --color-red-700: #8c2a23;
+  --color-red-800: #74221c;
 
-  --color-accent: #2C120B;
-  --color-accent-foreground: #F0ECD2;
+  --radius-lg: 0.75rem;
+  --radius-xl: 0.875rem;
+  --radius-2xl: 1.25rem;
+  --radius-3xl: 1.5rem;
 
-  --font-display: "Sora", sans-serif;
-  --font-body: "Inter", sans-serif;
+  --font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Figtree", "Segoe UI", system-ui, sans-serif;
+}
+
+body {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-caramel);
+  outline-offset: 2px;
 }
 
 button:not(:disabled) {

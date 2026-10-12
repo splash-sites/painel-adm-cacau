@@ -27,7 +27,7 @@ export function DialogContent({
 }: ComponentProps<typeof DialogPrimitive.Content>) {
   return (
     <DialogPrimitive.Portal>
-      <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/40" />
+      <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-[rgba(42,26,20,0.4)]" />
       {/* Centraliza via flex, não via transform: um Popper do Radix (Combobox/Select) aberto
           dentro do Dialog usa position:fixed pra se posicionar — um ancestral com transform
           (o -translate-x/y de antes) vira containing block desse fixed e quebra o cálculo de
@@ -40,7 +40,7 @@ export function DialogContent({
             onEscapeKeyDown?.(event)
           }}
           className={cn(
-            'w-full max-w-sm space-y-4 rounded-2xl border border-secondary/15 bg-background p-6 font-body shadow-sm sm:p-8',
+            'w-full max-w-md space-y-4 rounded-3xl bg-surface p-6 font-body shadow-[0_24px_64px_-24px_rgba(42,26,20,0.45)]',
             className,
           )}
           {...props}
@@ -61,14 +61,14 @@ export function DialogSideContent({
 }: ComponentProps<typeof DialogPrimitive.Content>) {
   return (
     <DialogPrimitive.Portal>
-      <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/40" />
+      <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-[rgba(42,26,20,0.4)]" />
       <DialogPrimitive.Content
         onEscapeKeyDown={(event) => {
           preventEscapeWhilePopperOpen(event)
           onEscapeKeyDown?.(event)
         }}
         className={cn(
-          'fixed right-0 top-0 z-50 h-full w-full max-w-md overflow-y-auto border-l border-secondary/15 bg-background p-6 font-body shadow-lg sm:p-8',
+          'fixed right-0 top-0 z-50 h-full w-full max-w-md overflow-y-auto bg-surface p-6 font-body shadow-[0_24px_64px_-24px_rgba(42,26,20,0.45)] sm:p-7',
           className,
         )}
         {...props}
@@ -80,11 +80,11 @@ export function DialogSideContent({
 }
 
 export function DialogTitle({ className, ...props }: ComponentProps<typeof DialogPrimitive.Title>) {
-  return <DialogPrimitive.Title className={cn('font-display text-xl text-accent', className)} {...props} />
+  return <DialogPrimitive.Title className={cn('font-display text-2xl font-bold leading-tight text-ink', className)} {...props} />
 }
 
 export function DialogDescription({ className, ...props }: ComponentProps<typeof DialogPrimitive.Description>) {
-  return <DialogPrimitive.Description className={cn('text-sm text-foreground/70', className)} {...props} />
+  return <DialogPrimitive.Description className={cn('text-sm text-muted', className)} {...props} />
 }
 
 export function DialogFooter({ className, ...props }: HTMLAttributes<HTMLDivElement>) {

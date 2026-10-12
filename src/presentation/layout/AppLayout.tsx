@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Menu, X } from 'lucide-react'
 import { NavLink, Outlet } from 'react-router-dom'
 import { Toaster } from 'sonner'
 import { useAuth } from '../auth/useAuth'
@@ -9,8 +10,8 @@ import { StoreSwitcher } from './StoreSwitcher'
 import { UserMenu } from './UserMenu'
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
-  `block px-3 py-2 rounded-lg font-body transition-colors ${
-    isActive ? 'bg-primary text-primary-foreground' : 'text-accent-foreground hover:bg-primary/20'
+  `block rounded-xl px-3 py-2.5 font-body text-[15px] transition-colors ${
+    isActive ? 'bg-ink font-semibold text-white' : 'text-faint hover:bg-surface hover:text-ink'
   }`
 
 export function AppLayout() {
@@ -21,81 +22,83 @@ export function AppLayout() {
   const { data: store } = useStore(storeId)
   useOrderNotifications(storeId)
 
+  const close = () => setSidebarOpen(false)
+
   return (
-    <div className="min-h-screen bg-background text-foreground md:flex md:h-screen md:overflow-hidden">
-      <div className="flex items-center justify-between border-b border-secondary/20 p-4 md:hidden">
-        <h1 className="font-display text-xl text-accent">Splash Pedidos</h1>
-        <div className="flex items-center gap-2">
-          <UserMenu />
-          <button
-            type="button"
-            onClick={() => setSidebarOpen((open) => !open)}
-            aria-label="Abrir menu"
-            aria-expanded={sidebarOpen}
-            className="rounded border border-secondary/30 px-3 py-2"
-          >
-            Menu
-          </button>
-        </div>
+    <div className="min-h-screen bg-canvas text-ink md:flex md:h-screen md:overflow-hidden">
+      <div className="flex items-center justify-between border-b border-line bg-surface-2 px-4 py-3 md:hidden">
+        <span className="font-display text-[22px] font-bold">Splash</span>
+        <button
+          type="button"
+          onClick={() => setSidebarOpen((open) => !open)}
+          aria-label={sidebarOpen ? 'Fechar menu' : 'Abrir menu'}
+          aria-expanded={sidebarOpen}
+          className="flex h-11 w-11 items-center justify-center rounded-xl text-ink hover:bg-surface"
+        >
+          {sidebarOpen ? <X className="h-5 w-5" aria-hidden="true" /> : <Menu className="h-5 w-5" aria-hidden="true" />}
+        </button>
       </div>
 
       <aside
         className={`${
           sidebarOpen ? 'flex' : 'hidden'
-        } md:flex w-full md:w-60 shrink-0 flex-col bg-accent text-accent-foreground md:h-full md:overflow-y-auto`}
+        } md:flex w-full md:w-56 shrink-0 flex-col gap-5 bg-surface-2 px-3.5 py-5 md:h-full md:overflow-y-auto`}
       >
-        <div className="hidden md:flex items-center h-16 px-4 border-b border-accent-foreground/20 md:shrink-0">
-          <h1 className="font-display text-xl">Splash Pedidos</h1>
-        </div>
-        <div className="flex flex-col flex-1 p-4">
-          <nav className="flex flex-col gap-1">
-            <NavLink to="/" end className={linkClass} onClick={() => setSidebarOpen(false)}>
-              Dashboard
+        <span className="hidden px-2 font-display text-[22px] font-bold md:block">Splash</span>
+        <nav aria-label="Menu" className="flex flex-col gap-0.5">
+          <NavLink to="/" end className={linkClass} onClick={close}>
+            Pedidos
+          </NavLink>
+          <NavLink to="/historico" className={linkClass} onClick={close}>
+            Histórico
+          </NavLink>
+          <NavLink to="/produtos" className={linkClass} onClick={close}>
+            Produtos
+          </NavLink>
+          <NavLink to="/promocoes" className={linkClass} onClick={close}>
+            Promoções
+          </NavLink>
+          <NavLink to="/atendentes" className={linkClass} onClick={close}>
+            Atendentes
+          </NavLink>
+          {store?.resellerEnabled && (
+            <NavLink to="/revendedores" className={linkClass} onClick={close}>
+              Revendedores
             </NavLink>
-            <NavLink to="/produtos" className={linkClass} onClick={() => setSidebarOpen(false)}>
-              Produtos
+          )}
+          {isSuperAdmin && (
+            <NavLink to="/relatorios" className={linkClass} onClick={close}>
+              Relatórios
             </NavLink>
-            <NavLink to="/promocoes" className={linkClass} onClick={() => setSidebarOpen(false)}>
-              Promoções
+          )}
+          {isSuperAdmin && (
+            <NavLink to="/usuarios" className={linkClass} onClick={close}>
+              Usuários
             </NavLink>
-            {store?.resellerEnabled && (
-              <NavLink to="/revendedores" className={linkClass} onClick={() => setSidebarOpen(false)}>
-                Revendedores
-              </NavLink>
-            )}
-            <NavLink to="/atendentes" className={linkClass} onClick={() => setSidebarOpen(false)}>
-              Atendentes
-            </NavLink>
-            {isSuperAdmin && (
-              <NavLink to="/relatorios" className={linkClass} onClick={() => setSidebarOpen(false)}>
-                Relatórios
-              </NavLink>
-            )}
-            <NavLink to="/historico" className={linkClass} onClick={() => setSidebarOpen(false)}>
-              Histórico
-            </NavLink>
-            {isSuperAdmin && (
-              <NavLink to="/usuarios" className={linkClass} onClick={() => setSidebarOpen(false)}>
-                Usuários
-              </NavLink>
-            )}
-          </nav>
-          <div className="mt-auto space-y-1">
-            {isSuperAdmin && <StoreSwitcher />}
-            <div className="border-t border-accent-foreground/20 pt-4">
-              <NavLink to="/configuracoes" end className={linkClass} onClick={() => setSidebarOpen(false)}>
-                Configurações
-              </NavLink>
+          )}
+          <NavLink to="/configuracoes" end className={linkClass} onClick={close}>
+            Configurações
+          </NavLink>
+        </nav>
+        <div className="mt-auto flex flex-col gap-3">
+          {isSuperAdmin ? (
+            <StoreSwitcher />
+          ) : (
+            <div className="flex flex-col gap-px rounded-xl bg-surface px-3 py-2.5">
+              <span className="text-xs text-faint">Unidade</span>
+              <span className="truncate text-sm font-semibold" title={store?.name}>
+                {store?.name ?? '—'}
+              </span>
             </div>
+          )}
+          <div className="border-t border-line-strong pt-3">
+            <UserMenu />
           </div>
         </div>
       </aside>
 
       <main className="flex-1 flex flex-col md:h-full md:overflow-hidden">
-        <div className="hidden md:flex items-center justify-end h-16 px-4 border-b border-secondary/20 md:shrink-0">
-          <UserMenu />
-        </div>
-        <div className="bg-secondary/5 p-6 flex-1 md:overflow-y-auto scrollbar-hidden">
+        <div className="flex-1 p-5 md:overflow-y-auto md:px-7 md:py-6 scrollbar-hidden">
           <Outlet />
         </div>
       </main>
@@ -103,10 +106,9 @@ export function AppLayout() {
         position="bottom-right"
         toastOptions={{
           classNames: {
-            toast:
-              'rounded-2xl! border! border-secondary/15! bg-background! text-foreground! shadow-lg! font-body!',
-            title: 'font-body!',
-            description: 'text-foreground/70!',
+            toast: 'rounded-2xl! border! border-line! bg-surface! text-ink! shadow-lg! font-body!',
+            title: 'font-body! font-semibold!',
+            description: 'text-muted!',
           },
         }}
       />

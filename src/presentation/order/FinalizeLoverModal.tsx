@@ -1,9 +1,8 @@
 import { toast } from 'sonner'
 import type { Order } from '../../domain/order/Order'
 import { calculateOrderLoverTotal, calculateOrderRegularTotal } from '../../domain/order/orderPricing'
-import { Button } from '../ui/Button'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogTitle } from '../ui/Dialog'
-import { formatCurrency } from './orderCardFormat'
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '../ui/Dialog'
+import { formatCurrency, formatName } from './orderCardFormat'
 import { useFinalizeOrders } from './useOrders'
 
 /** Pergunta ao finalizar (1 pedido ou a mesa inteira): a resposta decide o preço que vale nos Relatórios. */
@@ -33,34 +32,51 @@ export function FinalizeLoverModal({
     )
   }
 
+  const who =
+    orders.length > 1
+      ? `Vale para os ${orders.length} pedidos da mesa.`
+      : orders[0]?.customerName
+        ? `Finalizando o pedido de ${formatName(orders[0].customerName)}.`
+        : ''
+
   return (
     <Dialog open onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-sm">
-        <DialogTitle>Cliente é Cacau Lover?</DialogTitle>
-        <DialogDescription>
-          {orders.length > 1 ? `Vale pros ${orders.length} pedidos da mesa. ` : ''}A resposta define o valor do
-          pedido nos Relatórios.
-        </DialogDescription>
+      <DialogContent className="max-w-[440px]">
+        <div className="flex flex-col gap-1">
+          <DialogTitle>Cliente é Cacau Lover?</DialogTitle>
+          <DialogDescription>
+            {who} A resposta define o valor nos relatórios.
+          </DialogDescription>
+        </div>
 
-        <dl className="grid grid-cols-2 gap-3 font-body text-sm">
-          <div className="rounded-lg border border-secondary/15 p-3">
-            <dt className="text-foreground/60">Preço normal</dt>
-            <dd className="text-lg font-semibold">{formatCurrency(regularTotal)}</dd>
-          </div>
-          <div className="rounded-lg border border-primary/40 p-3">
-            <dt className="text-foreground/60">Cacau Lover</dt>
-            <dd className="text-lg font-semibold text-secondary">{formatCurrency(loverTotal)}</dd>
-          </div>
-        </dl>
+        <div className="grid grid-cols-2 gap-2.5 tabular-nums">
+          <button
+            type="button"
+            onClick={() => handleAnswer(false)}
+            disabled={finalize.isPending}
+            className="flex flex-col gap-1 rounded-2xl border-[1.5px] border-line-strong bg-surface p-4 text-left transition-colors hover:bg-canvas disabled:opacity-50"
+          >
+            <span className="text-sm text-muted">Não, preço normal</span>
+            <span className="text-2xl font-semibold">{formatCurrency(regularTotal)}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => handleAnswer(true)}
+            disabled={finalize.isPending}
+            className="flex flex-col gap-1 rounded-2xl bg-ink p-4 text-left text-white transition-colors hover:bg-[#3d2820] disabled:opacity-50"
+          >
+            <span className="text-sm text-caramel">Sim, é Lover</span>
+            <span className="text-2xl font-semibold">{formatCurrency(loverTotal)}</span>
+          </button>
+        </div>
 
-        <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => handleAnswer(false)} disabled={finalize.isPending}>
-            Não, preço normal
-          </Button>
-          <Button type="button" onClick={() => handleAnswer(true)} disabled={finalize.isPending}>
-            {finalize.isPending ? 'Finalizando...' : 'Sim, é Lover'}
-          </Button>
-        </DialogFooter>
+        <button
+          type="button"
+          onClick={onClose}
+          className="self-start text-sm font-semibold text-lover hover:underline"
+        >
+          Voltar sem finalizar
+        </button>
       </DialogContent>
     </Dialog>
   )

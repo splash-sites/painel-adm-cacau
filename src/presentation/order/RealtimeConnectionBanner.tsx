@@ -8,10 +8,10 @@ export function RealtimeConnectionBanner() {
   if (status === 'connected') return null
 
   return (
-    <div className="flex items-center gap-3 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 font-body">
-      <WifiOff className="h-5 w-5 shrink-0 text-amber-600" />
-      <p className="text-sm font-medium text-amber-900">
-        Conexão em tempo real caiu — pedido novo pode levar até 30s pra aparecer aqui.
+    <div className="flex items-center gap-3 rounded-2xl bg-wait-soft px-4 py-3 font-body">
+      <WifiOff className="h-5 w-5 shrink-0 text-wait" />
+      <p className="text-sm font-medium text-ink">
+        A conexão em tempo real caiu. Pedido novo pode levar até 30 segundos para aparecer aqui.
       </p>
     </div>
   )

@@ -71,19 +71,19 @@ export function CreateAdminModal({ onClose }: { onClose: () => void }) {
           <div className="space-y-1">
             <Label htmlFor="fullName">Nome</Label>
             <Input id="fullName" {...register('fullName')} />
-            {errors.fullName && <p className="text-sm text-red-600">{errors.fullName.message}</p>}
+            {errors.fullName && <p className="text-sm text-danger">{errors.fullName.message}</p>}
           </div>
 
           <div className="space-y-1">
             <Label htmlFor="email">E-mail</Label>
             <Input id="email" type="email" {...register('email')} />
-            {errors.email && <p className="text-sm text-red-600">{errors.email.message}</p>}
+            {errors.email && <p className="text-sm text-danger">{errors.email.message}</p>}
           </div>
 
           <div className="space-y-1">
             <Label htmlFor="password">Senha</Label>
             <Input id="password" type="password" {...register('password')} />
-            {errors.password && <p className="text-sm text-red-600">{errors.password.message}</p>}
+            {errors.password && <p className="text-sm text-danger">{errors.password.message}</p>}
           </div>
 
           <div className="space-y-1">
@@ -108,10 +108,10 @@ export function CreateAdminModal({ onClose }: { onClose: () => void }) {
           {role === 'store_admin' && (
             <div className="space-y-1">
               <span className="text-sm font-body">Loja</span>
-              <p className="text-sm font-body text-foreground/70">
+              <p className="text-sm font-body text-muted">
                 {activeStore ? activeStore.name : 'Selecione uma loja no seletor antes de cadastrar.'}
               </p>
-              {errors.storeId && <p className="text-sm text-red-600">{errors.storeId.message}</p>}
+              {errors.storeId && <p className="text-sm text-danger">{errors.storeId.message}</p>}
             </div>
           )}
 

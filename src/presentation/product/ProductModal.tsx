@@ -156,8 +156,8 @@ export function ProductModal({
       } catch (error) {
         toast.error(
           error instanceof Error
-            ? `Produto criado, mas falha ao vincular adicional/variação: ${error.message} — revise abaixo e salve de novo.`
-            : 'Produto criado, mas falha ao vincular adicional/variação — revise abaixo e salve de novo.',
+            ? `Produto criado, mas não deu para ligar adicionais e variações (${error.message}). Revise abaixo e salve de novo.`
+            : 'Produto criado, mas não deu para ligar adicionais e variações. Revise abaixo e salve de novo.',
         )
         return
       }
@@ -177,13 +177,13 @@ export function ProductModal({
           <div className="space-y-1">
             <Label htmlFor="externalCode">Código</Label>
             <Input id="externalCode" {...register('externalCode')} />
-            {errors.externalCode && <p className="text-sm text-red-600">{errors.externalCode.message}</p>}
+            {errors.externalCode && <p className="text-sm text-danger">{errors.externalCode.message}</p>}
           </div>
 
           <div className="space-y-1">
             <Label htmlFor="product-name">Descrição</Label>
             <Input id="product-name" {...register('name')} />
-            {errors.name && <p className="text-sm text-red-600">{errors.name.message}</p>}
+            {errors.name && <p className="text-sm text-danger">{errors.name.message}</p>}
           </div>
 
           <div className="space-y-1">
@@ -195,16 +195,16 @@ export function ProductModal({
             <div className="space-y-1">
               <Label htmlFor="product-price">Valor não lover (R$)</Label>
               <Input id="product-price" type="number" step="0.01" {...register('price')} />
-              {errors.price && <p className="text-sm text-red-600">{errors.price.message}</p>}
+              {errors.price && <p className="text-sm text-danger">{errors.price.message}</p>}
             </div>
             <div className="space-y-1">
               <Label htmlFor="loverPrice">Valor lover (R$)</Label>
               <Input id="loverPrice" type="number" step="0.01" {...register('loverPrice')} />
-              {errors.loverPrice && <p className="text-sm text-red-600">{errors.loverPrice.message}</p>}
+              {errors.loverPrice && <p className="text-sm text-danger">{errors.loverPrice.message}</p>}
             </div>
           </div>
 
-          <div className="space-y-2 rounded-lg bg-secondary/5 p-3">
+          <div className="space-y-2 rounded-lg bg-canvas p-3">
             <label className="flex items-center gap-2 font-body">
               <Controller
                 control={control}
@@ -218,7 +218,7 @@ export function ProductModal({
                 <Label htmlFor="stockQuantity">Estoque</Label>
                 <Input id="stockQuantity" type="number" step="any" {...register('stockQuantity')} />
                 {errors.stockQuantity && (
-                  <p className="text-sm text-red-600">{errors.stockQuantity.message}</p>
+                  <p className="text-sm text-danger">{errors.stockQuantity.message}</p>
                 )}
               </div>
             )}
@@ -238,8 +238,8 @@ export function ProductModal({
               </Button>
             </div>
             {currentCategory && (
-              <p className="font-body text-sm text-foreground/70">
-                Categoria atual: <span className="font-medium text-foreground">{currentCategory.name}</span>
+              <p className="font-body text-sm text-muted">
+                Categoria atual: <span className="font-medium text-ink">{currentCategory.name}</span>
               </p>
             )}
             <Controller
@@ -254,7 +254,7 @@ export function ProductModal({
                 />
               )}
             />
-            {errors.categoryId && <p className="text-sm text-red-600">{errors.categoryId.message}</p>}
+            {errors.categoryId && <p className="text-sm text-danger">{errors.categoryId.message}</p>}
           </div>
 
           {isCreatingCategory && (
@@ -265,7 +265,7 @@ export function ProductModal({
             />
           )}
 
-          <fieldset className="space-y-2 rounded-lg bg-secondary/5 p-3">
+          <fieldset className="space-y-2 rounded-lg bg-canvas p-3">
             <legend className="text-sm font-body mb-1 px-1">Tipo cardápio</legend>
             <label className="flex items-center gap-2 font-body">
               <Controller
@@ -342,7 +342,7 @@ export function ProductModal({
               className={inputClass}
             />
             {isUploadingImage && <p className="text-sm font-body">Enviando imagem...</p>}
-            {imageError && <p className="text-sm text-red-600">{imageError}</p>}
+            {imageError && <p className="text-sm text-danger">{imageError}</p>}
           </div>
 
           <label className="flex items-center gap-2 font-body">

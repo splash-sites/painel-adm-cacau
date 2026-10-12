@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
   KANBAN_COLUMNS,
+  nextActionLabel,
+  waitingLabel,
   canCancel,
   canEditItems,
   canRevert,
@@ -173,5 +175,38 @@ describe('KANBAN_COLUMNS matches', () => {
   it('every column key is unique', () => {
     const keys = KANBAN_COLUMNS.map((c) => c.key)
     expect(new Set(keys).size).toBe(keys.length)
+  })
+})
+
+describe('nextActionLabel', () => {
+  it('diz o que o clique faz em cada etapa', () => {
+    expect(nextActionLabel('received', 'pickup')).toBe('Aceitar pedido')
+    expect(nextActionLabel('preparing', 'pickup')).toBe('Pronto pra retirada')
+    expect(nextActionLabel('preparing', 'delivery')).toBe('Saiu pra entrega')
+    expect(nextActionLabel('preparing', 'dine_in')).toBe('Servido na mesa')
+    expect(nextActionLabel('out_for_delivery', 'delivery')).toBe('Entregue')
+    expect(nextActionLabel('delivered', 'pickup')).toBe('Finalizar')
+  })
+
+  it('não tem ação depois de finalizado ou cancelado', () => {
+    expect(nextActionLabel('finalized', 'pickup')).toBeNull()
+    expect(nextActionLabel('cancelled', 'pickup')).toBeNull()
+  })
+})
+
+describe('waitingLabel', () => {
+  const now = new Date('2026-10-12T15:00:00Z')
+
+  it('mostra minutos até 1 hora', () => {
+    expect(waitingLabel('2026-10-12T14:59:40Z', now)).toBe('agora')
+    expect(waitingLabel('2026-10-12T14:56:00Z', now)).toBe('há 4 min')
+  })
+
+  it('passa pra horas depois de 60 minutos', () => {
+    expect(waitingLabel('2026-10-12T13:55:00Z', now)).toBe('há 1 h 05')
+  })
+
+  it('nunca fica negativo com relógio adiantado', () => {
+    expect(waitingLabel('2026-10-12T15:02:00Z', now)).toBe('agora')
   })
 })

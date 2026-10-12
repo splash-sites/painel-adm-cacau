@@ -67,7 +67,7 @@ export function ResellerStockRow({ product }: ResellerStockRowProps) {
         <span className="flex items-center gap-2">
           <span className="truncate">{product.name}</span>
           {!product.active && (
-            <span className="shrink-0 rounded-full bg-secondary/10 px-2 py-0.5 text-xs text-foreground/60">
+            <span className="shrink-0 rounded-full bg-surface-2 px-2 py-0.5 text-xs text-muted">
               Inativo
             </span>
           )}
@@ -97,7 +97,7 @@ export function ResellerStockRow({ product }: ResellerStockRowProps) {
             className="w-28"
           />
         ) : (
-          <span className="text-sm text-foreground/50">Sem controle</span>
+          <span className="text-sm text-muted">Sem controle</span>
         )}
       </td>
     </tr>

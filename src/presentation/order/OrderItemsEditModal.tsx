@@ -52,7 +52,7 @@ function ProductSearchInput({
         placeholder="Buscar produto..."
       />
       {open && filtered.length > 0 && (
-        <div className="absolute left-0 right-0 top-full z-10 mt-1 max-h-48 overflow-y-auto rounded-lg border border-secondary/25 bg-background shadow-lg">
+        <div className="absolute left-0 right-0 top-full z-10 mt-1 max-h-48 overflow-y-auto rounded-lg border border-line-strong bg-surface shadow-lg">
           {filtered.map((product) => (
             <button
               key={product.id}
@@ -62,7 +62,7 @@ function ProductSearchInput({
                 setQuery(product.name)
                 setOpen(false)
               }}
-              className="block w-full truncate px-3 py-2 text-left text-sm font-body hover:bg-secondary/5"
+              className="block w-full truncate px-3 py-2 text-left text-sm font-body hover:bg-canvas"
             >
               {product.name}
             </button>
@@ -135,7 +135,7 @@ function ExistingItemCard({
             type="button"
             onClick={onToggleEdit}
             aria-label="Editar seleção do item"
-            className="rounded-md p-1.5 text-foreground/50 hover:bg-secondary/10 hover:text-foreground"
+            className="rounded-md p-1.5 text-muted hover:bg-surface-2 hover:text-ink"
           >
             <Pencil className="h-4 w-4" />
           </button>
@@ -145,7 +145,7 @@ function ExistingItemCard({
             disabled={isRemoving || !canRemove}
             aria-label={`Remover ${item.productName}`}
             title={canRemove ? undefined : 'Pedido precisa ter pelo menos 1 item'}
-            className="rounded-md p-1.5 text-foreground/50 hover:bg-red-700/10 hover:text-red-700 disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-foreground/50"
+            className="rounded-md p-1.5 text-muted hover:bg-danger-soft hover:text-danger disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-muted"
           >
             <Trash2 className="h-4 w-4" />
           </button>
@@ -162,11 +162,11 @@ function ExistingItemCard({
           onChange={(event) => setQuantity(Number(event.target.value))}
           onBlur={(event) => handleQuantityBlur(Number(event.target.value))}
         />
-        {quantity < 1 && <p className="text-sm text-red-600">Quantidade precisa ser maior que zero</p>}
+        {quantity < 1 && <p className="text-sm text-danger">Quantidade precisa ser maior que zero</p>}
       </div>
 
       {isEditing && (
-        <div className="space-y-3 border-t border-secondary/10 pt-3">
+        <div className="space-y-3 border-t border-line pt-3">
           <ItemSelectionFields
             storeId={storeId}
             productId={item.productId}
@@ -177,7 +177,7 @@ function ExistingItemCard({
               setSelectionValid(valid)
             }}
           />
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          {error && <p className="text-sm text-danger">{error}</p>}
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={onToggleEdit}>
               Cancelar
@@ -249,11 +249,11 @@ export function OrderItemsEditModal({ order, onClose }: { order: Order; onClose:
             />
           ))}
           {order.items.length === 0 && (
-            <p className="font-body text-sm text-foreground/50">Nenhum item nesse pedido.</p>
+            <p className="font-body text-sm text-muted">Nenhum item nesse pedido.</p>
           )}
         </div>
 
-        <fieldset className={`${cardClass} space-y-3 bg-secondary/5 p-4`}>
+        <fieldset className={`${cardClass} space-y-3 bg-canvas p-4`}>
           <legend className="px-1 font-body text-sm font-medium">Adicionar item</legend>
 
           <div className="space-y-1">
@@ -301,7 +301,7 @@ export function OrderItemsEditModal({ order, onClose }: { order: Order; onClose:
           </Button>
         </fieldset>
 
-        {error && <p className="text-sm text-red-600">{error}</p>}
+        {error && <p className="text-sm text-danger">{error}</p>}
 
         <DialogFooter>
           <Button type="button" variant="outline" onClick={onClose}>

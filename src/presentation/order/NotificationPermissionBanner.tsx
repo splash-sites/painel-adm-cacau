@@ -28,17 +28,17 @@ export function NotificationPermissionBanner({ storeId }: { storeId: string }) {
   const isDenied = permission === 'denied'
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 font-body">
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-wait-soft px-4 py-3 font-body">
       <div className="flex items-center gap-3">
-        <Bell className="h-5 w-5 shrink-0 text-amber-600" />
+        <Bell className="h-5 w-5 shrink-0 text-wait" />
         <div>
-          <p className="text-sm font-medium text-amber-900">
-            Notificação de pedido novo está desativada neste computador
+          <p className="text-sm font-medium text-ink">
+            Aviso de pedido novo desligado neste computador
           </p>
-          <p className="text-sm text-amber-800/80">
+          <p className="text-sm text-wait">
             {isDenied
-              ? 'O navegador bloqueou a permissão — clique no ícone de cadeado/sino ao lado do endereço do site e libere "Notificações" pra esse painel.'
-              : 'O navegador ainda não tem permissão — sem ela, pedido novo não gera aviso na tela.'}
+              ? 'O navegador bloqueou o aviso. Clique no cadeado ao lado do endereço do site e libere "Notificações".'
+              : 'Sem essa permissão, pedido novo não aparece como aviso na tela.'}
           </p>
         </div>
       </div>

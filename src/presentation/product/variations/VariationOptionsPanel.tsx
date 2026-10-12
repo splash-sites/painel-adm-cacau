@@ -39,9 +39,9 @@ export function VariationOptionsPanel({ groupId }: { groupId: string }) {
   }
 
   return (
-    <div className="space-y-3 bg-secondary/5 px-6 py-4">
+    <div className="space-y-3 bg-canvas px-6 py-4">
       <div className="flex items-center justify-between">
-        <span className="font-body text-sm text-foreground/60">Variações desse grupo</span>
+        <span className="font-body text-sm text-muted">Variações desse grupo</span>
         <Button variant="outline" onClick={() => setIsCreating(true)} className="h-8 gap-1.5 px-3 text-sm">
           <Plus className="h-3.5 w-3.5" />
           Nova variação
@@ -50,13 +50,13 @@ export function VariationOptionsPanel({ groupId }: { groupId: string }) {
 
       {isLoading && <p className="font-body text-sm">Carregando...</p>}
       {options && options.length === 0 && (
-        <p className="font-body text-sm text-foreground/60">Nenhuma variação nesse grupo ainda.</p>
+        <p className="font-body text-sm text-muted">Nenhuma variação nesse grupo ainda.</p>
       )}
 
       {options && options.length > 0 && (
-        <div className="rounded-lg border border-secondary/15 bg-background">
+        <div className="rounded-lg border border-line bg-surface">
           <SortableList ids={options.map((option) => option.id)} onReorder={handleReorder}>
-            <div className="divide-y divide-secondary/15">
+            <div className="divide-y divide-line">
               {options.map((option) => (
                 <SortableItem key={option.id} id={option.id}>
                   {({ setActivatorNodeRef, attributes, listeners }) => (
@@ -68,19 +68,19 @@ export function VariationOptionsPanel({ groupId }: { groupId: string }) {
                           {...attributes}
                           {...listeners}
                           aria-label={`Arrastar ${option.name}`}
-                          className="shrink-0 cursor-grab touch-none rounded-md p-1.5 text-foreground/40 hover:bg-secondary/10 hover:text-foreground active:cursor-grabbing"
+                          className="shrink-0 cursor-grab touch-none rounded-md p-1.5 text-faint hover:bg-surface-2 hover:text-ink active:cursor-grabbing"
                         >
                           <GripVertical className="h-3.5 w-3.5" />
                         </button>
-                        <span className={`truncate py-2 ${option.active ? '' : 'text-foreground/40 line-through'}`}>
+                        <span className={`truncate py-2 ${option.active ? '' : 'text-faint line-through'}`}>
                           {option.name}
                         </span>
                       </div>
                       <div className="flex shrink-0 items-center gap-3">
-                        <span className="text-foreground/70">
+                        <span className="text-muted">
                           {option.price === 0 ? 'sem diferença' : `+ ${formatCurrency(option.price)}`}
                           {option.loverPrice != null && (
-                            <span className="text-primary">
+                            <span className="text-lover">
                               {' '}
                               · lover{' '}
                               {option.loverPrice === 0 ? 'sem diferença' : `+ ${formatCurrency(option.loverPrice)}`}
@@ -91,7 +91,7 @@ export function VariationOptionsPanel({ groupId }: { groupId: string }) {
                           type="button"
                           aria-label={`Editar ${option.name}`}
                           onClick={() => setEditingOption(option)}
-                          className="rounded-md p-1.5 text-foreground/50 hover:bg-secondary/10 hover:text-foreground"
+                          className="rounded-md p-1.5 text-muted hover:bg-surface-2 hover:text-ink"
                         >
                           <Pencil className="h-3.5 w-3.5" />
                         </button>
@@ -99,7 +99,7 @@ export function VariationOptionsPanel({ groupId }: { groupId: string }) {
                           type="button"
                           aria-label={`Excluir ${option.name}`}
                           onClick={() => setDeletingOption(option)}
-                          className="rounded-md p-1.5 text-foreground/50 hover:bg-red-700/10 hover:text-red-700"
+                          className="rounded-md p-1.5 text-muted hover:bg-danger-soft hover:text-danger"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>

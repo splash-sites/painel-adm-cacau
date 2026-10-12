@@ -1,6 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, GripVertical, Pencil, Plus, Trash2 } from 'lucide-react'
+import { GripVertical, Pencil, Plus, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useEffectiveStoreId } from '../storeContext/useEffectiveStoreId'
 import type { Category } from '../../domain/category/Category'
@@ -10,10 +9,10 @@ import { SortableItem, SortableList } from '../ui/SortableList'
 import { cardClass, tableCardClass } from '../ui/styles'
 import { CategoryModal } from './CategoryModal'
 import { useCategoryList, useDeleteCategory, useReorderCategories } from './useCategories'
+import { CatalogTabs } from '../product/CatalogTabs'
 
 export function CategoryListPage() {
   const storeId = useEffectiveStoreId()
-  const navigate = useNavigate()
   const { data: categories, isLoading, error } = useCategoryList(storeId ?? '')
   const deleteCategory = useDeleteCategory()
   const reorderCategories = useReorderCategories()
@@ -51,18 +50,14 @@ export function CategoryListPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="font-display text-2xl md:text-3xl text-accent">Categorias</h2>
-          <p className="font-body text-sm text-foreground/60">
-            Ordem em que os grupos de produtos aparecem no cardápio — arraste pra reordenar. Vincule
-            cada produto a uma categoria dentro do cadastro do produto.
+          <h2 className="font-display text-[28px] font-bold leading-tight tracking-tight text-ink">Categorias</h2>
+          <p className="font-body text-sm text-muted">
+            As seções do cardápio, na ordem em que o cliente vê. Arraste para reordenar. A categoria de
+            cada produto fica no cadastro dele.
           </p>
         </div>
         {storeId && (
           <div className="flex gap-3">
-            <Button variant="outline" onClick={() => navigate('/produtos')}>
-              <ArrowLeft className="h-4 w-4" />
-              Produtos
-            </Button>
             <Button onClick={() => setIsCreating(true)} className="gap-1.5">
               <Plus className="h-4 w-4" />
               Nova categoria
@@ -71,13 +66,15 @@ export function CategoryListPage() {
         )}
       </div>
 
+      <CatalogTabs />
+
       {!storeId && <p className="font-body">Selecione uma loja pra ver as categorias.</p>}
       {isLoading && <p className="font-body">Carregando...</p>}
-      {error && <p className="font-body text-red-600">Erro ao carregar categorias</p>}
+      {error && <p className="font-body text-danger">Erro ao carregar categorias</p>}
 
       {categories && categories.length === 0 && (
         <div className={cardClass}>
-          <p className="font-body text-foreground/70">Nenhuma categoria cadastrada ainda.</p>
+          <p className="font-body text-muted">Nenhuma categoria cadastrada ainda.</p>
         </div>
       )}
 
@@ -88,20 +85,20 @@ export function CategoryListPage() {
               {categories.map((category) => (
                 <SortableItem key={category.id} id={category.id}>
                   {({ setActivatorNodeRef, attributes, listeners }) => (
-                    <div className="flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-secondary/5">
+                    <div className="flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-canvas">
                       <button
                         type="button"
                         ref={setActivatorNodeRef}
                         {...attributes}
                         {...listeners}
                         aria-label={`Arrastar ${category.name}`}
-                        className="cursor-grab touch-none rounded-md p-1 text-foreground/40 hover:bg-secondary/10 hover:text-foreground active:cursor-grabbing"
+                        className="cursor-grab touch-none rounded-md p-1 text-faint hover:bg-surface-2 hover:text-ink active:cursor-grabbing"
                       >
                         <GripVertical className="h-4 w-4" />
                       </button>
                       <span
                         className={`min-w-0 flex-1 truncate font-body ${
-                          category.active ? '' : 'text-foreground/40 line-through'
+                          category.active ? '' : 'text-faint line-through'
                         }`}
                       >
                         {category.name}
@@ -111,7 +108,7 @@ export function CategoryListPage() {
                           type="button"
                           aria-label={`Editar ${category.name}`}
                           onClick={() => setEditingCategory(category)}
-                          className="rounded-md p-1.5 text-foreground/50 hover:bg-secondary/10 hover:text-foreground"
+                          className="rounded-md p-1.5 text-muted hover:bg-surface-2 hover:text-ink"
                         >
                           <Pencil className="h-4 w-4" />
                         </button>
@@ -119,7 +116,7 @@ export function CategoryListPage() {
                           type="button"
                           aria-label={`Excluir ${category.name}`}
                           onClick={() => setDeletingCategory(category)}
-                          className="rounded-md p-1.5 text-foreground/50 hover:bg-red-700/10 hover:text-red-700"
+                          className="rounded-md p-1.5 text-muted hover:bg-danger-soft hover:text-danger"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>

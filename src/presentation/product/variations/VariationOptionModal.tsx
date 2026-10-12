@@ -53,7 +53,7 @@ export function VariationOptionModal({
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-md">
         <DialogTitle>{option ? 'Editar variação' : 'Nova variação'}</DialogTitle>
-        <DialogDescription>Ex: "Chocolate especial" — preço 0 se não mudar o valor do produto.</DialogDescription>
+        <DialogDescription>Ex: "Chocolate especial". Deixe o preço em 0 se não muda o valor do produto.</DialogDescription>
 
         <form
           onSubmit={(event) => {
@@ -66,20 +66,20 @@ export function VariationOptionModal({
           <div className="space-y-1">
             <Label htmlFor={nameId}>Nome</Label>
             <Input id={nameId} {...register('name')} />
-            {errors.name && <p className="text-sm text-red-600">{errors.name.message}</p>}
+            {errors.name && <p className="text-sm text-danger">{errors.name.message}</p>}
           </div>
 
           <div className="space-y-1">
             <Label htmlFor={priceId}>Diferença de preço (R$)</Label>
             <Input id={priceId} type="number" step="0.01" {...register('price')} />
-            {errors.price && <p className="text-sm text-red-600">{errors.price.message}</p>}
+            {errors.price && <p className="text-sm text-danger">{errors.price.message}</p>}
           </div>
 
           <div className="space-y-1">
-            <Label htmlFor={loverPriceId}>Diferença de preço lover (R$) — opcional</Label>
+            <Label htmlFor={loverPriceId}>Diferença no preço Lover (R$), opcional</Label>
             <Input id={loverPriceId} type="number" step="0.01" {...register('loverPrice')} />
-            {errors.loverPrice && <p className="text-sm text-red-600">{errors.loverPrice.message}</p>}
-            <p className="text-xs text-foreground/50">Deixe em branco se não tiver preço diferenciado.</p>
+            {errors.loverPrice && <p className="text-sm text-danger">{errors.loverPrice.message}</p>}
+            <p className="text-xs text-muted">Deixe em branco se não tiver preço diferenciado.</p>
           </div>
 
           <label className="flex items-center gap-2 font-body">

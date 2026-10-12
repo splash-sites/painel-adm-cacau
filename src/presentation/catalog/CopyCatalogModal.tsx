@@ -71,7 +71,7 @@ export function CopyCatalogModal({
       setPassword('')
       setPhase('done')
       if (summary.imagesCopied < summary.imageCount || summary.imageErrors > 0) {
-        toast.warning('Catálogo copiado, mas faltaram fotos — copie de novo pra terminar.')
+        toast.warning('Catálogo copiado, mas algumas fotos ficaram para trás. Copie de novo para terminar.')
       } else {
         toast.success('Catálogo copiado.')
       }
@@ -93,8 +93,8 @@ export function CopyCatalogModal({
           <div className="space-y-4">
             <div className="space-y-1">
               <Label>Para</Label>
-              <p className="font-body text-sm text-foreground">
-                {toStoreName} <span className="text-foreground/50">(loja atual)</span>
+              <p className="font-body text-sm text-ink">
+                {toStoreName} <span className="text-muted">(loja atual)</span>
               </p>
             </div>
 
@@ -126,7 +126,7 @@ export function CopyCatalogModal({
               </span>
             </label>
 
-            <p className="rounded-lg border border-secondary/15 bg-secondary/5 p-3 font-body text-xs text-foreground/70">
+            <p className="rounded-lg border border-line bg-canvas p-3 font-body text-xs text-muted">
               Preço, custo e lover são copiados da origem. Estoque no destino entra como “não utiliza
               estoque”. Pedidos não são copiados.
             </p>
@@ -144,17 +144,17 @@ export function CopyCatalogModal({
 
         {phase === 'preview' && preview && (
           <div className="space-y-4">
-            <div className="rounded-lg border border-secondary/20 bg-secondary/5 p-4 font-body text-sm">
-              <p>{preview.created} produto(s) serão criados</p>
+            <div className="rounded-lg border border-line-strong bg-canvas p-4 font-body text-sm">
+              <p>{preview.created} {preview.created === 1 ? 'produto novo' : 'produtos novos'}</p>
               <p>
-                {preview.updated} produto(s) serão {updateExisting ? 'atualizados' : 'pulados'}
+                {preview.updated} {preview.updated === 1 ? 'produto já existe' : 'produtos já existem'} e {updateExisting ? 'serão atualizados' : 'ficam como estão'}
               </p>
-              {updateExisting && <p>{preview.skipped} produto(s) serão pulados</p>}
-              <p className="mt-2">{preview.imageCount} foto(s) serão copiadas</p>
+              {updateExisting && <p>{preview.skipped} {preview.skipped === 1 ? 'produto fica' : 'produtos ficam'} como está</p>}
+              <p className="mt-2">{preview.imageCount} {preview.imageCount === 1 ? 'foto' : 'fotos'} para copiar</p>
             </div>
 
             {updateExisting && preview.updated > 0 && (
-              <p className="font-body text-sm text-amber-700">
+              <p className="font-body text-sm text-wait">
                 Atualizar sobrescreve nome, categoria, canais e <strong>preço/custo/lover</strong> desses
                 produtos em {toStoreName}. Não tem desfazer.
               </p>
@@ -193,22 +193,22 @@ export function CopyCatalogModal({
 
         {phase === 'done' && result && (
           <div className="space-y-4">
-            <div className="rounded-lg border border-secondary/20 bg-secondary/5 p-4 font-body text-sm">
-              <p>{result.created} produto(s) criado(s)</p>
-              <p>{result.updated} produto(s) atualizado(s)</p>
-              <p>{result.skipped} produto(s) pulado(s) (já existiam)</p>
+            <div className="rounded-lg border border-line-strong bg-canvas p-4 font-body text-sm">
+              <p>{result.created} {result.created === 1 ? 'produto criado' : 'produtos criados'}</p>
+              <p>{result.updated} {result.updated === 1 ? 'produto atualizado' : 'produtos atualizados'}</p>
+              <p>{result.skipped} {result.skipped === 1 ? 'produto já existia e ficou' : 'produtos já existiam e ficaram'} como estava</p>
               <p className="mt-2">
-                {result.imagesCopied} de {result.imageCount} foto(s) copiada(s)
+                {result.imagesCopied} de {result.imageCount} fotos copiadas
                 {result.imageErrors > 0 && ` · ${result.imageErrors} com erro`}
               </p>
             </div>
 
             {result.imagesCopied < result.imageCount || result.imageErrors > 0 ? (
               <>
-                <p className="font-body text-sm text-amber-700">
+                <p className="font-body text-sm text-wait">
                   Faltaram {Math.max(result.imageCount - result.imagesCopied, result.imageErrors)}{' '}
-                  foto(s) — conexão lenta ou tempo esgotado. Digite a senha e copie de novo: só as
-                  que faltam são processadas.
+                  fotos (a conexão demorou demais). Digite a senha e copie de novo: só as que faltam
+                  são copiadas.
                 </p>
                 <div className="space-y-1">
                   <Label htmlFor="copy-catalog-password-retry">Sua senha</Label>

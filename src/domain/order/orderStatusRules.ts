@@ -120,3 +120,25 @@ const ORDER_TYPE_LABEL: Record<OrderType, string> = {
 export function orderChannelLabel(order: Pick<Order, 'orderType' | 'salesChannel'>): string {
   return order.salesChannel === 'reseller' ? 'Revendedor' : ORDER_TYPE_LABEL[order.orderType]
 }
+
+/**
+ * Texto do botão que avança o pedido, dito pelo que acontece (não "Avançar etapa"):
+ * a atendente vê no card o que o clique faz.
+ */
+export function nextActionLabel(status: OrderStatus, orderType: OrderType): string | null {
+  const next = getNextStatus(status, orderType)
+  if (!next) return null
+  if (next === 'preparing') return 'Aceitar pedido'
+  if (next === 'out_for_delivery') return orderType === 'pickup' ? 'Pronto pra retirada' : 'Saiu pra entrega'
+  if (next === 'delivered') return orderType === 'dine_in' ? 'Servido na mesa' : 'Entregue'
+  return 'Finalizar'
+}
+
+/** "há 4 min" / "há 1 h 05" a partir de quando o pedido entrou. */
+export function waitingLabel(createdAt: string, now: Date): string {
+  const minutes = Math.max(0, Math.floor((now.getTime() - new Date(createdAt).getTime()) / 60_000))
+  if (minutes < 1) return 'agora'
+  if (minutes < 60) return `há ${minutes} min`
+  const hours = Math.floor(minutes / 60)
+  return `há ${hours} h ${String(minutes % 60).padStart(2, '0')}`
+}

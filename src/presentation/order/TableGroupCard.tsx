@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
 import type { Order } from '../../domain/order/Order'
-import { canRevert, getNextStatus } from '../../domain/order/orderStatusRules'
+import { canRevert, getNextStatus, nextActionLabel } from '../../domain/order/orderStatusRules'
 import { calculateOrderTotal, needsLoverQuestion } from '../../domain/order/orderPricing'
 import { cn } from '../ui/cn'
 import { buttonClass } from '../ui/styles'
@@ -20,45 +20,43 @@ export function TableGroupCard({ orders }: { orders: Order[] }) {
   const changeStatus = useChangeOrderStatus()
   const revertStatus = useRevertOrderStatus()
   const finalizeAll = useFinalizeOrders()
-  // Pergunta do Lover aberta pra 1 pedido da mesa ou pra mesa inteira ("Finalizar tudo").
+  // Pergunta do Lover aberta pra 1 pedido da mesa ou pra mesa inteira ("Finalizar mesa").
   const [loverQuestionFor, setLoverQuestionFor] = useState<Order[] | null>(null)
   const tableNumber = orders[0].tableNumber
   const grandTotal = orders.reduce((sum, order) => sum + calculateOrderTotal(order), 0)
 
   return (
-    <div
+    <article
       data-testid="table-group-card"
-      className="flex flex-col rounded-xl border border-secondary/15 bg-background font-body shadow-sm overflow-hidden"
+      className="flex flex-col gap-3 rounded-[20px] bg-surface p-4 font-body"
     >
-      <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1 px-4 py-2 bg-blue-50 text-blue-800">
-        <span className="flex items-center gap-2 text-sm font-medium whitespace-nowrap">
-          <span className="h-2 w-2 rounded-full shrink-0 bg-blue-500" />
-          Entregue
-        </span>
-        <span className="text-xs">
-          Mesa {tableNumber} · {orders.length} pedidos
-        </span>
-      </div>
+      <header className="flex items-start justify-between gap-2">
+        <div className="flex flex-col">
+          <span className="font-display text-[19px] font-bold leading-tight">Mesa {tableNumber}</span>
+          <span className="text-[13px] text-muted">{orders.length} pedidos</span>
+        </div>
+        <span className="rounded-full bg-info-soft px-2.5 py-0.5 text-xs font-semibold text-info">Entregue</span>
+      </header>
 
-      <div className="divide-y divide-secondary/10 p-4">
+      <div className="divide-y divide-line">
         {orders.map((order) => {
           const nextStatus = getNextStatus(order.status, order.orderType)
           return (
             <div key={order.id} className="py-3 first:pt-0 last:pb-0 space-y-1.5">
               <div>
-                <span className="font-medium">
+                <span className="font-semibold">
                   {order.customerName ? formatName(order.customerName) : 'Não identificado'}
                 </span>
                 {order.customerCpf && (
-                  <p className="text-xs text-foreground/60">CPF {formatCpf(order.customerCpf)}</p>
+                  <p className="text-xs text-muted">CPF {formatCpf(order.customerCpf)}</p>
                 )}
                 {order.customerPhone && (
-                  <p className="text-xs text-foreground/60">
+                  <p className="text-xs text-muted">
                     <a
                       href={whatsAppLink(order)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="hover:text-[#25D366] transition-colors"
+                      className="hover:text-ink transition-colors"
                     >
                       {formatPhone(order.customerPhone)}
                     </a>
@@ -69,10 +67,7 @@ export function TableGroupCard({ orders }: { orders: Order[] }) {
               <OrderItemsList items={order.items} />
 
               <div className="space-y-2 pt-1">
-                <div>
-                  <span className="block text-xs font-medium uppercase tracking-wide text-foreground/50">
-                    Subtotal
-                  </span>
+                <div className="flex items-baseline justify-between gap-2 tabular-nums">
                   <span className="font-semibold">{formatCurrency(calculateOrderTotal(order))}</span>
                   <LoverTotalHint order={order} />
                 </div>
@@ -86,7 +81,7 @@ export function TableGroupCard({ orders }: { orders: Order[] }) {
                         })
                       }
                       disabled={revertStatus.isPending}
-                      className="whitespace-nowrap text-sm text-foreground/70 hover:text-foreground"
+                      className="whitespace-nowrap text-sm text-muted hover:text-ink"
                     >
                       Voltar etapa
                     </button>
@@ -103,9 +98,9 @@ export function TableGroupCard({ orders }: { orders: Order[] }) {
                             )
                       }
                       disabled={changeStatus.isPending}
-                      className={cn(buttonClass('primary'), 'whitespace-nowrap px-3 py-1.5 text-sm')}
+                      className={cn(buttonClass('primary'), 'min-h-9 whitespace-nowrap px-3 py-1.5 text-sm')}
                     >
-                      Avançar etapa
+                      {nextActionLabel(order.status, order.orderType)}
                     </button>
                   )}
                 </div>
@@ -115,11 +110,9 @@ export function TableGroupCard({ orders }: { orders: Order[] }) {
         })}
       </div>
 
-      <div className="mt-auto space-y-3 border-t border-secondary/10 p-4">
-        <div>
-          <span className="block text-xs font-medium uppercase tracking-wide text-foreground/50">
-            Total da mesa
-          </span>
+      <div className="flex flex-col gap-3 border-t border-line pt-3">
+        <div className="flex items-baseline justify-between tabular-nums">
+          <span className="text-[13px] text-muted">Total da mesa</span>
           <span className="text-lg font-semibold">{formatCurrency(grandTotal)}</span>
         </div>
         <button
@@ -138,7 +131,7 @@ export function TableGroupCard({ orders }: { orders: Order[] }) {
           disabled={finalizeAll.isPending}
           className={`w-full ${buttonClass('primary')}`}
         >
-          Finalizar tudo
+          Finalizar mesa
         </button>
       </div>
 
@@ -149,6 +142,6 @@ export function TableGroupCard({ orders }: { orders: Order[] }) {
           onFinalized={() => loverQuestionFor.length > 1 && toast.success('Mesa finalizada.')}
         />
       )}
-    </div>
+    </article>
   )
 }

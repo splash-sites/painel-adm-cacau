@@ -1,6 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, ChevronDown, ChevronRight, GripVertical, Pencil, Trash2 } from 'lucide-react'
+import { ChevronDown, ChevronRight, GripVertical, Pencil, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useEffectiveStoreId } from '../../storeContext/useEffectiveStoreId'
 import type { AddonGroup } from '../../../domain/product/Addon'
@@ -11,10 +10,10 @@ import { cardClass, tableCardClass } from '../../ui/styles'
 import { AddonGroupModal } from './AddonGroupModal'
 import { AddonOptionsPanel } from './AddonOptionsPanel'
 import { useAddonGroupList, useDeleteAddonGroup, useReorderAddonGroups } from './useAddons'
+import { CatalogTabs } from '../CatalogTabs'
 
 export function AddonGroupListPage() {
   const storeId = useEffectiveStoreId()
-  const navigate = useNavigate()
   const { data: groups, isLoading, error } = useAddonGroupList(storeId ?? '')
   const deleteGroup = useDeleteAddonGroup()
   const reorderGroups = useReorderAddonGroups()
@@ -46,40 +45,35 @@ export function AddonGroupListPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="font-display text-2xl md:text-3xl text-accent">Adicionais</h2>
-          <p className="font-body text-sm text-foreground/60">
-            Grupos reutilizáveis de adicionais — vincule cada um aos produtos dentro do cadastro do produto.
-            Arraste pra reordenar como aparecem no cardápio.
+          <h2 className="font-display text-[28px] font-bold leading-tight tracking-tight text-ink">Adicionais</h2>
+          <p className="font-body text-sm text-muted">
+            Grupos de adicionais que você liga aos produtos no cadastro de cada um. Arraste para mudar a
+            ordem no cardápio.
           </p>
         </div>
         {storeId && (
           <div className="flex gap-3">
-            <Button variant="outline" onClick={() => navigate('/produtos')}>
-              <ArrowLeft className="h-4 w-4" />
-              Produtos
-            </Button>
-            <Button variant="outline" onClick={() => navigate('/produtos/variacoes')}>
-              Variações
-            </Button>
             <Button onClick={() => setIsCreating(true)}>Novo grupo</Button>
           </div>
         )}
       </div>
 
+      <CatalogTabs />
+
       {!storeId && <p className="font-body">Selecione uma loja pra ver os adicionais.</p>}
       {isLoading && <p className="font-body">Carregando...</p>}
-      {error && <p className="font-body text-red-600">Erro ao carregar grupos de adicionais</p>}
+      {error && <p className="font-body text-danger">Erro ao carregar grupos de adicionais</p>}
 
       {groups && groups.length === 0 && (
         <div className={cardClass}>
-          <p className="font-body text-foreground/70">Nenhum grupo de adicionais cadastrado ainda.</p>
+          <p className="font-body text-muted">Nenhum grupo de adicionais cadastrado ainda.</p>
         </div>
       )}
 
       {groups && groups.length > 0 && (
         <div className={tableCardClass}>
           <SortableList ids={groups.map((group) => group.id)} onReorder={handleReorder}>
-            <div className="divide-y divide-secondary/10">
+            <div className="divide-y divide-line">
               {groups.map((group) => {
                 const isExpanded = expandedGroupId === group.id
                 return (
@@ -93,7 +87,7 @@ export function AddonGroupListPage() {
                             {...attributes}
                             {...listeners}
                             aria-label={`Arrastar ${group.name}`}
-                            className="shrink-0 cursor-grab touch-none rounded-md p-1.5 text-foreground/40 hover:bg-secondary/10 hover:text-foreground active:cursor-grabbing"
+                            className="shrink-0 cursor-grab touch-none rounded-md p-1.5 text-faint hover:bg-surface-2 hover:text-ink active:cursor-grabbing"
                           >
                             <GripVertical className="h-4 w-4" />
                           </button>
@@ -101,7 +95,7 @@ export function AddonGroupListPage() {
                             type="button"
                             aria-label={isExpanded ? `Recolher ${group.name}` : `Expandir ${group.name}`}
                             onClick={() => setExpandedGroupId(isExpanded ? null : group.id)}
-                            className="shrink-0 rounded-md p-1.5 text-foreground/50 hover:bg-secondary/10 hover:text-foreground"
+                            className="shrink-0 rounded-md p-1.5 text-muted hover:bg-surface-2 hover:text-ink"
                           >
                             {isExpanded ? (
                               <ChevronDown className="h-4 w-4" />
@@ -110,7 +104,7 @@ export function AddonGroupListPage() {
                             )}
                           </button>
                           <span
-                            className={`flex-1 py-2 font-body ${group.active ? '' : 'text-foreground/40 line-through'}`}
+                            className={`flex-1 py-2 font-body ${group.active ? '' : 'text-faint line-through'}`}
                           >
                             {group.name}
                           </span>
@@ -119,7 +113,7 @@ export function AddonGroupListPage() {
                               type="button"
                               aria-label={`Editar ${group.name}`}
                               onClick={() => setEditingGroup(group)}
-                              className="rounded-md p-1.5 text-foreground/50 hover:bg-secondary/10 hover:text-foreground"
+                              className="rounded-md p-1.5 text-muted hover:bg-surface-2 hover:text-ink"
                             >
                               <Pencil className="h-4 w-4" />
                             </button>
@@ -127,7 +121,7 @@ export function AddonGroupListPage() {
                               type="button"
                               aria-label={`Excluir ${group.name}`}
                               onClick={() => setDeletingGroup(group)}
-                              className="rounded-md p-1.5 text-foreground/50 hover:bg-red-700/10 hover:text-red-700"
+                              className="rounded-md p-1.5 text-muted hover:bg-danger-soft hover:text-danger"
                             >
                               <Trash2 className="h-4 w-4" />
                             </button>

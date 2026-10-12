@@ -53,16 +53,16 @@ export function AdminUserListPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="font-display text-2xl md:text-3xl text-accent">Usuários</h2>
+        <h2 className="font-display text-[28px] font-bold leading-tight tracking-tight text-ink">Usuários</h2>
         <Button onClick={() => setIsCreating(true)}>Novo usuário</Button>
       </div>
 
       {isLoading && <p className="font-body">Carregando...</p>}
-      {error && <p className="font-body text-red-600">Erro ao carregar usuários</p>}
+      {error && <p className="font-body text-danger">Erro ao carregar usuários</p>}
 
       {admins && admins.length === 0 && (
         <div className={cardClass}>
-          <p className="font-body text-foreground/70">Nenhum usuário cadastrado ainda.</p>
+          <p className="font-body text-muted">Nenhum usuário cadastrado ainda.</p>
         </div>
       )}
 
@@ -90,7 +90,7 @@ export function AdminUserListPage() {
                 <tr key={admin.id} className={tableRowClass}>
                   <td className="py-3 pl-6">
                     <div className="flex items-center gap-3">
-                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/20 text-xs font-semibold text-accent">
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-tile text-xs font-semibold text-ink">
                         {initials(admin.fullName)}
                       </span>
                       <span className="truncate">{admin.fullName ?? '—'}</span>
@@ -100,11 +100,11 @@ export function AdminUserListPage() {
                   <td className="py-3 truncate">{storeName(admin.storeId)}</td>
                   <td className="py-3">
                     {admin.active ? (
-                      <span className="inline-block w-24 rounded-full bg-green-700 text-white text-xs px-2.5 py-1 text-center">
+                      <span className="inline-block w-24 rounded-full bg-success-soft text-success text-xs font-semibold px-2.5 py-1 text-center">
                         Ativo
                       </span>
                     ) : (
-                      <span className="inline-block w-24 rounded-full bg-red-700 text-white text-xs px-2.5 py-1 text-center">
+                      <span className="inline-block w-24 rounded-full bg-danger-soft text-danger text-xs font-semibold px-2.5 py-1 text-center">
                         Desativado
                       </span>
                     )}
@@ -115,7 +115,7 @@ export function AdminUserListPage() {
                         type="button"
                         aria-label={`Editar ${admin.fullName ?? 'usuário'}`}
                         onClick={() => setEditingAdmin(admin)}
-                        className="rounded-md p-1.5 text-foreground/50 hover:bg-secondary/10 hover:text-foreground"
+                        className="rounded-md p-1.5 text-muted hover:bg-surface-2 hover:text-ink"
                       >
                         <Pencil className="h-4 w-4" />
                       </button>
@@ -124,7 +124,7 @@ export function AdminUserListPage() {
                           type="button"
                           aria-label={`Excluir ${admin.fullName ?? 'usuário'}`}
                           onClick={() => setDeletingAdmin(admin)}
-                          className="rounded-md p-1.5 text-foreground/50 hover:bg-red-700/10 hover:text-red-700"
+                          className="rounded-md p-1.5 text-muted hover:bg-danger-soft hover:text-danger"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -147,7 +147,7 @@ export function AdminUserListPage() {
       {deletingAdmin && (
         <ConfirmModal
           title="Excluir usuário"
-          description={`Excluir "${deletingAdmin.fullName ?? 'usuário'}"? Essa ação não pode ser desfeita. Só funciona se não tiver pedido vinculado — nesse caso, desative em vez de excluir.`}
+          description={`Excluir "${deletingAdmin.fullName ?? 'usuário'}"? Não dá para desfazer. Se a pessoa já mexeu em algum pedido, desative a conta em vez de excluir.`}
           confirmLabel="Confirmar exclusão"
           pendingLabel="Excluindo..."
           confirmVariant="danger"

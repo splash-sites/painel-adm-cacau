@@ -45,7 +45,7 @@ test('login e avanço de status refletem no kanban', async ({ page }) => {
   const card = receivedColumn.getByTestId('order-card').first()
   const orderId = await card.getAttribute('data-order-id')
 
-  await card.getByRole('button', { name: 'Avançar etapa' }).click()
+  await card.getByRole('button', { name: 'Aceitar pedido' }).click()
 
   await expect(page.getByText('Quem vai preparar?')).toBeVisible()
   await page.getByRole('button', { name: 'Novo atendente' }).click()

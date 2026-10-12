@@ -76,8 +76,8 @@ export function MenuOrderPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="font-display text-2xl md:text-3xl text-accent">Organizar cardápio</h2>
-          <p className="font-body text-sm text-foreground/60">
+          <h2 className="font-display text-[28px] font-bold leading-tight tracking-tight text-ink">Organizar cardápio</h2>
+          <p className="font-body text-sm text-muted">
             Arraste as categorias e os produtos pra montar a ordem que aparece no cardápio. Salva na hora.
           </p>
         </div>
@@ -91,11 +91,11 @@ export function MenuOrderPage() {
 
       {!storeId && <p className="font-body">Selecione uma loja pra organizar o cardápio.</p>}
       {isLoading && storeId && <p className="font-body">Carregando...</p>}
-      {error && <p className="font-body text-red-600">Erro ao carregar o cardápio</p>}
+      {error && <p className="font-body text-danger">Erro ao carregar o cardápio</p>}
 
       {storeId && !isLoading && groups.length === 0 && (
         <div className={cardClass}>
-          <p className="font-body text-foreground/70">
+          <p className="font-body text-muted">
             Nenhuma categoria cadastrada ainda. Crie categorias e vincule produtos a elas primeiro.
           </p>
         </div>
@@ -129,7 +129,7 @@ function ProductRows({
 }) {
   if (products.length === 0) {
     return (
-      <p className="px-2 py-2 font-body text-sm text-foreground/40">Nenhum produto nessa categoria.</p>
+      <p className="px-2 py-2 font-body text-sm text-faint">Nenhum produto nessa categoria.</p>
     )
   }
 
@@ -139,31 +139,31 @@ function ProductRows({
         {products.map((product) => (
           <SortableItem key={product.id} id={product.id}>
             {({ setActivatorNodeRef, attributes, listeners }) => (
-              <div className="flex items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-secondary/5">
+              <div className="flex items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-canvas">
                 <button
                   type="button"
                   ref={setActivatorNodeRef}
                   {...attributes}
                   {...listeners}
                   aria-label={`Arrastar ${product.name}`}
-                  className="cursor-grab touch-none rounded-md p-1 text-foreground/40 hover:bg-secondary/10 hover:text-foreground active:cursor-grabbing"
+                  className="cursor-grab touch-none rounded-md p-1 text-faint hover:bg-surface-2 hover:text-ink active:cursor-grabbing"
                 >
                   <GripVertical className="h-4 w-4" />
                 </button>
                 {product.imageUrl ? (
                   <img src={product.imageUrl} alt="" className="h-9 w-9 shrink-0 rounded-md object-cover" />
                 ) : (
-                  <div className="h-9 w-9 shrink-0 rounded-md bg-secondary/10" />
+                  <div className="h-9 w-9 shrink-0 rounded-md bg-surface-2" />
                 )}
                 <span className="min-w-0 flex-1 truncate font-body text-sm">
                   {product.name}
                   {isProductIncomplete(product) && (
-                    <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800">
+                    <span className="ml-2 rounded-full bg-wait-soft px-2 py-0.5 text-xs text-wait">
                       Incompleto
                     </span>
                   )}
                 </span>
-                <span className="shrink-0 font-body text-sm text-foreground/60">
+                <span className="shrink-0 font-body text-sm text-muted">
                   {formatCurrency(product.price)}
                 </span>
               </div>
@@ -188,13 +188,13 @@ function SectionHeader({
 }) {
   const isUncategorized = group.category === null
   const nameClass = isUncategorized
-    ? 'font-medium text-foreground/60'
+    ? 'font-medium text-muted'
     : group.category!.active
       ? 'font-medium'
-      : 'font-medium text-foreground/40 line-through'
+      : 'font-medium text-faint line-through'
 
   return (
-    <div className="flex items-center gap-2 rounded-lg px-2 py-2 hover:bg-secondary/5">
+    <div className="flex items-center gap-2 rounded-lg px-2 py-2 hover:bg-canvas">
       {dragHandle}
       <button
         type="button"
@@ -203,12 +203,12 @@ function SectionHeader({
         className="flex flex-1 items-center gap-2 font-body"
       >
         {open ? (
-          <ChevronDown className="h-4 w-4 text-foreground/40" />
+          <ChevronDown className="h-4 w-4 text-faint" />
         ) : (
-          <ChevronRight className="h-4 w-4 text-foreground/40" />
+          <ChevronRight className="h-4 w-4 text-faint" />
         )}
         <span className={nameClass}>{group.category?.name ?? 'Sem categoria'}</span>
-        <span className="text-xs text-foreground/50">
+        <span className="text-xs text-muted">
           {group.products.length} produto{group.products.length === 1 ? '' : 's'}
         </span>
       </button>
@@ -263,7 +263,7 @@ function CategorySection({
                 {...attributes}
                 {...listeners}
                 aria-label={`Arrastar categoria ${group.category!.name}`}
-                className="cursor-grab touch-none rounded-md p-1 text-foreground/40 hover:bg-secondary/10 hover:text-foreground active:cursor-grabbing"
+                className="cursor-grab touch-none rounded-md p-1 text-faint hover:bg-surface-2 hover:text-ink active:cursor-grabbing"
               >
                 <GripVertical className="h-4 w-4" />
               </button>

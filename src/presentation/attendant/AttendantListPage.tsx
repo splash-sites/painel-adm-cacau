@@ -32,9 +32,9 @@ export function AttendantListPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="font-display text-2xl md:text-3xl text-accent">Atendentes</h2>
-          <p className="font-body text-sm text-foreground/60">
-            Quem prepara os pedidos — vinculado na hora de aceitar um pedido no Dashboard, sem login.
+          <h2 className="font-display text-[28px] font-bold leading-tight tracking-tight text-ink">Atendentes</h2>
+          <p className="font-body text-sm text-muted">
+            Quem prepara os pedidos. Você escolhe a pessoa ao aceitar cada pedido. Atendente não tem login.
           </p>
         </div>
         {storeId && (
@@ -47,11 +47,11 @@ export function AttendantListPage() {
 
       {!storeId && <p className="font-body">Selecione uma loja pra ver os atendentes.</p>}
       {isLoading && <p className="font-body">Carregando...</p>}
-      {error && <p className="font-body text-red-600">Erro ao carregar atendentes</p>}
+      {error && <p className="font-body text-danger">Erro ao carregar atendentes</p>}
 
       {attendants && attendants.length === 0 && (
         <div className={cardClass}>
-          <p className="font-body text-foreground/70">Nenhum atendente cadastrado ainda.</p>
+          <p className="font-body text-muted">Nenhum atendente cadastrado ainda.</p>
         </div>
       )}
 
@@ -68,7 +68,7 @@ export function AttendantListPage() {
               {attendants.map((attendant) => (
                 <tr key={attendant.id} className={tableRowClass}>
                   <td className="py-3 pl-6">
-                    <span className={attendant.active ? '' : 'text-foreground/40 line-through'}>
+                    <span className={attendant.active ? '' : 'text-faint line-through'}>
                       {attendant.name}
                     </span>
                   </td>
@@ -78,7 +78,7 @@ export function AttendantListPage() {
                         type="button"
                         aria-label={`Editar ${attendant.name}`}
                         onClick={() => setEditingAttendant(attendant)}
-                        className="rounded-md p-1.5 text-foreground/50 hover:bg-secondary/10 hover:text-foreground"
+                        className="rounded-md p-1.5 text-muted hover:bg-surface-2 hover:text-ink"
                       >
                         <Pencil className="h-4 w-4" />
                       </button>
@@ -86,7 +86,7 @@ export function AttendantListPage() {
                         type="button"
                         aria-label={`Excluir ${attendant.name}`}
                         onClick={() => setDeletingAttendant(attendant)}
-                        className="rounded-md p-1.5 text-foreground/50 hover:bg-red-700/10 hover:text-red-700"
+                        className="rounded-md p-1.5 text-muted hover:bg-danger-soft hover:text-danger"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>

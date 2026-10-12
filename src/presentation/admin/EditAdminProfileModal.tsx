@@ -47,7 +47,7 @@ export function EditAdminProfileModal({ admin, onClose }: { admin: AdminUser; on
         toast.error(
           error instanceof Error
             ? `Nome/e-mail/senha salvos, mas falha ao mudar status ativo: ${error.message}`
-            : 'Nome/e-mail/senha salvos, mas falha ao mudar status ativo — tente de novo.',
+            : 'Nome, e-mail e senha salvos, mas não deu para mudar se a conta está ativa. Tente de novo.',
         )
         return
       }
@@ -67,13 +67,13 @@ export function EditAdminProfileModal({ admin, onClose }: { admin: AdminUser; on
           <div className="space-y-1">
             <Label htmlFor="fullName">Nome</Label>
             <Input id="fullName" {...register('fullName')} />
-            {errors.fullName && <p className="text-sm text-red-600">{errors.fullName.message}</p>}
+            {errors.fullName && <p className="text-sm text-danger">{errors.fullName.message}</p>}
           </div>
 
           <div className="space-y-1">
             <Label htmlFor="email">E-mail</Label>
             <Input id="email" type="email" {...register('email')} />
-            {errors.email && <p className="text-sm text-red-600">{errors.email.message}</p>}
+            {errors.email && <p className="text-sm text-danger">{errors.email.message}</p>}
           </div>
 
           <div className="space-y-1">
@@ -84,7 +84,7 @@ export function EditAdminProfileModal({ admin, onClose }: { admin: AdminUser; on
               placeholder="Deixe em branco pra manter a atual"
               {...register('password')}
             />
-            {errors.password && <p className="text-sm text-red-600">{errors.password.message}</p>}
+            {errors.password && <p className="text-sm text-danger">{errors.password.message}</p>}
           </div>
 
           {canToggleActive && (

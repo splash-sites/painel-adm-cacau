@@ -8,7 +8,7 @@ export function LoverTotalHint({ order }: { order: Order }) {
 
   if (order.isLover === true) {
     return (
-      <span className="block text-xs text-secondary">
+      <span className="text-[13px] text-lover">
         Cacau Lover · normal {formatCurrency(calculateOrderRegularTotal(order))}
       </span>
     )
@@ -16,6 +16,6 @@ export function LoverTotalHint({ order }: { order: Order }) {
   if (order.isLover === false) return null
 
   return (
-    <span className="block text-xs text-secondary">Lover {formatCurrency(calculateOrderLoverTotal(order))}</span>
+    <span className="text-[13px] text-lover">Lover {formatCurrency(calculateOrderLoverTotal(order))}</span>
   )
 }

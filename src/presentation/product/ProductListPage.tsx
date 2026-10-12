@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ChangeEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, Pencil, Search, Trash2 } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Copy, Download, MoreHorizontal, Pencil, Search, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useEffectiveStoreId } from '../storeContext/useEffectiveStoreId'
 import { useAuth } from '../auth/useAuth'
@@ -12,6 +12,8 @@ import { isProductIncomplete } from '../../domain/product/isProductIncomplete'
 import type { Product } from '../../domain/product/Product'
 import type { ProductMenuType } from '../../application/product/ProductRepository'
 import { Button } from '../ui/Button'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/DropdownMenu'
+import { CatalogTabs } from './CatalogTabs'
 import { Checkbox } from '../ui/Checkbox'
 import { ConfirmModal } from '../ui/ConfirmModal'
 import { Input } from '../ui/Input'
@@ -104,8 +106,8 @@ export function ProductListPage() {
       })
       toast.success(
         count > 0
-          ? `Planilha exportada — ${count} produto${count === 1 ? '' : 's'}.`
-          : 'Planilha exportada — modelo vazio (nenhum produto cadastrado).',
+          ? `Planilha exportada com ${count} produto${count === 1 ? '' : 's'}.`
+          : 'Planilha exportada sem produtos, só o modelo para preencher.',
       )
     } catch (exportError) {
       toast.error(exportError instanceof Error ? exportError.message : 'Falha ao exportar planilha')
@@ -133,9 +135,9 @@ export function ProductListPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="font-display text-2xl md:text-3xl text-accent">Produtos</h2>
+        <h2 className="font-display text-[28px] font-bold leading-tight tracking-tight text-ink">Produtos</h2>
         {storeId && (
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-2">
             <input
               ref={importInputRef}
               type="file"
@@ -146,39 +148,43 @@ export function ProductListPage() {
             <Button variant="outline" onClick={() => importInputRef.current?.click()}>
               Importar planilha
             </Button>
-            <Button variant="outline" onClick={handleExport} disabled={exportProducts.isPending}>
-              {exportProducts.isPending ? 'Exportando...' : 'Exportar planilha'}
-            </Button>
-            <Button variant="outline" onClick={() => navigate('/produtos/adicionais')}>
-              Adicionais
-            </Button>
-            <Button variant="outline" onClick={() => navigate('/produtos/variacoes')}>
-              Variações
-            </Button>
-            <Button variant="outline" onClick={() => navigate('/produtos/categorias')}>
-              Categorias
-            </Button>
             <Button variant="outline" onClick={() => navigate('/produtos/ordenar')}>
               Organizar cardápio
             </Button>
-            {isSuperAdmin && (
-              <Button variant="outline" onClick={() => setIsCopyingCatalog(true)}>
-                Copiar catálogo
-              </Button>
-            )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" aria-label="Mais ações do catálogo">
+                  <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onSelect={handleExport} disabled={exportProducts.isPending}>
+                  <Download className="h-4 w-4" aria-hidden="true" />
+                  {exportProducts.isPending ? 'Exportando...' : 'Exportar planilha'}
+                </DropdownMenuItem>
+                {isSuperAdmin && (
+                  <DropdownMenuItem onSelect={() => setIsCopyingCatalog(true)}>
+                    <Copy className="h-4 w-4" aria-hidden="true" />
+                    Copiar catálogo de outra loja
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button onClick={() => setIsCreating(true)}>Novo produto</Button>
           </div>
         )}
       </div>
 
+      <CatalogTabs />
+
       {!storeId && <p className="font-body">Selecione uma loja pra ver os produtos.</p>}
       {isLoading && <p className="font-body">Carregando...</p>}
-      {error && <p className="font-body text-red-600">Erro ao carregar produtos</p>}
+      {error && <p className="font-body text-danger">Erro ao carregar produtos</p>}
 
       {storeId && (
         <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-center">
           <div className="relative w-full md:w-72">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/40" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-faint" />
             <Input
               type="search"
               value={searchInput}
@@ -232,7 +238,7 @@ export function ProductListPage() {
 
       {data && data.items.length === 0 && (
         <div className={cardClass}>
-          <p className="font-body text-foreground/70">
+          <p className="font-body text-muted">
             {hasFilters
               ? 'Nenhum produto encontrado com esses filtros.'
               : 'Nenhum produto cadastrado ainda.'}
@@ -271,7 +277,7 @@ export function ProductListPage() {
                     <span className="flex items-center gap-2">
                       <span className="truncate">{product.name}</span>
                       {isProductIncomplete(product) && (
-                        <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-xs text-amber-800">
+                        <span className="shrink-0 rounded-full bg-wait-soft px-2 py-0.5 text-xs text-wait">
                           Incompleto
                         </span>
                       )}
@@ -287,7 +293,7 @@ export function ProductListPage() {
                         type="button"
                         aria-label={`Editar ${product.name}`}
                         onClick={() => setEditingProduct(product)}
-                        className="rounded-md p-1.5 text-foreground/50 hover:bg-secondary/10 hover:text-foreground"
+                        className="rounded-md p-1.5 text-muted hover:bg-surface-2 hover:text-ink"
                       >
                         <Pencil className="h-4 w-4" />
                       </button>
@@ -295,7 +301,7 @@ export function ProductListPage() {
                         type="button"
                         aria-label={`Excluir ${product.name}`}
                         onClick={() => setDeletingProduct(product)}
-                        className="rounded-md p-1.5 text-foreground/50 hover:bg-red-700/10 hover:text-red-700"
+                        className="rounded-md p-1.5 text-muted hover:bg-danger-soft hover:text-danger"
                       >
                         <Trash2 className="h-4 w-4" />
                       </button>
@@ -306,11 +312,11 @@ export function ProductListPage() {
             </tbody>
           </table>
 
-          <div className="flex h-11 items-center justify-end gap-6 border-t border-secondary/15 px-6 font-body text-sm">
+          <div className="flex h-11 items-center justify-end gap-6 border-t border-line px-6 font-body text-sm">
             <div className="flex items-center gap-2">
-              <span className="text-foreground/60">Linhas por página:</span>
+              <span className="text-muted">Linhas por página:</span>
               <Select value={String(pageSize)} onValueChange={handlePageSizeChange}>
-                <SelectTrigger className="w-auto gap-1.5 border-none py-1 text-sm hover:bg-secondary/10">
+                <SelectTrigger className="w-auto gap-1.5 border-none py-1 text-sm hover:bg-surface-2">
                   <SelectValue>{pageSize}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
@@ -323,7 +329,7 @@ export function ProductListPage() {
               </Select>
             </div>
 
-            <span className="text-foreground/60">
+            <span className="text-muted">
               {page * pageSize + 1}–{Math.min((page + 1) * pageSize, data.total)} de {data.total}
             </span>
 
@@ -333,7 +339,7 @@ export function ProductListPage() {
                 aria-label="Página anterior"
                 disabled={page === 0}
                 onClick={() => setPage((current) => current - 1)}
-                className="rounded-md p-1.5 text-foreground/50 hover:bg-secondary/10 hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
+                className="rounded-md p-1.5 text-muted hover:bg-surface-2 hover:text-ink disabled:pointer-events-none disabled:opacity-40"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
@@ -342,7 +348,7 @@ export function ProductListPage() {
                 aria-label="Próxima página"
                 disabled={page + 1 >= totalPages}
                 onClick={() => setPage((current) => current + 1)}
-                className="rounded-md p-1.5 text-foreground/50 hover:bg-secondary/10 hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
+                className="rounded-md p-1.5 text-muted hover:bg-surface-2 hover:text-ink disabled:pointer-events-none disabled:opacity-40"
               >
                 <ChevronRight className="h-4 w-4" />
               </button>

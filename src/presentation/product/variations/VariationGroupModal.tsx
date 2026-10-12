@@ -56,7 +56,7 @@ export function VariationGroupModal({
       <DialogContent className="max-w-md">
         <DialogTitle>{group ? 'Editar grupo de variação' : 'Novo grupo de variação'}</DialogTitle>
         <DialogDescription>
-          Ex: "Sabor" ou "Intensidade" — sempre obrigatório quando vinculado a um produto.
+          Ex: "Sabor" ou "Tamanho". Quando ligado a um produto, o cliente sempre escolhe uma opção.
         </DialogDescription>
 
         <form
@@ -70,12 +70,12 @@ export function VariationGroupModal({
           <div className="space-y-1">
             <Label htmlFor={nameId}>Nome</Label>
             <Input id={nameId} {...register('name')} />
-            {errors.name && <p className="text-sm text-red-600">{errors.name.message}</p>}
+            {errors.name && <p className="text-sm text-danger">{errors.name.message}</p>}
           </div>
 
           <div className="space-y-1">
             <Label>Efeito no preço</Label>
-            <p className="text-sm font-body text-foreground/60">
+            <p className="text-sm font-body text-muted">
               Ex: "Tamanho" substitui (Grande vira o preço final); "Intensidade" soma ou não muda nada.
             </p>
             <Controller

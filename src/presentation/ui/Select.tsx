@@ -14,10 +14,10 @@ export function SelectTrigger({
   return (
     <SelectPrimitive.Trigger
       className={cn(
-        'flex w-full items-center justify-between gap-2 rounded-lg border border-secondary/25 bg-background px-3 py-2 text-foreground transition',
-        'focus-visible:outline-none focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/40',
+        'flex w-full items-center justify-between gap-2 rounded-xl border-[1.5px] border-line-strong bg-surface px-3.5 py-2.5 text-[15px] text-ink transition',
+        'focus-visible:outline-none focus-visible:border-ink focus-visible:ring-2 focus-visible:ring-caramel/50',
         'disabled:opacity-50 disabled:pointer-events-none',
-        'data-[placeholder]:text-foreground/40',
+        'data-[placeholder]:text-faint',
         className,
       )}
       {...props}
@@ -35,7 +35,7 @@ export function SelectContent({ className, children, ...props }: ComponentProps<
     <SelectPrimitive.Portal>
       <SelectPrimitive.Content
         className={cn(
-          'z-50 max-h-[var(--radix-select-content-available-height)] min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-lg border border-secondary/15 bg-background shadow-lg',
+          'z-50 max-h-[var(--radix-select-content-available-height)] min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-2xl border border-line bg-surface shadow-[0_12px_32px_-12px_rgba(42,26,20,0.25)]',
           className,
         )}
         position="popper"
@@ -55,8 +55,8 @@ export function SelectItem({ className, children, ...props }: ComponentProps<typ
   return (
     <SelectPrimitive.Item
       className={cn(
-        'relative flex cursor-pointer select-none items-center rounded-md px-2.5 py-2 text-sm font-body outline-none',
-        'hover:bg-primary/10 focus:bg-primary/10',
+        'relative flex cursor-pointer select-none items-center rounded-lg px-3 py-2.5 text-[15px] font-body outline-none',
+        'hover:bg-surface-2 focus:bg-surface-2',
         'data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
         className,
       )}

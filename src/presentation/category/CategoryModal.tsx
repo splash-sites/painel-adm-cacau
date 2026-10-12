@@ -65,7 +65,7 @@ export function CategoryModal({
           <div className="space-y-1">
             <Label htmlFor={nameId}>Nome</Label>
             <Input id={nameId} {...register('name')} />
-            {errors.name && <p className="text-sm text-red-600">{errors.name.message}</p>}
+            {errors.name && <p className="text-sm text-danger">{errors.name.message}</p>}
           </div>
 
           <label className="flex items-center gap-2 font-body">

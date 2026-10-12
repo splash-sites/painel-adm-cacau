@@ -46,9 +46,9 @@ export function PromotionListPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="font-display text-2xl md:text-3xl text-accent">Promoções</h2>
-          <p className="font-body text-sm text-foreground/60">
-            Carrossel de promoções do cardápio — arraste pra mudar a ordem de exibição.
+          <h2 className="font-display text-[28px] font-bold leading-tight tracking-tight text-ink">Promoções</h2>
+          <p className="font-body text-sm text-muted">
+            As promoções que aparecem no topo do cardápio. Arraste para mudar a ordem.
           </p>
         </div>
         {storeId && <Button onClick={() => setIsCreating(true)}>Nova promoção</Button>}
@@ -56,11 +56,11 @@ export function PromotionListPage() {
 
       {!storeId && <p className="font-body">Selecione uma loja pra ver as promoções.</p>}
       {isLoading && <p className="font-body">Carregando...</p>}
-      {error && <p className="font-body text-red-600">Erro ao carregar promoções</p>}
+      {error && <p className="font-body text-danger">Erro ao carregar promoções</p>}
 
       {promotions && promotions.length === 0 && (
         <div className={cardClass}>
-          <p className="font-body text-foreground/70">Nenhuma promoção cadastrada ainda.</p>
+          <p className="font-body text-muted">Nenhuma promoção cadastrada ainda.</p>
         </div>
       )}
 
@@ -71,14 +71,14 @@ export function PromotionListPage() {
               {promotions.map((promotion) => (
                 <SortableItem key={promotion.id} id={promotion.id}>
                   {({ setActivatorNodeRef, attributes, listeners }) => (
-                    <div className="flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-secondary/5">
+                    <div className="flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-canvas">
                       <button
                         type="button"
                         ref={setActivatorNodeRef}
                         {...attributes}
                         {...listeners}
                         aria-label={`Arrastar ${promotion.title}`}
-                        className="cursor-grab touch-none rounded-md p-1 text-foreground/40 hover:bg-secondary/10 hover:text-foreground active:cursor-grabbing"
+                        className="cursor-grab touch-none rounded-md p-1 text-faint hover:bg-surface-2 hover:text-ink active:cursor-grabbing"
                       >
                         <GripVertical className="h-4 w-4" />
                       </button>
@@ -86,19 +86,19 @@ export function PromotionListPage() {
                       <div className="min-w-0 flex-1 font-body">
                         <p
                           className={
-                            promotion.active ? 'font-medium truncate' : 'truncate font-medium text-foreground/40 line-through'
+                            promotion.active ? 'font-medium truncate' : 'truncate font-medium text-faint line-through'
                           }
                         >
                           {promotion.title}
                         </p>
-                        <p className="truncate text-xs text-foreground/50">
+                        <p className="truncate text-xs text-muted">
                           {promotion.productName}
-                          {promotion.comboItems.length > 0 && ` +${promotion.comboItems.length} produto(s)`}
+                          {promotion.comboItems.length > 0 && ` + ${promotion.comboItems.length} ${promotion.comboItems.length === 1 ? 'item' : 'itens'}`}
                           {promotion.badgeLabel && ` · ${promotion.badgeLabel}`}
                         </p>
                       </div>
                       {promotion.discountType && (
-                        <span className="shrink-0 rounded-full bg-primary/15 px-2 py-0.5 text-xs font-medium text-primary">
+                        <span className="shrink-0 rounded-full bg-tile px-2 py-0.5 text-xs font-medium text-lover">
                           {promotion.discountType === 'percent'
                             ? `${promotion.discountValue}% OFF`
                             : `R$ ${promotion.discountValue} OFF`}
@@ -109,7 +109,7 @@ export function PromotionListPage() {
                           type="button"
                           aria-label={`Editar ${promotion.title}`}
                           onClick={() => setEditingPromotion(promotion)}
-                          className="rounded-md p-1.5 text-foreground/50 hover:bg-secondary/10 hover:text-foreground"
+                          className="rounded-md p-1.5 text-muted hover:bg-surface-2 hover:text-ink"
                         >
                           <Pencil className="h-4 w-4" />
                         </button>
@@ -117,7 +117,7 @@ export function PromotionListPage() {
                           type="button"
                           aria-label={`Excluir ${promotion.title}`}
                           onClick={() => setDeletingPromotion(promotion)}
-                          className="rounded-md p-1.5 text-foreground/50 hover:bg-red-700/10 hover:text-red-700"
+                          className="rounded-md p-1.5 text-muted hover:bg-danger-soft hover:text-danger"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>

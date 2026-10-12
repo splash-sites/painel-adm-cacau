@@ -205,8 +205,8 @@ export function PromotionModal({
     } catch (error) {
       toast.error(
         error instanceof Error
-          ? `Promoção salva, mas falha ao salvar combo: ${error.message} — revise abaixo e salve de novo.`
-          : 'Promoção salva, mas falha ao salvar combo — revise abaixo e salve de novo.',
+          ? `Promoção salva, mas o combo não (${error.message}). Revise abaixo e salve de novo.`
+          : 'Promoção salva, mas o combo não. Revise abaixo e salve de novo.',
       )
       return
     }
@@ -232,7 +232,7 @@ export function PromotionModal({
           <div className="space-y-1">
             <Label htmlFor={titleId}>Título</Label>
             <Input id={titleId} {...register('title')} />
-            {errors.title && <p className="text-sm text-red-600">{errors.title.message}</p>}
+            {errors.title && <p className="text-sm text-danger">{errors.title.message}</p>}
           </div>
 
           <div className="space-y-1">
@@ -248,8 +248,8 @@ export function PromotionModal({
           <div className="space-y-1">
             <Label>Produto principal</Label>
             {currentProduct && (
-              <p className="font-body text-sm text-foreground/70">
-                Produto atual: <span className="font-medium text-foreground">{currentProduct.name}</span> ·{' '}
+              <p className="font-body text-sm text-muted">
+                Produto atual: <span className="font-medium text-ink">{currentProduct.name}</span> ·{' '}
                 {formatCurrency(currentProduct.price)}
               </p>
             )}
@@ -266,18 +266,18 @@ export function PromotionModal({
                 />
               )}
             />
-            {errors.productId && <p className="text-sm text-red-600">{errors.productId.message}</p>}
-            <p className="text-xs text-foreground/50">
-              Imagem e texto do card sempre giram em torno desse produto — preço vem sempre ao vivo, a promoção
-              não guarda preço próprio.
+            {errors.productId && <p className="text-sm text-danger">{errors.productId.message}</p>}
+            <p className="text-xs text-muted">
+              O card da promoção usa a foto e o texto deste produto. O preço vem sempre do cadastro dele.
+              A promoção não guarda preço próprio.
             </p>
           </div>
 
-          <div className="space-y-2 rounded-lg bg-secondary/5 p-3">
-            <Label>Combo — produtos extras (opcional)</Label>
-            <p className="text-sm font-body text-foreground/60">
-              Deixe vazio pra uma promoção de 1 produto só. Adicionando produto(s) aqui, vira um combo — o
-              desconto (se marcado abaixo) aplica sobre a soma do produto principal + esses itens extras.
+          <div className="space-y-2 rounded-lg bg-canvas p-3">
+            <Label>Itens do combo (opcional)</Label>
+            <p className="text-sm font-body text-muted">
+              Deixe vazio para promover um produto só. Com itens aqui, vira combo, e o desconto (se tiver)
+              vale sobre a soma do produto principal com esses itens.
             </p>
             <Combobox
               placeholder="Buscar produto pra adicionar..."
@@ -291,7 +291,7 @@ export function PromotionModal({
                 {comboItems.map((item) => (
                   <li key={item.productId} className="flex items-center justify-between gap-2 text-sm font-body">
                     <span className="min-w-0 truncate">
-                      {item.productName} <span className="text-foreground/50">· {formatCurrency(item.price)}</span>
+                      {item.productName} <span className="text-muted">· {formatCurrency(item.price)}</span>
                     </span>
                     <div className="flex shrink-0 items-center gap-2">
                       <Input
@@ -306,7 +306,7 @@ export function PromotionModal({
                       <button
                         type="button"
                         onClick={() => handleRemoveComboItem(item.productId)}
-                        className="text-xs text-red-700 hover:underline"
+                        className="text-xs text-danger hover:underline"
                       >
                         Remover
                       </button>
@@ -316,17 +316,17 @@ export function PromotionModal({
               </ul>
             )}
             {currentProduct && baseTotal != null && (
-              <p className="pt-1 text-sm font-body text-foreground/70">
+              <p className="pt-1 text-sm font-body text-muted">
                 Total do produto{comboItems.length > 0 ? ' + combo' : ''}:{' '}
-                <span className="font-medium text-foreground">{formatCurrency(baseTotal)}</span>
+                <span className="font-medium text-ink">{formatCurrency(baseTotal)}</span>
                 {loverBaseTotal != null && (
-                  <span className="text-foreground/50"> · lover {formatCurrency(loverBaseTotal)}</span>
+                  <span className="text-muted"> · lover {formatCurrency(loverBaseTotal)}</span>
                 )}
               </p>
             )}
           </div>
 
-          <div className="space-y-2 rounded-lg bg-secondary/5 p-3">
+          <div className="space-y-2 rounded-lg bg-canvas p-3">
             <label className="flex items-center gap-2 font-body">
               <Checkbox
                 checked={discountType !== null}
@@ -362,17 +362,17 @@ export function PromotionModal({
                 </div>
               </div>
             )}
-            {errors.discountValue && <p className="text-sm text-red-600">{errors.discountValue.message}</p>}
+            {errors.discountValue && <p className="text-sm text-danger">{errors.discountValue.message}</p>}
             {discountType && discountedTotal != null && baseTotal != null && (
               <p className="pt-1 text-sm font-body">
                 Total com desconto: <span className="font-medium">{formatCurrency(discountedTotal)}</span>{' '}
-                <span className="text-foreground/50 line-through">{formatCurrency(baseTotal)}</span>
+                <span className="text-muted line-through">{formatCurrency(baseTotal)}</span>
               </p>
             )}
             {discountType && loverDiscountedTotal != null && loverBaseTotal != null && (
-              <p className="text-sm font-body text-foreground/70">
+              <p className="text-sm font-body text-muted">
                 Total lover com desconto: <span className="font-medium">{formatCurrency(loverDiscountedTotal)}</span>{' '}
-                <span className="text-foreground/50 line-through">{formatCurrency(loverBaseTotal)}</span>
+                <span className="text-muted line-through">{formatCurrency(loverBaseTotal)}</span>
               </p>
             )}
           </div>
@@ -401,8 +401,8 @@ export function PromotionModal({
               className={inputClass}
             />
             {isUploadingImage && <p className="text-sm font-body">Enviando imagem...</p>}
-            {imageError && <p className="text-sm text-red-600">{imageError}</p>}
-            {errors.imageUrl && <p className="text-sm text-red-600">{errors.imageUrl.message}</p>}
+            {imageError && <p className="text-sm text-danger">{imageError}</p>}
+            {errors.imageUrl && <p className="text-sm text-danger">{errors.imageUrl.message}</p>}
           </div>
 
           <label className="flex items-center gap-2 font-body">

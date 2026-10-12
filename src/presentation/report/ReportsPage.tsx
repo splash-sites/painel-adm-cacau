@@ -29,14 +29,16 @@ const PERIOD_LABEL: Record<ReportPeriod, string> = {
   '30d': '30 dias',
 }
 
-const CHART_PRIMARY = '#CF9047'
-const CHART_ACCENT = '#2C120B'
+const countLabel = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`
+
+const CHART_PRIMARY = '#e8a75c'
+const CHART_ACCENT = '#2a1a14'
 
 const CHANNEL_CHART_COLOR: Record<string, string> = {
-  Cafeteria: '#2C120B',
-  'Retirar no local': '#7B431B',
-  Delivery: '#B91C1C',
-  Revendedor: '#CF9047',
+  Cafeteria: '#2a1a14',
+  'Retirar no local': '#e8a75c',
+  Delivery: '#2f5d8f',
+  Revendedor: '#9a5a1c',
 }
 
 function formatCurrency(value: number): string {
@@ -44,7 +46,7 @@ function formatCurrency(value: number): string {
 }
 
 function chartTick() {
-  return { fill: '#030404', fontSize: 12, fontFamily: 'Inter, sans-serif' }
+  return { fill: '#7a6a60', fontSize: 12, fontFamily: 'Figtree, sans-serif' }
 }
 
 function ChartTooltip({
@@ -60,10 +62,10 @@ function ChartTooltip({
 }) {
   if (!active || !payload?.length) return null
   return (
-    <div className="rounded-lg border border-secondary/15 bg-background px-3 py-2 text-xs font-body shadow-lg">
-      {label && <p className="font-medium text-foreground">{label}</p>}
+    <div className="rounded-lg border border-line bg-surface px-3 py-2 text-xs font-body shadow-lg">
+      {label && <p className="font-medium text-ink">{label}</p>}
       {payload.map((entry, index) => (
-        <p key={index} className="text-foreground/70">
+        <p key={index} className="text-muted">
           {entry.name ? `${entry.name}: ` : ''}
           {formatter(entry.value)}
         </p>
@@ -105,12 +107,12 @@ export function ReportsPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="font-display text-2xl md:text-3xl text-accent">Relatórios</h2>
-          <p className="font-body text-sm text-foreground/60">Período: {PERIOD_LABEL[period]}</p>
+          <h2 className="font-display text-[28px] font-bold leading-tight tracking-tight text-ink">Relatórios</h2>
+          <p className="font-body text-sm text-muted">Período: {PERIOD_LABEL[period]}</p>
         </div>
         {storeId && (
           <div className="flex flex-wrap items-center gap-2">
-            <div className="flex gap-1 rounded-lg bg-secondary/10 p-1">
+            <div className="flex gap-1 rounded-lg bg-surface-2 p-1">
               {(Object.keys(PERIOD_LABEL) as ReportPeriod[]).map((key) => (
                 <button
                   key={key}
@@ -118,8 +120,8 @@ export function ReportsPage() {
                   onClick={() => setPeriod(key)}
                   className={`rounded-md px-3 py-1.5 text-sm font-body transition ${
                     period === key
-                      ? 'bg-background text-foreground shadow-sm'
-                      : 'text-foreground/60 hover:text-foreground'
+                      ? 'bg-surface text-ink shadow-sm'
+                      : 'text-muted hover:text-ink'
                   }`}
                 >
                   {PERIOD_LABEL[key]}
@@ -141,50 +143,50 @@ export function ReportsPage() {
 
       {!storeId && (
         <div className={cardClass}>
-          <p className="font-body text-foreground/70">Selecione uma loja pra ver os relatórios.</p>
+          <p className="font-body text-muted">Selecione uma loja pra ver os relatórios.</p>
         </div>
       )}
       {isLoading && <p className="font-body">Carregando...</p>}
-      {error != null && <p className="font-body text-red-600">Erro ao carregar relatório</p>}
+      {error != null && <p className="font-body text-danger">Erro ao carregar relatório</p>}
 
       {summary && (
         <>
           {/* KPIs */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
             <div className={cardClass}>
-              <p className="font-body text-sm text-foreground/60">Faturamento</p>
-              <p className="font-display text-2xl text-accent">{formatCurrency(summary.totalRevenue)}</p>
-              <p className="font-body text-xs text-foreground/50">{summary.orderCount} pedido(s)</p>
+              <p className="font-body text-sm text-muted">Faturamento</p>
+              <p className="mt-1 text-[26px] font-semibold leading-tight tabular-nums text-ink">{formatCurrency(summary.totalRevenue)}</p>
+              <p className="font-body text-xs text-muted">{countLabel(summary.orderCount, 'pedido', 'pedidos')}</p>
             </div>
             <div className={cardClass}>
-              <p className="font-body text-sm text-foreground/60">Ticket médio</p>
-              <p className="font-display text-2xl text-accent">{formatCurrency(summary.averageTicket)}</p>
+              <p className="font-body text-sm text-muted">Ticket médio</p>
+              <p className="mt-1 text-[26px] font-semibold leading-tight tabular-nums text-ink">{formatCurrency(summary.averageTicket)}</p>
             </div>
             <div className={cardClass}>
-              <p className="font-body text-sm text-foreground/60">Canal mais usado</p>
-              <p className="font-display text-2xl text-accent">{summary.channelBreakdown[0]?.label ?? '—'}</p>
-              <p className="font-body text-xs text-foreground/50">
+              <p className="font-body text-sm text-muted">Canal mais usado</p>
+              <p className="mt-1 text-[26px] font-semibold leading-tight tabular-nums text-ink">{summary.channelBreakdown[0]?.label ?? '—'}</p>
+              <p className="font-body text-xs text-muted">
                 {summary.channelBreakdown[0]
-                  ? `${summary.channelBreakdown[0].orderCount} pedido(s)`
+                  ? countLabel(summary.channelBreakdown[0].orderCount, 'pedido', 'pedidos')
                   : 'Sem pedido no período'}
               </p>
             </div>
             <div className={cardClass}>
-              <p className="font-body text-sm text-foreground/60">Taxa de cancelamento</p>
-              <p className="font-display text-2xl text-accent">
+              <p className="font-body text-sm text-muted">Taxa de cancelamento</p>
+              <p className="mt-1 text-[26px] font-semibold leading-tight tabular-nums text-ink">
                 {summary.orderCount + summary.cancelledCount > 0
                   ? `${((summary.cancelledCount / (summary.orderCount + summary.cancelledCount)) * 100).toFixed(1)}%`
                   : '—'}
               </p>
-              <p className="font-body text-xs text-foreground/50">{summary.cancelledCount} cancelado(s)</p>
+              <p className="font-body text-xs text-muted">{countLabel(summary.cancelledCount, 'cancelado', 'cancelados')}</p>
             </div>
             <div className={cardClass}>
-              <p className="font-body text-sm text-foreground/60">Tempo médio de preparo</p>
-              <p className="font-display text-2xl text-accent">
+              <p className="font-body text-sm text-muted">Tempo médio de preparo</p>
+              <p className="mt-1 text-[26px] font-semibold leading-tight tabular-nums text-ink">
                 {avgPrepTimeMinutes != null ? `${Math.round(avgPrepTimeMinutes)} min` : '—'}
               </p>
-              <p className="font-body text-xs text-foreground/50">
-                {avgPrepTimeMinutes != null ? 'received → preparing → próxima etapa' : 'Sem pedido concluído'}
+              <p className="font-body text-xs text-muted">
+                {avgPrepTimeMinutes != null ? 'Do aceite até ficar pronto' : 'Sem pedido concluído'}
               </p>
             </div>
           </div>
@@ -192,7 +194,7 @@ export function ReportsPage() {
           {/* Faturamento ao longo do tempo + Canais */}
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
             <div className={`${cardClass} lg:col-span-2`}>
-              <h3 className="font-body font-medium">Faturamento ao longo do tempo</h3>
+              <h3 className="font-display text-lg font-bold">Faturamento ao longo do tempo</h3>
               {revenueSeries && revenueSeries.length > 0 ? (
                 <div className="mt-3 h-64">
                   <ResponsiveContainer width="100%" height="100%">
@@ -203,7 +205,7 @@ export function ReportsPage() {
                           <stop offset="95%" stopColor={CHART_PRIMARY} stopOpacity={0.05} />
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#7B431B" strokeOpacity={0.1} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#ece4dd" strokeOpacity={1} />
                       <XAxis dataKey="label" tick={chartTick()} axisLine={false} tickLine={false} />
                       <YAxis tick={chartTick()} axisLine={false} tickLine={false} width={40} />
                       <Tooltip content={<ChartTooltip formatter={formatCurrency} />} />
@@ -218,12 +220,12 @@ export function ReportsPage() {
                   </ResponsiveContainer>
                 </div>
               ) : (
-                <p className="mt-2 font-body text-sm text-foreground/60">Sem venda no período.</p>
+                <p className="mt-2 font-body text-sm text-muted">Sem venda no período.</p>
               )}
             </div>
 
             <div className={cardClass}>
-              <h3 className="font-body font-medium">Canais de venda</h3>
+              <h3 className="font-display text-lg font-bold">Canais de venda</h3>
               {summary.channelBreakdown.length > 0 ? (
                 <div className="mt-3 h-64">
                   <ResponsiveContainer width="100%" height="100%">
@@ -243,16 +245,16 @@ export function ReportsPage() {
                           <Cell key={channel.label} fill={CHANNEL_CHART_COLOR[channel.label] ?? CHART_PRIMARY} />
                         ))}
                       </Pie>
-                      <Tooltip content={<ChartTooltip formatter={(value) => `${value} pedido(s)`} />} />
+                      <Tooltip content={<ChartTooltip formatter={(value) => countLabel(Number(value), 'pedido', 'pedidos')} />} />
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
               ) : (
-                <p className="mt-2 font-body text-sm text-foreground/60">Sem pedido no período.</p>
+                <p className="mt-2 font-body text-sm text-muted">Sem pedido no período.</p>
               )}
               <ul className="mt-2 space-y-1">
                 {summary.channelBreakdown.map((channel) => (
-                  <li key={channel.label} className="flex items-center gap-2 font-body text-xs text-foreground/70">
+                  <li key={channel.label} className="flex items-center gap-2 font-body text-xs text-muted">
                     <span
                       className="h-2 w-2 rounded-full"
                       style={{ backgroundColor: CHANNEL_CHART_COLOR[channel.label] ?? CHART_PRIMARY }}
@@ -267,12 +269,12 @@ export function ReportsPage() {
           {/* Pedidos por horário + Ticket médio por canal */}
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
             <div className={`${cardClass} lg:col-span-2`}>
-              <h3 className="font-body font-medium">Pedidos por horário</h3>
+              <h3 className="font-display text-lg font-bold">Pedidos por horário</h3>
               {ordersByHour && ordersByHour.some((point) => point.count > 0) ? (
                 <div className="mt-3 h-64">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={ordersByHour}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#7B431B" strokeOpacity={0.1} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#ece4dd" strokeOpacity={1} />
                       <XAxis
                         dataKey="hour"
                         tickFormatter={(hour: number) => `${String(hour).padStart(2, '0')}h`}
@@ -283,7 +285,7 @@ export function ReportsPage() {
                       <YAxis tick={chartTick()} axisLine={false} tickLine={false} width={30} allowDecimals={false} />
                       <Tooltip
                         content={
-                          <ChartTooltip formatter={(value) => `${value} pedido(s)`} />
+                          <ChartTooltip formatter={(value) => countLabel(Number(value), 'pedido', 'pedidos')} />
                         }
                       />
                       <Bar dataKey="count" radius={[4, 4, 0, 0]}>
@@ -298,17 +300,17 @@ export function ReportsPage() {
                   </ResponsiveContainer>
                 </div>
               ) : (
-                <p className="mt-2 font-body text-sm text-foreground/60">Sem pedido no período.</p>
+                <p className="mt-2 font-body text-sm text-muted">Sem pedido no período.</p>
               )}
             </div>
 
             <div className={cardClass}>
-              <h3 className="font-body font-medium">Ticket médio por canal</h3>
+              <h3 className="font-display text-lg font-bold">Ticket médio por canal</h3>
               {summary.channelBreakdown.length > 0 ? (
                 <div className="mt-3 h-64">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={summary.channelBreakdown} layout="vertical">
-                      <CartesianGrid strokeDasharray="3 3" stroke="#7B431B" strokeOpacity={0.1} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#ece4dd" strokeOpacity={1} />
                       <XAxis type="number" tick={chartTick()} axisLine={false} tickLine={false} />
                       <YAxis
                         type="category"
@@ -328,7 +330,7 @@ export function ReportsPage() {
                   </ResponsiveContainer>
                 </div>
               ) : (
-                <p className="mt-2 font-body text-sm text-foreground/60">Sem pedido no período.</p>
+                <p className="mt-2 font-body text-sm text-muted">Sem pedido no período.</p>
               )}
             </div>
           </div>
@@ -336,18 +338,18 @@ export function ReportsPage() {
           {/* Rankings */}
           <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
             <div className={cardClass}>
-              <h3 className="font-body font-medium">Produtos mais vendidos</h3>
+              <h3 className="font-display text-lg font-bold">Produtos mais vendidos</h3>
               {summary.topProducts.length === 0 && (
-                <p className="mt-2 font-body text-sm text-foreground/60">Sem venda no período.</p>
+                <p className="mt-2 font-body text-sm text-muted">Sem venda no período.</p>
               )}
               {summary.topProducts.length > 0 && (
                 <ol className="mt-3 space-y-2">
                   {summary.topProducts.slice(0, 5).map((product, index) => (
                     <li key={product.productId} className="flex items-center justify-between font-body text-sm">
                       <span>
-                        <span className="text-foreground/40">{index + 1}.</span> {product.productName}
+                        <span className="text-faint">{index + 1}.</span> {product.productName}
                       </span>
-                      <span className="text-foreground/60">{product.quantitySold}x</span>
+                      <span className="text-muted">{product.quantitySold}x</span>
                     </li>
                   ))}
                 </ol>
@@ -355,9 +357,9 @@ export function ReportsPage() {
             </div>
 
             <div className={cardClass}>
-              <h3 className="font-body font-medium">Ranking de atendente</h3>
+              <h3 className="font-display text-lg font-bold">Ranking de atendente</h3>
               {summary.attendantRanking.length === 0 && (
-                <p className="mt-2 font-body text-sm text-foreground/60">Sem pedido preparado no período.</p>
+                <p className="mt-2 font-body text-sm text-muted">Sem pedido preparado no período.</p>
               )}
               {summary.attendantRanking.length > 0 && (
                 <ol className="mt-3 space-y-2">
@@ -367,15 +369,15 @@ export function ReportsPage() {
                       className="flex items-center justify-between gap-2 font-body text-sm"
                     >
                       <span className="flex items-center gap-2 min-w-0">
-                        <span className="text-foreground/40 shrink-0">{index + 1}.</span>
-                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/20 text-xs font-semibold text-accent">
+                        <span className="text-faint shrink-0">{index + 1}.</span>
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-tile text-xs font-semibold text-ink">
                           {initials(attendant.attendantName)}
                         </span>
                         <span className="truncate">{attendant.attendantName}</span>
                       </span>
-                      <span className="shrink-0 text-right text-foreground/60">
+                      <span className="shrink-0 text-right text-muted">
                         {formatCurrency(attendant.revenue)}
-                        <span className="block text-xs text-foreground/40">{attendant.orderCount} pedido(s)</span>
+                        <span className="block text-xs text-faint">{countLabel(attendant.orderCount, 'pedido', 'pedidos')}</span>
                       </span>
                     </li>
                   ))}
@@ -386,20 +388,20 @@ export function ReportsPage() {
 
           {/* Novos vs recorrentes */}
           <div className={cardClass}>
-            <h3 className="font-body font-medium">Clientes novos vs. recorrentes</h3>
+            <h3 className="font-display text-lg font-bold">Clientes novos vs. recorrentes</h3>
             {newVsReturning && newVsReturning.newCustomers + newVsReturning.returningCustomers > 0 ? (
               <div className="mt-3 flex items-center gap-6">
                 <div>
-                  <p className="font-display text-2xl text-accent">{newVsReturning.newCustomers}</p>
-                  <p className="font-body text-xs text-foreground/50">Novos</p>
+                  <p className="mt-1 text-[26px] font-semibold leading-tight tabular-nums text-ink">{newVsReturning.newCustomers}</p>
+                  <p className="font-body text-xs text-muted">Novos</p>
                 </div>
                 <div>
-                  <p className="font-display text-2xl text-accent">{newVsReturning.returningCustomers}</p>
-                  <p className="font-body text-xs text-foreground/50">Recorrentes</p>
+                  <p className="mt-1 text-[26px] font-semibold leading-tight tabular-nums text-ink">{newVsReturning.returningCustomers}</p>
+                  <p className="font-body text-xs text-muted">Recorrentes</p>
                 </div>
               </div>
             ) : (
-              <p className="mt-2 font-body text-sm text-foreground/60">Sem cliente identificado no período.</p>
+              <p className="mt-2 font-body text-sm text-muted">Sem cliente identificado no período.</p>
             )}
           </div>
         </>

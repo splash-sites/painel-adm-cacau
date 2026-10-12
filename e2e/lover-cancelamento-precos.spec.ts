@@ -69,18 +69,17 @@ test('finalizar pergunta se o cliente é Cacau Lover e grava a resposta', async 
 
   // aceitar (atendente do seed) → pronto pra retirada → entregue; espera o card mudar de coluna
   // antes de cada clique (o botão calcula a próxima etapa pelo status que está na tela)
-  await cardIn('received').getByRole('button', { name: 'Avançar etapa' }).click()
-  await page.getByRole('combobox').click()
-  await page.getByRole('option', { name: 'Atendente E2E' }).click()
+  await cardIn('received').getByRole('button', { name: 'Aceitar pedido' }).click()
+  await page.getByRole('radio', { name: 'Atendente E2E' }).check()
   await page.getByRole('button', { name: 'Aceitar pedido' }).click()
   await expect(cardIn('preparing')).toBeVisible({ timeout: 10_000 })
 
-  await cardIn('preparing').getByRole('button', { name: 'Avançar etapa' }).click()
+  await cardIn('preparing').getByRole('button', { name: 'Pronto pra retirada' }).click()
   await expect(cardIn('ready_for_pickup')).toBeVisible({ timeout: 10_000 })
-  await cardIn('ready_for_pickup').getByRole('button', { name: 'Avançar etapa' }).click()
+  await cardIn('ready_for_pickup').getByRole('button', { name: 'Entregue' }).click()
   await expect(cardIn('delivered')).toBeVisible({ timeout: 10_000 })
 
-  await cardIn('delivered').getByRole('button', { name: 'Avançar etapa' }).click()
+  await cardIn('delivered').getByRole('button', { name: 'Finalizar' }).click()
   const dialog = page.getByRole('dialog').filter({ hasText: 'Cliente é Cacau Lover?' })
   await expect(dialog).toBeVisible()
   await expect(dialog.getByText('R$ 10,00')).toBeVisible()
@@ -102,7 +101,7 @@ test('cancelar exige motivo', async ({ page }) => {
   await card.getByRole('button', { name: 'Cancelar' }).click()
 
   const dialog = page.getByRole('dialog').filter({ hasText: 'Cancelar pedido' })
-  const confirm = dialog.getByRole('button', { name: 'Confirmar cancelamento' })
+  const confirm = dialog.getByRole('button', { name: 'Cancelar pedido' })
   await expect(confirm).toBeDisabled()
   await dialog.getByLabel('Motivo do cancelamento').fill('   ')
   await expect(confirm).toBeDisabled()

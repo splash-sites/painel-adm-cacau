@@ -34,14 +34,14 @@ export function ResellerStockPanel({ storeId }: ResellerStockPanelProps) {
 
   return (
     <div className="space-y-4">
-      <p className="font-body text-sm text-foreground/60">
+      <p className="font-body text-sm text-muted">
         Saldo separado do estoque normal, só pros pedidos de revendedor. Ligue "Controlar estoque" nos produtos que
         querem limite: o saldo baixa a cada pedido, bloqueia pedido acima dele e volta se o pedido for cancelado.
         Produto com o controle desligado nunca bloqueia pedido.
       </p>
 
       <div className="relative w-full md:w-72">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/40" />
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-faint" />
         <Input
           type="search"
           value={searchInput}
@@ -53,11 +53,11 @@ export function ResellerStockPanel({ storeId }: ResellerStockPanelProps) {
       </div>
 
       {isLoading && <p className="font-body">Carregando...</p>}
-      {error && <p className="font-body text-red-600">Erro ao carregar produtos</p>}
+      {error && <p className="font-body text-danger">Erro ao carregar produtos</p>}
 
       {data && data.items.length === 0 && (
         <div className={cardClass}>
-          <p className="font-body text-foreground/70">
+          <p className="font-body text-muted">
             {search
               ? 'Nenhum produto encontrado com essa busca.'
               : 'Nenhum produto liberado pra revendedor ainda. Marque "Revendedor" no cadastro do produto.'}
@@ -84,8 +84,8 @@ export function ResellerStockPanel({ storeId }: ResellerStockPanelProps) {
             </tbody>
           </table>
 
-          <div className="flex h-11 items-center justify-end gap-6 border-t border-secondary/15 px-6 font-body text-sm">
-            <span className="text-foreground/60">
+          <div className="flex h-11 items-center justify-end gap-6 border-t border-line px-6 font-body text-sm">
+            <span className="text-muted">
               {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, data.total)} de {data.total}
             </span>
             <div className="flex items-center">
@@ -94,7 +94,7 @@ export function ResellerStockPanel({ storeId }: ResellerStockPanelProps) {
                 aria-label="Página anterior"
                 disabled={page === 0}
                 onClick={() => setPage((current) => current - 1)}
-                className="rounded-md p-1.5 text-foreground/50 hover:bg-secondary/10 hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
+                className="rounded-md p-1.5 text-muted hover:bg-surface-2 hover:text-ink disabled:pointer-events-none disabled:opacity-40"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
@@ -103,7 +103,7 @@ export function ResellerStockPanel({ storeId }: ResellerStockPanelProps) {
                 aria-label="Próxima página"
                 disabled={page + 1 >= totalPages}
                 onClick={() => setPage((current) => current + 1)}
-                className="rounded-md p-1.5 text-foreground/50 hover:bg-secondary/10 hover:text-foreground disabled:pointer-events-none disabled:opacity-40"
+                className="rounded-md p-1.5 text-muted hover:bg-surface-2 hover:text-ink disabled:pointer-events-none disabled:opacity-40"
               >
                 <ChevronRight className="h-4 w-4" />
               </button>

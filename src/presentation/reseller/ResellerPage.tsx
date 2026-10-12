@@ -21,14 +21,14 @@ export function ResellerPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="font-display text-2xl md:text-3xl text-accent">Revendedores</h2>
-          <p className="font-body text-sm text-foreground/60">
+          <h2 className="font-display text-[28px] font-bold leading-tight tracking-tight text-ink">Revendedores</h2>
+          <p className="font-body text-sm text-muted">
             Estoque do canal de revenda e os pedidos feitos pelas revendedoras no cardápio.
           </p>
         </div>
 
         {store?.resellerEnabled && (
-          <div className="flex gap-1 rounded-lg bg-secondary/10 p-1">
+          <div className="flex gap-1 rounded-lg bg-surface-2 p-1">
             {(Object.keys(TAB_LABEL) as ResellerTab[]).map((key) => (
               <button
                 key={key}
@@ -36,8 +36,8 @@ export function ResellerPage() {
                 onClick={() => setTab(key)}
                 className={`rounded-md px-3 py-1.5 text-sm font-body transition ${
                   tab === key
-                    ? 'bg-background text-foreground shadow-sm'
-                    : 'text-foreground/60 hover:text-foreground'
+                    ? 'bg-surface text-ink shadow-sm'
+                    : 'text-muted hover:text-ink'
                 }`}
               >
                 {TAB_LABEL[key]}
@@ -52,7 +52,7 @@ export function ResellerPage() {
 
       {storeId && store && !store.resellerEnabled && (
         <div className={cardClass}>
-          <p className="font-body text-foreground/70">
+          <p className="font-body text-muted">
             Essa loja não atende revendedores. Ative "Revendedores" em Configurações pra liberar o canal.
           </p>
         </div>

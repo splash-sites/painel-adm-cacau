@@ -8,6 +8,7 @@ import {
   canRevert,
   getNextStatus,
   needsAttendantToAdvance,
+  nextActionLabel,
   orderChannelLabel,
   statusLabel,
 } from '../../domain/order/orderStatusRules'
@@ -58,15 +59,15 @@ export function OrderDetailsDrawer({ order, onClose }: { order: Order; onClose: 
       <Dialog open onOpenChange={(open) => !open && onClose()}>
         <DialogSideContent>
           <div className="flex items-start justify-between">
-            <h3 className="font-display text-xl text-accent">Detalhes do pedido</h3>
-            <DialogClose className="rounded-md p-1.5 text-foreground/50 hover:bg-secondary/10 hover:text-foreground">
+            <h3 className="font-display text-2xl font-bold leading-tight text-ink">Detalhes do pedido</h3>
+            <DialogClose className="rounded-md p-1.5 text-muted hover:bg-surface-2 hover:text-ink">
               <X className="h-5 w-5" />
             </DialogClose>
           </div>
 
           <div className="mt-6 space-y-6">
             <section className="space-y-2">
-              <h4 className="text-xs font-medium uppercase tracking-wide text-foreground/50">Cliente</h4>
+              <h4 className="text-[13px] font-semibold text-muted">Cliente</h4>
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                 <span className="font-medium">
                   {order.customerName ? formatName(order.customerName) : 'Não identificado'}
@@ -76,7 +77,7 @@ export function OrderDetailsDrawer({ order, onClose }: { order: Order; onClose: 
                 </span>
               </div>
               {order.customerCpf && (
-                <p className="text-sm text-foreground/70">CPF {formatCpf(order.customerCpf)}</p>
+                <p className="text-sm text-muted">CPF {formatCpf(order.customerCpf)}</p>
               )}
               {order.customerPhone && (
                 <p className="text-sm">
@@ -84,15 +85,15 @@ export function OrderDetailsDrawer({ order, onClose }: { order: Order; onClose: 
                     href={whatsAppLink(order)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-foreground/70 hover:text-[#25D366] transition-colors"
+                    className="text-muted hover:text-ink transition-colors"
                   >
                     {formatPhone(order.customerPhone)}
                   </a>
                 </p>
               )}
-              {order.tableNumber && <p className="text-sm text-foreground/70">Mesa {order.tableNumber}</p>}
+              {order.tableNumber && <p className="text-sm text-muted">Mesa {order.tableNumber}</p>}
               {order.orderType === 'delivery' && order.deliveryAddress && (
-                <p className="text-sm text-foreground/70">
+                <p className="text-sm text-muted">
                   {order.deliveryAddress.street}, {order.deliveryAddress.number}
                   {order.deliveryAddress.complement && ` - ${order.deliveryAddress.complement}`}
                   <br />
@@ -102,13 +103,13 @@ export function OrderDetailsDrawer({ order, onClose }: { order: Order; onClose: 
             </section>
 
             <section className="space-y-2">
-              <h4 className="text-xs font-medium uppercase tracking-wide text-foreground/50">Linha do tempo</h4>
+              <h4 className="text-[13px] font-semibold text-muted">Linha do tempo</h4>
               <ul className="space-y-2 text-sm">
-                <li className="flex items-center justify-between text-foreground/70">
+                <li className="flex items-center justify-between text-muted">
                   <span>Pedido criado</span>
                   <span>{formatDateTime(order.createdAt)}</span>
                 </li>
-                <li className="flex items-center justify-between rounded-lg bg-primary/10 px-2.5 py-1.5 font-medium text-accent">
+                <li className="flex items-center justify-between rounded-lg bg-chosen px-2.5 py-1.5 font-medium text-ink">
                   <span className="flex items-center gap-2">
                     <span className={`h-2 w-2 rounded-full shrink-0 ${STATUS_DOT_CLASS[order.status]}`} />
                     {statusLabel(order.status, order.orderType)}
@@ -117,7 +118,7 @@ export function OrderDetailsDrawer({ order, onClose }: { order: Order; onClose: 
                 </li>
               </ul>
               {order.status === 'cancelled' && order.cancellationReason && (
-                <p className="rounded-lg bg-red-50 px-2.5 py-1.5 text-sm text-red-800">
+                <p className="rounded-lg bg-danger-soft px-2.5 py-1.5 text-sm text-danger">
                   Motivo: {order.cancellationReason}
                 </p>
               )}
@@ -125,14 +126,14 @@ export function OrderDetailsDrawer({ order, onClose }: { order: Order; onClose: 
 
             <section className="space-y-2">
               <div className="flex items-center justify-between">
-                <h4 className="text-xs font-medium uppercase tracking-wide text-foreground/50">
+                <h4 className="text-[13px] font-semibold text-muted">
                   Itens · {order.items.length}
                 </h4>
                 {canEditItems(order.status) && (
                   <button
                     type="button"
                     onClick={() => setIsEditingItems(true)}
-                    className="text-xs text-foreground/60 hover:text-foreground"
+                    className="text-xs text-muted hover:text-ink"
                   >
                     Editar itens
                   </button>
@@ -141,8 +142,8 @@ export function OrderDetailsDrawer({ order, onClose }: { order: Order; onClose: 
               <OrderItemsList items={order.items} />
             </section>
 
-            <div className="flex items-center justify-between border-t border-secondary/10 pt-4">
-              <span className="text-sm text-foreground/50">Total</span>
+            <div className="flex items-center justify-between border-t border-line pt-4">
+              <span className="text-sm text-muted">Total</span>
               <span className="text-right">
                 <span className="block text-lg font-semibold">{formatCurrency(calculateOrderTotal(order))}</span>
                 <LoverTotalHint order={order} />
@@ -166,7 +167,7 @@ export function OrderDetailsDrawer({ order, onClose }: { order: Order; onClose: 
                   disabled={changeStatus.isPending}
                   className={`w-full ${buttonClass('primary')}`}
                 >
-                  Avançar etapa
+                  {nextActionLabel(order.status, order.orderType)}
                 </button>
               )}
               {canRevert(order.status) && (
@@ -206,6 +207,7 @@ export function OrderDetailsDrawer({ order, onClose }: { order: Order; onClose: 
 
       {isCancelling && (
         <CancelOrderModal
+          customerName={order.customerName ? formatName(order.customerName) : null}
           isPending={changeStatus.isPending}
           onClose={() => setIsCancelling(false)}
           onConfirm={(reason) =>

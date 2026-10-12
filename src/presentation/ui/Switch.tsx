@@ -6,9 +6,9 @@ export function Switch({ className, ...props }: ComponentProps<typeof SwitchPrim
   return (
     <SwitchPrimitive.Root
       className={cn(
-        'relative h-[22px] w-[38px] shrink-0 rounded-full bg-secondary/25 transition-colors',
+        'relative h-[22px] w-[38px] shrink-0 rounded-full bg-line-strong transition-colors',
         'data-[state=checked]:bg-primary',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-caramel/50',
         'disabled:opacity-50 disabled:pointer-events-none',
         className,
       )}
@@ -16,7 +16,7 @@ export function Switch({ className, ...props }: ComponentProps<typeof SwitchPrim
     >
       <SwitchPrimitive.Thumb
         className={cn(
-          'block h-[18px] w-[18px] translate-x-[2px] rounded-full bg-background shadow transition-transform',
+          'block h-[18px] w-[18px] translate-x-[2px] rounded-full bg-surface shadow transition-transform',
           'data-[state=checked]:translate-x-[18px]',
         )}
       />

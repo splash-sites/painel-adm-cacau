@@ -133,7 +133,7 @@ function AddonGroupField({
                     min={1}
                     value={quantity}
                     onChange={(event) => setQuantity(option.id, Number(event.target.value))}
-                    className="w-14 rounded-lg border border-secondary/25 bg-background px-2 py-1 text-sm"
+                    className="w-14 rounded-lg border border-line-strong bg-surface px-2 py-1 text-sm"
                   />
                 )}
               </li>
@@ -196,7 +196,7 @@ export function ItemSelectionFields({
   if (!linkedVariationGroups.length && !linkedAddonGroups.length) return null
 
   return (
-    <div className="space-y-4 rounded-lg bg-secondary/5 p-4">
+    <div className="space-y-4 rounded-lg bg-canvas p-4">
       {linkedVariationGroups?.map((link) => (
         <VariationGroupField
           key={link.variationGroupId}

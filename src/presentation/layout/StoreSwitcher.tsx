@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { ChevronDown, Plus } from 'lucide-react'
+import { ChevronsUpDown, Plus } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAllStores } from '../store/useStores'
 import { useActiveStore } from '../storeContext/useActiveStore'
@@ -31,12 +31,16 @@ export function StoreSwitcher() {
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className="flex w-full items-center justify-between gap-2 rounded px-3 py-2 font-body text-accent-foreground hover:bg-primary/20"
+          aria-label={`Trocar unidade. Unidade atual: ${activeStoreName}`}
+          className="flex w-full items-center justify-between gap-2 rounded-xl bg-surface px-3 py-2.5 text-left font-body text-ink transition-colors hover:bg-chosen"
         >
-          <span className="truncate" title={activeStoreName}>
-            {activeStoreName}
+          <span className="flex min-w-0 flex-col gap-px">
+            <span className="text-xs text-faint">Unidade</span>
+            <span className="truncate text-sm font-semibold" title={activeStoreName}>
+              {activeStoreName}
+            </span>
           </span>
-          <ChevronDown className="h-4 w-4 shrink-0" aria-hidden="true" />
+          <ChevronsUpDown className="h-4 w-4 shrink-0 text-muted" aria-hidden="true" />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent side="top" align="start" className="w-[--radix-popper-anchor-width]">
@@ -44,7 +48,7 @@ export function StoreSwitcher() {
           <DropdownMenuItem
             key={store.id}
             title={store.name}
-            className={store.id === activeStoreId ? 'font-medium' : ''}
+            className={store.id === activeStoreId ? 'font-semibold' : ''}
             onSelect={() => setActiveStoreId(store.id)}
           >
             {store.name}

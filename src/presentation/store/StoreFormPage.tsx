@@ -50,31 +50,31 @@ export function StoreFormPage() {
 
   return (
     <div className="max-w-lg space-y-6">
-      <h2 className="font-display text-2xl md:text-3xl text-accent">Nova loja</h2>
+      <h2 className="font-display text-[28px] font-bold leading-tight tracking-tight text-ink">Nova loja</h2>
 
       <form onSubmit={handleSubmit(onSubmit)} className={`space-y-5 ${cardClass}`} noValidate>
         <div className="space-y-1">
           <Label htmlFor="name">Nome</Label>
           <Input id="name" {...register('name')} />
-          {errors.name && <p className="text-sm text-red-600">{errors.name.message}</p>}
+          {errors.name && <p className="text-sm text-danger">{errors.name.message}</p>}
         </div>
 
         <div className="space-y-1">
           <Label htmlFor="slug">Slug</Label>
           <Input id="slug" {...register('slug')} />
-          {errors.slug && <p className="text-sm text-red-600">{errors.slug.message}</p>}
+          {errors.slug && <p className="text-sm text-danger">{errors.slug.message}</p>}
         </div>
 
         <div className="space-y-1">
           <Label htmlFor="whatsappNumber">WhatsApp</Label>
-          <p className="text-sm font-body text-foreground/60">
-            Só números, com DDI e DDD (ex: 5551999998888) — usado no link do WhatsApp com o cliente.
+          <p className="text-sm font-body text-muted">
+            Só números, com DDI e DDD (ex: 5551999998888). É o número que o cliente chama pelo WhatsApp.
           </p>
           <Input id="whatsappNumber" placeholder="5551999998888" {...register('whatsappNumber')} />
-          {errors.whatsappNumber && <p className="text-sm text-red-600">{errors.whatsappNumber.message}</p>}
+          {errors.whatsappNumber && <p className="text-sm text-danger">{errors.whatsappNumber.message}</p>}
         </div>
 
-        <fieldset className="space-y-2 rounded-lg bg-secondary/5 p-3">
+        <fieldset className="space-y-2 rounded-lg bg-canvas p-3">
           <legend className="text-sm font-body mb-1 px-1">Canais</legend>
           <label className="flex items-center gap-2 font-body">
             <Controller
@@ -118,7 +118,7 @@ export function StoreFormPage() {
           </label>
         </fieldset>
 
-        {submitError && <p className="text-sm text-red-600">{submitError}</p>}
+        {submitError && <p className="text-sm text-danger">{submitError}</p>}
 
         <div className="flex gap-3 pt-2">
           <Button type="submit" disabled={isSubmitting}>

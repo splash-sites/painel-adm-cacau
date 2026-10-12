@@ -82,7 +82,7 @@ export function ProductVariationGroupsSection(props: Props) {
   }
 
   return (
-    <fieldset className="space-y-3 rounded-lg bg-secondary/5 p-3">
+    <fieldset className="space-y-3 rounded-lg bg-canvas p-3">
       <div className="flex items-center justify-between px-1">
         <legend className="text-sm font-body">Variações (obrigatório quando marcado)</legend>
         <Button
@@ -104,7 +104,7 @@ export function ProductVariationGroupsSection(props: Props) {
       />
 
       {linkedGroupIds.length === 0 && (
-        <p className="px-1 font-body text-sm text-foreground/50">Nenhuma variação vinculada ainda.</p>
+        <p className="px-1 font-body text-sm text-muted">Nenhuma variação vinculada ainda.</p>
       )}
 
       {linkedGroupIds.length > 0 && (
@@ -125,7 +125,7 @@ export function ProductVariationGroupsSection(props: Props) {
                           {...attributes}
                           {...listeners}
                           aria-label={`Arrastar ${group.name}`}
-                          className="cursor-grab touch-none rounded-md p-1 text-foreground/40 hover:bg-secondary/10 hover:text-foreground active:cursor-grabbing"
+                          className="cursor-grab touch-none rounded-md p-1 text-faint hover:bg-surface-2 hover:text-ink active:cursor-grabbing"
                         >
                           <GripVertical className="h-4 w-4" />
                         </button>
@@ -133,7 +133,7 @@ export function ProductVariationGroupsSection(props: Props) {
                           type="button"
                           aria-label={isExpanded ? `Recolher ${group.name}` : `Expandir ${group.name}`}
                           onClick={() => setExpandedGroupId(isExpanded ? null : group.id)}
-                          className="rounded-md p-1 text-foreground/50 hover:bg-secondary/10 hover:text-foreground"
+                          className="rounded-md p-1 text-muted hover:bg-surface-2 hover:text-ink"
                         >
                           {isExpanded ? (
                             <ChevronDown className="h-4 w-4" />
@@ -146,7 +146,7 @@ export function ProductVariationGroupsSection(props: Props) {
                           type="button"
                           aria-label={`Desvincular ${group.name}`}
                           onClick={() => handleUnlink(group.id)}
-                          className="rounded-md p-1.5 text-foreground/50 hover:bg-red-700/10 hover:text-red-700"
+                          className="rounded-md p-1.5 text-muted hover:bg-danger-soft hover:text-danger"
                         >
                           <X className="h-4 w-4" />
                         </button>

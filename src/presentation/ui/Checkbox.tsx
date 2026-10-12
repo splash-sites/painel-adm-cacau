@@ -7,9 +7,9 @@ export function Checkbox({ className, ...props }: ComponentProps<typeof Checkbox
   return (
     <CheckboxPrimitive.Root
       className={cn(
-        'h-[18px] w-[18px] shrink-0 rounded-[5px] border-[1.5px] border-secondary/25 bg-background transition-colors',
+        'h-[18px] w-[18px] shrink-0 rounded-[5px] border-[1.5px] border-line-strong bg-surface transition-colors',
         'data-[state=checked]:bg-primary data-[state=checked]:border-primary',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-caramel/50',
         'disabled:opacity-50 disabled:pointer-events-none',
         className,
       )}

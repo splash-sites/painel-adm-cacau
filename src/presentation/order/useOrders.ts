@@ -120,7 +120,7 @@ export function useFinalizeOrders() {
       )
       const failed = results.filter((result): result is PromiseRejectedResult => result.status === 'rejected')
       if (failed.length > 0) {
-        throw new Error(`${failed.length} de ${orderIds.length} pedido(s) não finalizaram — tenta de novo.`)
+        throw new Error(`${failed.length} de ${orderIds.length} pedidos não finalizaram. Tente de novo.`)
       }
     },
     onSettled: () => {
