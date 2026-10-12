@@ -8,7 +8,7 @@ pnpm install                 # dependências
 pnpm dev                     # contra PRODUÇÃO (.env.local) — só leitura
 pnpm dev --mode staging      # contra STAGING (.env.staging.local) — use este pra testar
 pnpm test                    # Vitest (unitário)
-pnpm test:e2e                # Playwright contra o STAGING (loja-e2e). Precisa E2E_TEST_EMAIL/E2E_TEST_PASSWORD (store_admin da loja-e2e) no .env.staging.local
+pnpm test:e2e                # Playwright contra o STAGING: pedidos e todos os cadastros (e2e/cadastros.spec.ts). Precisa E2E_TEST_EMAIL/E2E_TEST_PASSWORD (store_admin da loja-e2e) e E2E_SUPER_EMAIL/E2E_SUPER_PASSWORD (super_admin) no .env.staging.local
 pnpm lint                    # oxlint
 pnpm build                   # tsc -b + vite build
 node scripts/check-shared-rules.mjs   # confere se o bloco "Regras compartilhadas" bate com o do cacau-cardapio

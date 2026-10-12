@@ -13,7 +13,7 @@ import {
 
 export function StoreSwitcher() {
   const navigate = useNavigate()
-  const { data: stores } = useAllStores()
+  const { data: stores, isFetching } = useAllStores()
   const { activeStoreId, setActiveStoreId } = useActiveStore()
 
   useEffect(() => {
@@ -22,7 +22,7 @@ export function StoreSwitcher() {
     if (!stillExists && stores.length) {
       setActiveStoreId(stores[0].id)
     }
-  }, [stores, activeStoreId, setActiveStoreId])
+  }, [stores, isFetching, activeStoreId, setActiveStoreId])
 
   const activeStoreName = stores?.find((store) => store.id === activeStoreId)?.name ?? 'Selecione a loja'
 

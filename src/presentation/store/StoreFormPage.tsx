@@ -11,6 +11,7 @@ import { Label } from '../ui/Label'
 import { cardClass } from '../ui/styles'
 import { useSaveStore } from './useStores'
 import { maskWhatsapp } from '../../domain/store/whatsappMask'
+import { useQueryClient } from '@tanstack/react-query'
 
 const emptyDefaults: CreateStoreFormInput = {
   name: '',
@@ -26,6 +27,7 @@ const emptyDefaults: CreateStoreFormInput = {
 export function StoreFormPage() {
   const navigate = useNavigate()
   const saveStore = useSaveStore()
+  const queryClient = useQueryClient()
   const setActiveStoreId = useActiveStore((state) => state.setActiveStoreId)
   const [submitError, setSubmitError] = useState<string | null>(null)
 
@@ -43,6 +45,9 @@ export function StoreFormPage() {
       const savedStore = await saveStore.mutateAsync({
         input: { ...input, whatsappNumber: input.whatsappNumber.replace(/\D/g, '') },
       })
+      // Espera a lista de lojas já ter a nova: senão o seletor da sidebar não acha a loja
+      // ativa na lista antiga e volta sozinho pra primeira loja.
+      await queryClient.refetchQueries({ queryKey: ['stores'] })
       setActiveStoreId(savedStore.id)
       navigate('/')
     } catch (error) {
