@@ -6,7 +6,6 @@ Prioridade: **P0** = risco pra produção/dado real · **P1** = regra de negóci
 Origem: revisão + teste ponta a ponta no staging em 2026-10-11, mais o backlog da auditoria anterior (itens com "(aud. N)" = número no relatório original, ver histórico).
 
 ## P0 — risco pra produção
-- [ ] **Aplicar na produção** `20261011130000_order_initial_status_history.sql` e `20261011131000_public_option_groups_sort_order.sql` (testadas no staging 2026-10-11).
 - [ ] **Plano do Supabase**: produção no plano grátis pausa sozinha após ~7 dias sem uso (aconteceu em 2026-10-08). Avaliar Pro (não pausa, backup diário).
 
 ## P1 — regra decidida, falta implementar
