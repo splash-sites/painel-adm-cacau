@@ -1299,3 +1299,9 @@ Pedido explícito: testar todo CRUD do app ao vivo (não confiar só em type-che
 ## 2026-10-11 — Travas de status no banco
 - Os dois itens esperavam o painel em produção acompanhar; conferido na `main`: o modal de cancelar já exige motivo (único caminho que cancela; o cardápio não cancela) e o fluxo já passa por "Entregue". Então: `change_order_status` recusa cancelamento sem motivo (ou só espaços) e não aceita mais `out_for_delivery → finalized` nem `preparing → finalized` na mesa (compatibilidade com o front antigo). Migration `20261011180000_status_rules_tightening.sql`.
 - Testado no staging: sem motivo / só espaços → "Informe o motivo do cancelamento"; com motivo → grava aparado; retirada e mesa pulando "Entregue" → recusado; fluxo normal finaliza; cancelar pela tela (botão desabilitado sem motivo) grava o motivo.
+
+## 2026-10-11 — Release v1.1.0 (produção)
+- Banco da produção: migrations `140000`, `150000`, `160000`, `170000` e `180000` aplicadas em ordem pelo SQL Editor (mesmos arquivos do staging). Conferido: 6 triggers novos, 4 funções novas, trava de motivo no `change_order_status` (1 versão só).
+- Antes: saldos dos 34 produtos de Torres com `track_stock` conferidos pela loja ("dados corretos") — a partir daqui o pedido desconta.
+- Testes antes da subida: unitário (painel 190, cardápio 192), lint, build, E2E painel 4/4 (2 rodadas; spec novo `lover-cancelamento-precos` como store_admin) e cardápio 5/5, "Finalizar tudo" da mesa e gaveta de detalhes à mão no staging.
+- Release: `main` = `dev` (fast-forward) com tag `v1.1.0` nos dois repos. Conferido no ar: bundle novo nos dois, cardápio de Torres abrindo e mostrando "Restam 60 em estoque" no Brigadeiro Petit Deli (saldo da lista), painel abrindo no login sem erro.
