@@ -7,7 +7,6 @@ Origem: revisão + teste ponta a ponta no staging em 2026-10-11, mais o backlog 
 
 ## P0 — risco pra produção
 - [ ] **Commitar a base do banco**: `supabase/migrations/20261011000000_baseline_from_prod.sql` + `supabase/seed.sql` (ainda não versionados).
-- [ ] **Cadastro público do Supabase Auth ligado** (padrão): qualquer um com a chave pública cria conta `customer` pela API. Desligar em Authentication → Sign In / Providers (staging primeiro, depois produção) e confirmar que criar admin pelas Edge Functions continua funcionando.
 - [ ] **Plano do Supabase**: produção no plano grátis pausa sozinha após ~7 dias sem uso (aconteceu em 2026-10-08). Avaliar Pro (não pausa, backup diário).
 
 ## P1 — regra decidida, falta implementar
@@ -23,7 +22,7 @@ Origem: revisão + teste ponta a ponta no staging em 2026-10-11, mais o backlog 
 - [ ] Apagar a versão antiga `add_order_item(uuid, uuid, integer)` (sobra; qualquer chamada de 3 argumentos dá erro de ambiguidade).
 - [ ] `delete-admin-user` apaga `profiles` antes do login (`auth.users`): se o 2º passo falhar, sobra login sem perfil. Inverter a ordem (apagar só o login; o perfil cai por cascade) e tratar o erro de FK de pedido.
 - [ ] Política `"super_admin update profiles"` sem `WITH CHECK` nem restrição de coluna: super_admin muda `role`/`store_id`/`active` de qualquer um direto pela REST (fura "papel e loja só na criação", o `set_admin_active` e o bloqueio de excluir super_admin — basta rebaixar antes). Trigger `BEFORE UPDATE` recusando mudança de `role`/`store_id`/`active` fora de `service_role`/funções (migration, staging primeiro). (security-sweep 2026-10-11, MÉDIO)
-- [ ] `setup-first-admin` aberta a qualquer um enquanto houver zero super_admin (acontece no reset do staging até repromover; cadastro público do Auth ligado dá JWT válido). Exigir segredo de bootstrap (env var) ou repromover o super no próprio script de reset. Inclui corrida (dois chamadores simultâneos viram super) e `createError.message` revelando e-mail cadastrado. (security-sweep 2026-10-11, MÉDIO)
+- [ ] `setup-first-admin` aberta a qualquer um enquanto houver zero super_admin (acontece no reset do staging até repromover; o gateway aceita a chave publishable, então basta a chave pública — cadastro público já desligado não fecha isso). Exigir segredo de bootstrap (env var) ou repromover o super no próprio script de reset. Inclui corrida (dois chamadores simultâneos viram super) e `createError.message` revelando e-mail cadastrado. (security-sweep 2026-10-11, MÉDIO)
 - [ ] Edge Functions devolvem mensagem crua do Auth/Postgres ao cliente e CORS `*` — mensagem genérica + `console.error`; restringir origem às URLs do painel. (security-sweep 2026-10-11, BAIXO)
 - [ ] `create-admin-user` aceita `role = 'customer'` e não confere se `storeId` existe (só super_admin chama; constraint barra papel desconhecido). Validar `role` em `super_admin`/`store_admin`.
 - [ ] Erro HTTP 400 no carregamento do painel (sem efeito visível; origem não identificada — olhar Logs → API no dashboard do Supabase).

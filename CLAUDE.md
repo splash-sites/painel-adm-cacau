@@ -61,7 +61,7 @@ node scripts/check-shared-rules.mjs   # confere se o bloco "Regras compartilhada
 
 ### Contas e identificação
 - **Cliente final não tem conta** (decisão 2026-10-11). Identifica-se por nome + CPF + telefone a cada pedido; "Meus pedidos" = digitar o CPF de novo. Risco aceito: quem souber o CPF vê os pedidos (itens e status, sem endereço). Se deixar de ser aceitável, a saída é código por SMS (Supabase Auth), nunca algo caseiro.
-- No banco sobrou a conta de cliente pela metade (`orders.customer_id`, papel `customer`, trigger `handle_new_user`) — **sem uso, não construir em cima**. Decidido: desligar o cadastro público no Supabase Auth (backlog — staging primeiro).
+- No banco sobrou a conta de cliente pela metade (`orders.customer_id`, papel `customer`, trigger `handle_new_user`) — **sem uso, não construir em cima**. **Cadastro público do Supabase Auth desligado** (staging e produção, 2026-10-11): ninguém cria conta pela API; logins só nascem pelas Edge Functions (`auth.admin.createUser`).
 - Login só no painel: `super_admin` e `store_admin`, criados pelas Edge Functions. Papel e loja só se definem na criação.
 
 ### Pedido: status
