@@ -1320,3 +1320,6 @@ Pedido explícito: testar todo CRUD do app ao vivo (não confiar só em type-che
 - Ficam com o nome antigo: os repositórios e pastas, as chaves salvas no navegador (`splash-active-store`, `splash-customer` etc., trocar apagaria as preferências de quem já usa) e o design system no Claude Design.
 - Entradas antigas deste histórico citam "Splash" quando descrevem o que existia na época.
 
+
+## 2026-10-13 — Release v1.3.0 (produção): marca Prestio
+- Nome, logo e favicon da Prestio no ar (detalhes na entrada "Nome novo: Prestio" acima). Antes da subida: E2E painel 14/14 e cardápio 5/5 no staging, unitários, lint e build limpos.
