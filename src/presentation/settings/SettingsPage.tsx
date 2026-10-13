@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { ExternalLink } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Store } from '../../domain/store/Store'
 import { useAuth } from '../auth/useAuth'
@@ -9,6 +10,7 @@ import { useDeleteStore, useSaveStore, useStore } from '../store/useStores'
 import { Button } from '../ui/Button'
 import { ConfirmModal } from '../ui/ConfirmModal'
 import { Switch } from '../ui/Switch'
+import { buttonClass } from '../ui/styles'
 import { SettingsToggleRow } from './SettingsToggleRow'
 import { StoreDataForm } from './StoreDataForm'
 import { TableQrSection } from './TableQrSection'
@@ -31,12 +33,26 @@ function getInitialPermission(): NotificationPermission | 'unsupported' {
 export function SettingsPage() {
   const storeId = useEffectiveStoreId()
   const { data: store } = useStore(storeId || undefined)
+  const storefrontUrl = import.meta.env.VITE_STOREFRONT_URL
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="flex flex-col gap-0.5">
-        <h2 className="font-display text-[28px] font-bold leading-tight tracking-tight text-ink">Configurações</h2>
-        {store && <span className="text-sm text-muted">{store.name}</span>}
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="flex flex-col gap-0.5">
+          <h2 className="font-display text-[28px] font-bold leading-tight tracking-tight text-ink">Configurações</h2>
+          {store && <span className="text-sm text-muted">{store.name}</span>}
+        </div>
+        {store && storefrontUrl && (
+          <a
+            href={`${storefrontUrl}/${store.slug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={buttonClass('outline')}
+          >
+            <ExternalLink className="h-4 w-4" aria-hidden="true" />
+            Abrir cardápio
+          </a>
+        )}
       </div>
 
       {!storeId && (

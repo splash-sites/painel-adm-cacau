@@ -22,7 +22,6 @@ export function StoreDataForm({ store }: { store: Store }) {
   } = useForm<StoreFormInput>({ resolver: zodResolver(storeSchema), defaultValues })
   const slug = watch('slug')
   const { onChange: onWhatsappChange, ...whatsappField } = register('whatsappNumber')
-  const storefrontUrl = import.meta.env.VITE_STOREFRONT_URL
 
   async function onSubmit(input: StoreFormInput) {
     try {
@@ -49,16 +48,6 @@ export function StoreDataForm({ store }: { store: Store }) {
           Só minúsculas, números e hífen. Fica no fim do link: …/<b className="font-semibold text-ink">{slug || 'sua-loja'}</b>
         </p>
         {errors.slug && <p className="text-sm text-danger">{errors.slug.message}</p>}
-        {storefrontUrl && slug && !errors.slug && (
-          <a
-            href={`${storefrontUrl}/${slug}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="w-fit text-sm font-semibold text-lover hover:underline"
-          >
-            Abrir o cardápio
-          </a>
-        )}
       </div>
       <div className="flex max-w-xl flex-col gap-1.5">
         <Label htmlFor="store-whatsapp">WhatsApp da loja</Label>
