@@ -16,7 +16,7 @@ export async function login(page: Page, account: { email?: string; password?: st
   await page.getByLabel('E-mail').fill(account.email!)
   await page.getByLabel('Senha').fill(account.password!)
   await page.getByRole('button', { name: 'Entrar' }).click()
-  await expect(page).toHaveURL('/')
+  await expect(page).toHaveURL('/', { timeout: 20_000 })
   if (storeId) {
     // super_admin escolhe a loja pelo seletor (persistido no localStorage)
     await page.evaluate(

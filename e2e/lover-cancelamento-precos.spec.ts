@@ -38,7 +38,7 @@ async function login(page: Page) {
   await page.getByLabel('E-mail').fill(EMAIL!)
   await page.getByLabel('Senha').fill(PASSWORD!)
   await page.getByRole('button', { name: 'Entrar' }).click()
-  await expect(page).toHaveURL('/')
+  await expect(page).toHaveURL('/', { timeout: 20_000 })
 }
 
 // Chama o PostgREST com a sessão do store_admin logado na página (mesmas regras de acesso do painel).

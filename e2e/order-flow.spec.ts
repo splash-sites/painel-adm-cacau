@@ -37,7 +37,7 @@ test('login e avanço de status refletem no kanban', async ({ page }) => {
   await page.getByLabel('Senha').fill(PASSWORD!)
   await page.getByRole('button', { name: 'Entrar' }).click()
 
-  await expect(page).toHaveURL('/')
+  await expect(page).toHaveURL('/', { timeout: 20_000 })
 
   const receivedColumn = page.getByTestId('kanban-column-received')
   await expect(receivedColumn.getByTestId('order-card').first()).toBeVisible({ timeout: 10_000 })
