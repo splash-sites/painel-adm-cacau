@@ -1305,3 +1305,10 @@ Pedido explícito: testar todo CRUD do app ao vivo (não confiar só em type-che
 - Antes: saldos dos 34 produtos de Torres com `track_stock` conferidos pela loja ("dados corretos") — a partir daqui o pedido desconta.
 - Testes antes da subida: unitário (painel 190, cardápio 192), lint, build, E2E painel 4/4 (2 rodadas; spec novo `lover-cancelamento-precos` como store_admin) e cardápio 5/5, "Finalizar tudo" da mesa e gaveta de detalhes à mão no staging.
 - Release: `main` = `dev` (fast-forward) com tag `v1.1.0` nos dois repos. Conferido no ar: bundle novo nos dois, cardápio de Torres abrindo e mostrando "Restam 60 em estoque" no Brigadeiro Petit Deli (saldo da lista), painel abrindo no login sem erro.
+
+## 2026-10-12 — Release v1.2.0 (produção): redesenho Ganache
+- Identidade nova nos dois apps, desenhada no canvas do Claude Design: painel em tema claro (menu com unidade e usuário no rodapé, quadro de pedidos com card completo e botão que diz o que faz, Configurações com submenu, abas no catálogo) e cardápio em tema escuro (boas-vindas da loja e da mesa, lista com miniatura, produto em etapas, fechamento em 3 telas, acompanhamento em linha do tempo). Plano e diferenças em relação ao canvas: `docs/redesign-plano.md`.
+- Máscara do WhatsApp da loja (`+55 (51) 9 9999-9999`) e telefone com o 9 separado nos cards e no cupom.
+- Bug corrigido: depois de criar uma loja, o seletor da sidebar voltava sozinho pra primeira loja (lista em cache sem a loja nova).
+- Bug corrigido: "Meus pedidos" no cardápio somava o total sem os adicionais. Migration `20261012190000` (`list_orders_by_cpf` devolve os adicionais), aplicada no staging e na produção pelo SQL Editor antes da subida.
+- Testes antes da subida: unitário (painel 199, cardápio 194), lint, build, E2E painel 14/14 (spec novo `cadastros` com todos os cadastros, 2 rodadas) e cardápio 5/5, tudo no staging.
