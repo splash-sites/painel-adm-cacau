@@ -43,15 +43,29 @@ export function SettingsPage() {
           {store && <span className="text-sm text-muted">{store.name}</span>}
         </div>
         {store && storefrontUrl && (
-          <a
-            href={`${storefrontUrl}/${store.slug}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={buttonClass('outline')}
-          >
-            <ExternalLink className="h-4 w-4" aria-hidden="true" />
-            Abrir cardápio
-          </a>
+          <div className="flex flex-wrap gap-2">
+            {/* revenda só existe com o canal ligado e retirada aceita (sem isso o link volta pra entrada) */}
+            {store.resellerEnabled && store.supportsPickup && (
+              <a
+                href={`${storefrontUrl}/${store.slug}/revendedor`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={buttonClass('outline')}
+              >
+                <ExternalLink className="h-4 w-4" aria-hidden="true" />
+                Abrir revenda
+              </a>
+            )}
+            <a
+              href={`${storefrontUrl}/${store.slug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={buttonClass('outline')}
+            >
+              <ExternalLink className="h-4 w-4" aria-hidden="true" />
+              Abrir cardápio
+            </a>
+          </div>
         )}
       </div>
 
