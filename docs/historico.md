@@ -1326,3 +1326,6 @@ Pedido explícito: testar todo CRUD do app ao vivo (não confiar só em type-che
 
 ## 2026-10-13 — Release v1.3.2: Abrir cardápio em Configurações
 - Botão "Abrir cardápio" no topo de Configurações (abre o cardápio da loja numa aba nova); sai o link repetido de dentro do formulário. Testado: botão abrindo o cardápio da loja, E2E painel 14/14 no staging.
+
+## 2026-10-13 — Release v1.3.3: Abrir revenda em Configurações
+- Botão "Abrir revenda" ao lado do "Abrir cardápio" (abre `/:slug/revendedor`; só aparece com a revenda ligada e retirada aceita). E2E painel 14/14 no staging antes da subida.
