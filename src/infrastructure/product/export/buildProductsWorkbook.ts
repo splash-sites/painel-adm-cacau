@@ -66,7 +66,7 @@ function productToRow(product: Product): (string | number)[] {
  */
 export async function buildProductsWorkbook(products: Product[], storeName: string): Promise<ArrayBuffer> {
   const workbook = new ExcelJS.Workbook()
-  workbook.creator = 'Splash Pedidos'
+  workbook.creator = 'Prestio'
   workbook.created = new Date()
 
   const sheet = workbook.addWorksheet('Produtos', {

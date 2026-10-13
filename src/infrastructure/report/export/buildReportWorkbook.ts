@@ -63,7 +63,7 @@ export async function buildReportWorkbook(
   period: keyof typeof PERIOD_LABEL,
 ): Promise<ArrayBuffer> {
   const workbook = new ExcelJS.Workbook()
-  workbook.creator = 'Splash Pedidos'
+  workbook.creator = 'Prestio'
   workbook.created = new Date()
 
   const exportedAt = `Exportado em ${new Date().toLocaleDateString('pt-BR')} · ${storeName} · Período: ${PERIOD_LABEL[period]}`

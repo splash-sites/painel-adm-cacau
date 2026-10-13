@@ -27,7 +27,7 @@ export function AppLayout() {
   return (
     <div className="min-h-screen bg-canvas text-ink md:flex md:h-screen md:overflow-hidden">
       <div className="flex items-center justify-between border-b border-line bg-surface-2 px-4 py-3 md:hidden">
-        <span className="font-display text-[22px] font-bold">Splash</span>
+        <img src="/prestio-logo.svg" alt="Prestio" className="h-7 w-auto" />
         <button
           type="button"
           onClick={() => setSidebarOpen((open) => !open)}
@@ -45,7 +45,7 @@ export function AppLayout() {
         } md:flex w-full md:w-56 shrink-0 flex-col gap-5 bg-surface-2 px-3.5 py-5 md:h-full md:overflow-y-auto`}
       >
         <div className="hidden border-b border-line-strong px-2 pb-4 md:block">
-          <span className="font-display text-[22px] font-bold">Splash</span>
+          <img src="/prestio-logo.svg" alt="Prestio" className="-ml-1 h-10 w-auto" />
         </div>
         <nav aria-label="Menu" className="flex flex-col gap-0.5">
           <NavLink to="/" end className={linkClass} onClick={close}>

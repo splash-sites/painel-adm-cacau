@@ -1,4 +1,4 @@
-# CLAUDE.md — Painel administrativo (Splash Pedidos)
+# CLAUDE.md — Painel administrativo (Prestio)
 
 Regras **vigentes**. Histórico de decisões, features e auditorias (o "porquê" de cada coisa): [docs/historico.md](docs/historico.md). Pendências: [docs/backlog.md](docs/backlog.md). Banco: [supabase/](supabase/).
 
@@ -16,12 +16,12 @@ node scripts/check-shared-rules.mjs   # confere se o bloco "Regras compartilhada
 `VITE_STOREFRONT_URL` (no `.env*.local`) aponta pro cardápio — usado no link "Ver cardápio" e nos QR Codes de mesa. Local: `http://localhost:5175` (cardápio rodando com `--port 5175`).
 
 <!-- REGRAS-COMPARTILHADAS:INICIO -->
-## Regras compartilhadas (Splash Pedidos)
+## Regras compartilhadas (Prestio)
 
 > **Este bloco é idêntico no `CLAUDE.md` do `painel-adm-cacau` e do `cacau-cardapio`.** Mudou aqui, muda lá no mesmo commit — `node scripts/check-shared-rules.mjs` compara os dois e falha se divergirem. Última conferência contra o banco real: 2026-10-11.
 
 ### Produto e repositórios
-- **Splash Pedidos**: SaaS de pedidos multi-loja. Primeira cliente: Kaká o Show (Cacau Show Torres e Capão da Canoa). Tudo precisa servir qualquer loja futura — nada de nome de loja fixo no código.
+- **Prestio** (até 2026-10-12 se chamava Splash Pedidos): SaaS de pedidos multi-loja. Primeira cliente: Kaká o Show (Cacau Show Torres e Capão da Canoa). Tudo precisa servir qualquer loja futura — nada de nome de loja fixo no código.
 - `painel-adm-cacau` = painel da loja (login, pedidos, catálogo, relatórios). `cacau-cardapio` = cardápio do cliente final (sem login). Os dois falam **direto** com o mesmo Supabase (sem backend próprio); deploy de cada um na Vercel.
 - Lugar de cada coisa: regra vigente → `CLAUDE.md` · decisões antigas e o porquê → `docs/historico.md` · pendências → `painel-adm-cacau/docs/backlog.md` · banco → `painel-adm-cacau/supabase/`.
 
@@ -135,9 +135,10 @@ React 19 + Vite 8 + TypeScript `strict` · Tailwind v4 (`@tailwindcss/vite`, tok
 - **Reordenar com upsert em lote**: mandar a linha inteira (upsert só com PK + `sort_order` quebra por `NOT NULL`).
 
 ### Identidade visual
-- Identidade **Ganache** (redesenho 2026-10-12, canvas no Claude Design; design system "Splash Pedidos"). Painel em **tema claro**: tokens no `@theme` — `canvas #f7f3f0` (fundo), `surface #fff` (cards), `surface-2 #efe8e2` (menu lateral), `ink #2a1a14` (texto e botão principal), `muted`/`faint` (texto secundário), `caramel #e8a75c` (marca, foco), `lover #9a5a1c` (preço Lover e links), `line`/`line-strong` (bordas). Os nomes antigos (`background`, `primary`, `secondary`, `accent`…) apontam pra paleta nova; código novo usa os nomes novos.
+- Identidade **Ganache** (redesenho 2026-10-12, canvas no Claude Design; design system "Splash Pedidos" no Claude Design). Painel em **tema claro**: tokens no `@theme` — `canvas #f7f3f0` (fundo), `surface #fff` (cards), `surface-2 #efe8e2` (menu lateral), `ink #2a1a14` (texto e botão principal), `muted`/`faint` (texto secundário), `caramel #e8a75c` (marca, foco), `lover #9a5a1c` (preço Lover e links), `line`/`line-strong` (bordas). Os nomes antigos (`background`, `primary`, `secondary`, `accent`…) apontam pra paleta nova; código novo usa os nomes novos.
 - Status: espera em caramelo (`wait`/`wait-soft`), a caminho/entregue em azul (`info`), finalizado em verde (`success`), cancelado em vermelho (`danger`). Classes em `orderCardFormat.ts`.
 - Fontes: `--font-display` **Bricolage Grotesque** (títulos, nome do cliente no card) · `--font-body` **Figtree**. Números de preço com `tabular-nums`.
+- Marca **Prestio**: logo em `public/prestio-logo.svg` (fundo claro: menu e barra do celular) e `public/prestio-logo-negativo.svg` (fundo escuro: tela de entrar); favicons e `manifest.webmanifest` em `public/`.
 - Menu lateral: itens no topo; no rodapé a unidade (seletor pro `super_admin`), uma linha e o usuário com o cargo (menu com "Sair"). Botão do card diz o que faz (`nextActionLabel`: "Aceitar pedido", "Pronto pra retirada", "Entregue", "Finalizar"). Textos sem travessão e sem "(s)".
 - Responsivo até mobile em toda tela; motion só onde explica mudança; numeração 1/2/3 só em sequência real.
 

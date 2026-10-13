@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  /* Identidade Ganache, tema claro do painel (design system "Splash Pedidos"). */
+  /* Identidade Ganache, tema claro do painel (design system "Prestio"). */
   --color-canvas: #f7f3f0;
   --color-surface: #ffffff;
   --color-surface-2: #efe8e2;

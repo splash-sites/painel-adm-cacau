@@ -1,4 +1,4 @@
-# Backlog — Splash Pedidos (painel + cardápio)
+# Backlog — Prestio (painel + cardápio)
 
 Pendências dos dois repos num lugar só. Ao concluir um item: tirar daqui, registrar a regra no `CLAUDE.md` (bloco compartilhado se valer pros dois) e o porquê em `docs/historico.md`.
 Prioridade: **P0** = risco pra produção/dado real · **P1** = regra de negócio decidida, falta implementar · **P2** = correção/qualidade · **P3** = melhoria.

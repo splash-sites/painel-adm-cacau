@@ -1,4 +1,4 @@
-# supabase/ — banco do Splash Pedidos (painel + cardápio)
+# supabase/ — banco do Prestio (painel + cardápio)
 
 Fonte de verdade do schema dos **dois** apps. Regras de como mudar: bloco "Banco de dados" no `CLAUDE.md`.
 

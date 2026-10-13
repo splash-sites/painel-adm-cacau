@@ -13,7 +13,7 @@ export function AuthSplitLayout({
   return (
     <div className="flex min-h-screen flex-col bg-canvas text-ink md:flex-row">
       <div className="relative flex flex-col justify-between gap-10 overflow-hidden bg-[#1b110e] px-6 py-8 text-[#f6ede6] md:flex-1 md:p-14">
-        <span className="font-display text-2xl font-bold">Splash Pedidos</span>
+        <img src="/prestio-logo-negativo.svg" alt="Prestio" className="h-10 w-auto self-start" />
         <div
           aria-hidden="true"
           className="absolute -right-16 top-28 hidden h-[420px] w-80 rounded-[28px] bg-caramel md:block"

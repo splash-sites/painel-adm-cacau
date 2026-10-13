@@ -20,7 +20,7 @@ export function notifyNewOrder(storeId: string): void {
     // tag: pedidos em sequência substituem o popup anterior em vez de empilhar.
     // renotify: sem isso, a substituição é silenciosa (sem popup novo) a partir do 2º pedido.
     const options: BrowserNotificationOptions = {
-      body: 'Um novo pedido chegou no dashboard.',
+      body: 'Chegou um pedido novo na Prestio.',
       tag: 'splash-new-order',
       renotify: true,
     }

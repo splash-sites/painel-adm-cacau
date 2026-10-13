@@ -24,7 +24,7 @@ Canvas de referência: https://claude.ai/artifact/BGkhda9WLYBTGH432PvESF (págin
 Nos dois apps, no `src/index.css` (o bloco `@theme` do Tailwind) e no `index.html`:
 
 - Fontes: Bricolage Grotesque para títulos e Figtree para o texto.
-- Cardápio, tema escuro: fundo chocolate `#1b110e`, destaque caramelo `#e8a75c`, superfícies, texto e bordas conforme o design system "Splash Pedidos".
+- Cardápio, tema escuro: fundo chocolate `#1b110e`, destaque caramelo `#e8a75c`, superfícies, texto e bordas conforme o design system "Splash Pedidos" no Claude Design.
 - Painel, tema claro: fundo `#f7f3f0`, menu `#efe8e2`, primária `#2a1a14`, perigo `#a3322a`, texto secundário `#76675e`.
 - Cantos arredondados (12, 16, 20 e 24 px), espaçamentos, números com largura fixa nos preços e foco visível pelo teclado.
 - O painel tem componentes base em `src/presentation/ui` (Button, Input, Select, Dialog, Switch, Checkbox, Combobox, DropdownMenu, Textarea). Eles ganham o visual novo primeiro, e assim todas as telas que os usam já mudam junto.

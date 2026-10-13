@@ -4,7 +4,7 @@
 
 ---
 
-# CLAUDE.md — Painel administrativo ([Splash Pedidos])
+# CLAUDE.md — Painel administrativo ([Prestio])
 
 ## Pré-requisitos (instalar uma vez, antes de tudo)
 - Node.js 20+ → https://nodejs.org
@@ -109,7 +109,7 @@ pnpm lint          # oxlint (não ESLint)
 Quando pedirem pra "iniciar a aplicação": sem `package.json` → siga "Setup inicial" primeiro. Com `package.json` mas sem `node_modules` → `pnpm install`. Depois, sempre `pnpm dev`.
 
 ## Sobre o projeto
-[Splash Pedidos] é um SaaS de pedidos multi-loja (multi-tenant). Não é um sistema exclusivo da Kaká o Show — a Kaká o Show é a primeira cliente (3 lojas), mas o produto precisa suportar qualquer loja/cafeteria que assinar depois. Não é um MVP raso: o objetivo é um produto pronto pra produção (testes, RLS, tratamento de erro) desde o primeiro código — mesmo que o processo em volta comece simples.
+[Prestio] (antes Splash Pedidos) é um SaaS de pedidos multi-loja (multi-tenant). Não é um sistema exclusivo da Kaká o Show — a Kaká o Show é a primeira cliente (3 lojas), mas o produto precisa suportar qualquer loja/cafeteria que assinar depois. Não é um MVP raso: o objetivo é um produto pronto pra produção (testes, RLS, tratamento de erro) desde o primeiro código — mesmo que o processo em volta comece simples.
 
 Este repositório é só o **painel administrativo**. O cardápio do cliente vive num repositório separado (`storefront`). Os dois se conectam ao mesmo projeto Supabase hospedado — não existe repositório de schema, porque não existe schema duplicado.
 
@@ -1312,3 +1312,11 @@ Pedido explícito: testar todo CRUD do app ao vivo (não confiar só em type-che
 - Bug corrigido: depois de criar uma loja, o seletor da sidebar voltava sozinho pra primeira loja (lista em cache sem a loja nova).
 - Bug corrigido: "Meus pedidos" no cardápio somava o total sem os adicionais. Migration `20261012190000` (`list_orders_by_cpf` devolve os adicionais), aplicada no staging e na produção pelo SQL Editor antes da subida.
 - Testes antes da subida: unitário (painel 199, cardápio 194), lint, build, E2E painel 14/14 (spec novo `cadastros` com todos os cadastros, 2 rodadas) e cardápio 5/5, tudo no staging.
+
+## 2026-10-12 — Nome novo: Prestio
+- O produto passa a se chamar **Prestio** (antes Splash Pedidos). Logo e favicon novos (pacote `prestio-marca.zip`): o "o" da marca é um grão de café.
+- Cores do sistema mantidas (caramelo da identidade Ganache); a logo usa o ferrugem dela só nos próprios arquivos.
+- Painel: logo no menu lateral, na barra do celular e na tela de entrar; título da aba "Prestio"; manifest pra instalar como app. Cardápio: continua com a cara da loja, só o favicon e um "feito com prestio" discreto no rodapé da entrada da loja e da mesa.
+- Ficam com o nome antigo: os repositórios e pastas, as chaves salvas no navegador (`splash-active-store`, `splash-customer` etc., trocar apagaria as preferências de quem já usa) e o design system no Claude Design.
+- Entradas antigas deste histórico citam "Splash" quando descrevem o que existia na época.
+

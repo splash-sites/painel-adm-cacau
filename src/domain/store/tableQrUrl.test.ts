@@ -3,14 +3,14 @@ import { buildTableMenuUrl, tableNumberRange } from './tableQrUrl'
 
 describe('buildTableMenuUrl', () => {
   it('appends the table as a path segment', () => {
-    expect(buildTableMenuUrl('https://pedido.splashpedidos.com', 'cacaushow-torres', '7')).toBe(
-      'https://pedido.splashpedidos.com/cacaushow-torres/mesa/7',
+    expect(buildTableMenuUrl('https://pedido.prestio.com.br', 'cacaushow-torres', '7')).toBe(
+      'https://pedido.prestio.com.br/cacaushow-torres/mesa/7',
     )
   })
 
   it('strips a trailing slash from the storefront url', () => {
-    expect(buildTableMenuUrl('https://pedido.splashpedidos.com/', 'cacaushow-torres', '7')).toBe(
-      'https://pedido.splashpedidos.com/cacaushow-torres/mesa/7',
+    expect(buildTableMenuUrl('https://pedido.prestio.com.br/', 'cacaushow-torres', '7')).toBe(
+      'https://pedido.prestio.com.br/cacaushow-torres/mesa/7',
     )
   })
 
