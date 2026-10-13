@@ -1323,3 +1323,6 @@ Pedido explícito: testar todo CRUD do app ao vivo (não confiar só em type-che
 
 ## 2026-10-13 — Release v1.3.0 (produção): marca Prestio
 - Nome, logo e favicon da Prestio no ar (detalhes na entrada "Nome novo: Prestio" acima). Antes da subida: E2E painel 14/14 e cardápio 5/5 no staging, unitários, lint e build limpos.
+
+## 2026-10-13 — Release v1.3.2: Abrir cardápio em Configurações
+- Botão "Abrir cardápio" no topo de Configurações (abre o cardápio da loja numa aba nova); sai o link repetido de dentro do formulário. Testado: botão abrindo o cardápio da loja, E2E painel 14/14 no staging.
