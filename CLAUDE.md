@@ -88,7 +88,7 @@ node scripts/check-shared-rules.mjs   # confere se o bloco "Regras compartilhada
 ### Canais e cardápio
 - Tipos de pedido: `dine_in` (mesa/cafeteria), `pickup` (retirada), `delivery` (entrega). Loja liga cada um em `stores.supports_*`.
 - No cardápio, retirada e entrega são **um cardápio só**, filtrado por `available_pickup`. `available_delivery` está aposentado (fica no banco, ninguém usa).
-- **Revenda** (`/:slug/atacado`, só se `stores.reseller_enabled`): filtra por `available_reseller`, pedido com `sales_channel = 'reseller'`, só retirada (nunca mesa).
+- **Revenda** (`/:slug/revendedor`, só se `stores.reseller_enabled`): filtra por `available_reseller`, pedido com `sales_channel = 'reseller'`, só retirada (nunca mesa).
 - Mesa via QR: `/:slug/mesa/:numero` (gerado em Configurações do painel com `VITE_STOREFRONT_URL`).
 - Ordem no cardápio: categorias, produtos, grupos de adicional/variação e as opções dentro de cada grupo, todos por `sort_order`, definida no painel.
 
