@@ -1329,3 +1329,7 @@ Pedido explícito: testar todo CRUD do app ao vivo (não confiar só em type-che
 
 ## 2026-10-13 — Release v1.3.3: Abrir revenda em Configurações
 - Botão "Abrir revenda" ao lado do "Abrir cardápio" (abre `/:slug/revendedor`; só aparece com a revenda ligada e retirada aceita). E2E painel 14/14 no staging antes da subida.
+
+## 2026-10-16 — Release v1.3.4: "Cliente é do clube?" e prints da central de ajuda
+- O texto "Cacau Lover" (nome da primeira cliente fixo no código) virou genérico: finalizar pergunta "Cliente é do clube?" / "Sim, é do clube", card mostra "Clube · normal", cupom imprime "Preço de clube" e a mensagem de WhatsApp do cardápio fala "Total preço de clube" / "Total preço normal". Só texto, banco igual (`is_lover`, `lover_price`).
+- `pnpm prints:ajuda` (`playwright.ajuda.config.ts` + `e2e/ajuda/`): gera os 96 prints da central de ajuda (prestio.com.br/ajuda) com a loja fictícia Brasa Burger, só no staging. Saída em `../prestio-lp/ajuda-insumos/` (tutoriais, funções do sistema, prints e LEIAME).
