@@ -43,7 +43,7 @@ export function FinalizeLoverModal({
     <Dialog open onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-[440px]">
         <div className="flex flex-col gap-1">
-          <DialogTitle>Cliente é Cacau Lover?</DialogTitle>
+          <DialogTitle>Cliente é do clube?</DialogTitle>
           <DialogDescription>
             {who} A resposta define o valor nos relatórios.
           </DialogDescription>
@@ -65,7 +65,7 @@ export function FinalizeLoverModal({
             disabled={finalize.isPending}
             className="flex flex-col gap-1 rounded-2xl bg-ink p-4 text-left text-white transition-colors hover:bg-[#3d2820] disabled:opacity-50"
           >
-            <span className="text-sm text-caramel">Sim, é Lover</span>
+            <span className="text-sm text-caramel">Sim, é do clube</span>
             <span className="text-2xl font-semibold">{formatCurrency(loverTotal)}</span>
           </button>
         </div>

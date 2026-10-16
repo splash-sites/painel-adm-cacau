@@ -99,7 +99,7 @@ export function OrderReceipt({
       </div>
       {hasLoverPrice(order) && order.isLover === null && (
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-          <span>Cacau Lover</span>
+          <span>Preço de clube</span>
           <span>{formatCurrency(calculateOrderLoverTotal(order))}</span>
         </div>
       )}

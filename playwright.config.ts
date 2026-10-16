@@ -27,6 +27,8 @@ const PORT = 5178
 
 export default defineConfig({
   testDir: './e2e',
+  // prints da central de ajuda têm config própria (playwright.ajuda.config.ts)
+  testIgnore: '**/ajuda/**',
   fullyParallel: false,
   workers: 1,
   reporter: 'list',
