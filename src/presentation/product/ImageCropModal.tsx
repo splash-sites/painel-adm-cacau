@@ -67,7 +67,7 @@ export function ImageCropModal({ src, onClose, onConfirm, isPending }: ImageCrop
 
   return (
     <Dialog open onOpenChange={(open) => !open && !isPending && !isProcessing && onClose()}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto scrollbar-hidden">
         <DialogTitle>Ajustar foto</DialogTitle>
         <DialogDescription>
           Arraste e use o zoom pra enquadrar — esse recorte é o que fica salvo, nas proporções abaixo.
