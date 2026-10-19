@@ -67,63 +67,59 @@ export function ImageCropModal({ src, onClose, onConfirm, isPending }: ImageCrop
 
   return (
     <Dialog open onOpenChange={(open) => !open && !isPending && !isProcessing && onClose()}>
-      <DialogContent className="max-h-[90vh] max-w-md overflow-y-auto scrollbar-hidden">
-        <DialogTitle>Ajustar foto</DialogTitle>
-        <DialogDescription>
-          Arraste e use o zoom pra enquadrar — esse recorte é o que fica salvo, nas proporções abaixo.
-        </DialogDescription>
-
-        <div className="relative h-72 w-full overflow-hidden rounded-lg bg-canvas">
-          <Cropper
-            image={src}
-            crop={crop}
-            zoom={zoom}
-            aspect={PRODUCT_IMAGE_ASPECT}
-            onCropChange={setCrop}
-            onZoomChange={setZoom}
-            onCropComplete={(_, areaPixels) => setCroppedArea(areaPixels)}
-            onMediaLoaded={setMediaSize}
-          />
+      <DialogContent className="max-h-[90vh] max-w-md space-y-5 overflow-y-auto scrollbar-hidden">
+        <div className="space-y-1">
+          <DialogTitle>Ajustar foto</DialogTitle>
+          <DialogDescription>Arraste e use o zoom pra enquadrar o produto.</DialogDescription>
         </div>
 
-        <div className="space-y-2">
-          <p className="text-xs font-medium text-muted">
-            Prévia — não tem ajuste próprio, só mostra como o recorte de cima vai aparecer:
-          </p>
-          <div className="flex items-center gap-4">
+        <div className="space-y-3">
+          <div className="relative h-72 w-full overflow-hidden rounded-2xl bg-canvas">
+            <Cropper
+              image={src}
+              crop={crop}
+              zoom={zoom}
+              aspect={PRODUCT_IMAGE_ASPECT}
+              onCropChange={setCrop}
+              onZoomChange={setZoom}
+              onCropComplete={(_, areaPixels) => setCroppedArea(areaPixels)}
+              onMediaLoaded={setMediaSize}
+            />
+          </div>
+          <label className="flex items-center gap-3 text-sm text-muted">
+            Zoom
+            <input
+              type="range"
+              min={1}
+              max={3}
+              step={0.01}
+              value={zoom}
+              onChange={(event) => setZoom(Number(event.target.value))}
+              className="h-1.5 flex-1 accent-caramel"
+              aria-label="Zoom da foto"
+            />
+          </label>
+        </div>
+
+        <div className="space-y-3 rounded-2xl bg-canvas p-4">
+          <p className="text-sm font-semibold text-ink">Como vai aparecer no cardápio</p>
+          <div className="flex items-start gap-5">
             <div className="flex flex-col items-center gap-1.5">
               <div
-                className="rounded-lg bg-canvas"
+                className="rounded-xl bg-surface-2"
                 style={{ width: DETAIL_PREVIEW_WIDTH, height: DETAIL_PREVIEW_HEIGHT, ...detailPreviewStyle }}
               />
               <span className="text-xs text-muted">No produto</span>
             </div>
             <div className="flex flex-col items-center gap-1.5">
               <div
-                className="rounded-[18px] bg-canvas"
+                className="rounded-[18px] bg-surface-2"
                 style={{ width: THUMB_PREVIEW_SIZE, height: THUMB_PREVIEW_SIZE, ...thumbPreviewStyle }}
               />
               <span className="text-xs text-muted">Na lista</span>
             </div>
-            <p className="flex-1 text-xs text-muted">
-              A miniatura da lista corta um pouco mais a lateral — normal, sem ajuste separado.
-            </p>
           </div>
         </div>
-
-        <label className="flex items-center gap-3 text-sm font-body text-muted">
-          Zoom
-          <input
-            type="range"
-            min={1}
-            max={3}
-            step={0.01}
-            value={zoom}
-            onChange={(event) => setZoom(Number(event.target.value))}
-            className="flex-1"
-            aria-label="Zoom da foto"
-          />
-        </label>
 
         {error && <p className="text-sm text-danger">{error}</p>}
 
