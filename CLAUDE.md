@@ -103,7 +103,7 @@ node scripts/check-shared-rules.mjs   # confere se o bloco "Regras compartilhada
 ## Este app — painel administrativo
 
 ### Stack
-React 19 + Vite 8 + TypeScript `strict` · Tailwind v4 (`@tailwindcss/vite`, tokens no `@theme` de `src/index.css`) · TanStack Query (servidor) + Zustand com `persist` (loja ativa, notificação por loja, "zerar finalizados") · React Hook Form + Zod · Radix UI em `presentation/ui/` (`Button`, `Select`, `Dialog`, `Combobox` com `cmdk`, `SortableList` com `@dnd-kit`…) + `cn()` · `lucide-react`, `sonner`, `recharts`, `exceljs`, `qrcode` · Vitest + Playwright · pnpm.
+React 19 + Vite 8 + TypeScript `strict` · Tailwind v4 (`@tailwindcss/vite`, tokens no `@theme` de `src/index.css`) · TanStack Query (servidor) + Zustand com `persist` (loja ativa, notificação por loja, "zerar finalizados") · React Hook Form + Zod · Radix UI em `presentation/ui/` (`Button`, `Select`, `Dialog`, `Combobox` com `cmdk`, `SortableList` com `@dnd-kit`…) + `cn()` · `lucide-react`, `sonner`, `recharts`, `exceljs`, `qrcode`, `react-easy-crop` · Vitest + Playwright · pnpm.
 
 ### Papéis e telas
 | Rota | Tela | Quem vê |
@@ -128,6 +128,7 @@ React 19 + Vite 8 + TypeScript `strict` · Tailwind v4 (`@tailwindcss/vite`, tok
 - **Editar itens** (só em `received`): inclui variação/adicional; pedido nunca fica sem item (cancelar em vez de esvaziar).
 - **Relatórios**: só pedido `finalized` conta como dinheiro, pelo preço que valeu (`calculateOrderTotal`: Lover se `is_lover`, normal senão); cancelado só entra na taxa de cancelamento; tempo de preparo vem de `order_status_history`; clientes novos x recorrentes por telefone. Exporta `.xlsx` (4 abas).
 - **Produto**: categoria é entidade (`category_id`; `products.category` texto é espelho por compatibilidade, nunca editar só ele). `category_id` de outra loja é recusado por trigger. Ordem do cardápio só pela tela "Organizar cardápio".
+- **Foto de produto**: sempre salva recortada em **4:3** (`cropImageToBlob.ts`, `PRODUCT_IMAGE_ASPECT`) — mesma proporção que o `cacau-cardapio` já usa no detalhe do produto (`aspect-[4/3] object-cover`), então a foto aparece inteira lá sem corte extra; a miniatura quadrada (painel e lista do cardápio) ainda recorta um pouco as bordas, igual qualquer e-commerce. `ImageCropModal` (zoom + arrastar, trava em 4:3) abre tanto ao escolher arquivo novo quanto no botão "Ajustar recorte" — esse segundo caso carrega a `image_url` já salva (não pede o arquivo de novo). Saída sempre JPEG, nunca passa de 1600px de largura (canvas sem teto trava o navegador em foto de celular moderna, 3000-4000px). `cacau-cardapio` não precisou de nenhuma mudança — a causa do corte era só a foto crua sem recorte nenhum do lado do painel.
 - **Copiar catálogo** (`super_admin`): Edge Function `copy-catalog` + RPC `copy_catalog`; destino = loja ativa; estoque no destino sempre `track_stock=false`/0.
 - **Usuários**: criar/editar/excluir só via Edge Functions; não dá pra desativar nem excluir outro `super_admin`, nem a si mesmo (a função `delete-admin-user` também recusa); excluir é bloqueado se o usuário já mexeu em pedido (aí desativa).
 - **Invalidar cache de pedido**: sempre `invalidateOrderQueries` (cobre `['orders']` e `['order-history']`), nunca `invalidateQueries(['orders'])` cru.

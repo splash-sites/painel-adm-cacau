@@ -12,6 +12,7 @@ import { useLinkAddonGroupToProduct } from './addons/useAddons'
 import { ProductAddonGroupsSection, type DraftAddonLink } from './addons/ProductAddonGroupsSection'
 import { useLinkVariationGroupToProduct } from './variations/useVariations'
 import { ProductVariationGroupsSection } from './variations/ProductVariationGroupsSection'
+import { ImageCropModal } from './ImageCropModal'
 import { Button } from '../ui/Button'
 import { Checkbox } from '../ui/Checkbox'
 import { Combobox } from '../ui/Combobox'
@@ -69,6 +70,9 @@ export function ProductModal({
   const { data: categories } = useCategoryList(storeId)
   const [imageError, setImageError] = useState<string | null>(null)
   const [isUploadingImage, setIsUploadingImage] = useState(false)
+  // Fonte pra abrir o recortador: object URL de arquivo recém-escolhido, ou a image_url já salva
+  // (botão "Ajustar recorte" — reaproveita a foto do Storage, sem pedir o arquivo de novo).
+  const [cropSource, setCropSource] = useState<string | null>(null)
   const [isCreatingCategory, setIsCreatingCategory] = useState(false)
   const [draftVariationGroupIds, setDraftVariationGroupIds] = useState<string[]>([])
   const [draftAddonLinks, setDraftAddonLinks] = useState<DraftAddonLink[]>([])
@@ -96,19 +100,32 @@ export function ProductModal({
     .filter((category) => category.active)
     .map((category) => ({ value: category.id, label: category.name }))
 
-  async function handleImageChange(event: ChangeEvent<HTMLInputElement>) {
+  function handleImageChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0]
+    event.target.value = '' // deixa escolher o mesmo arquivo de novo depois de cancelar o recorte
     if (!file) return
+    setImageError(null)
+    setCropSource(URL.createObjectURL(file))
+  }
+
+  async function handleCropConfirm(blob: Blob) {
     setImageError(null)
     setIsUploadingImage(true)
     try {
+      const file = new File([blob], 'produto.jpg', { type: 'image/jpeg' })
       const url = await uploadProductImage(storeId, file)
       setValue('imageUrl', url, { shouldValidate: true })
+      closeCropModal()
     } catch (error) {
       setImageError(error instanceof Error ? error.message : 'Falha ao enviar imagem')
     } finally {
       setIsUploadingImage(false)
     }
+  }
+
+  function closeCropModal() {
+    if (cropSource?.startsWith('blob:')) URL.revokeObjectURL(cropSource)
+    setCropSource(null)
   }
 
   async function onSubmit(input: ProductFormInput) {
@@ -323,14 +340,19 @@ export function ProductModal({
             <input type="hidden" {...register('imageUrl')} />
             {imageUrl && (
               <div className="flex items-center gap-3">
-                <img src={imageUrl} alt="Prévia do produto" className="h-24 w-24 rounded-lg object-cover" />
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setValue('imageUrl', '', { shouldValidate: true })}
-                >
-                  Remover foto
-                </Button>
+                <img src={imageUrl} alt="Prévia do produto" className="h-24 w-32 rounded-lg object-cover" />
+                <div className="flex flex-col gap-2">
+                  <Button type="button" variant="outline" onClick={() => setCropSource(imageUrl)}>
+                    Ajustar recorte
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setValue('imageUrl', '', { shouldValidate: true })}
+                  >
+                    Remover foto
+                  </Button>
+                </div>
               </div>
             )}
             <input
@@ -364,6 +386,15 @@ export function ProductModal({
           </DialogFooter>
         </form>
       </DialogContent>
+
+      {cropSource && (
+        <ImageCropModal
+          src={cropSource}
+          isPending={isUploadingImage}
+          onClose={closeCropModal}
+          onConfirm={handleCropConfirm}
+        />
+      )}
     </Dialog>
   )
 }
