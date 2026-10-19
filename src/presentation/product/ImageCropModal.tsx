@@ -70,7 +70,7 @@ export function ImageCropModal({ src, onClose, onConfirm, isPending }: ImageCrop
       <DialogContent className="max-w-md">
         <DialogTitle>Ajustar foto</DialogTitle>
         <DialogDescription>
-          Arraste e use o zoom pra enquadrar — essa é a área que aparece em todo o cardápio.
+          Arraste e use o zoom pra enquadrar — esse recorte é o que fica salvo, nas proporções abaixo.
         </DialogDescription>
 
         <div className="relative h-72 w-full overflow-hidden rounded-lg bg-canvas">
@@ -86,22 +86,29 @@ export function ImageCropModal({ src, onClose, onConfirm, isPending }: ImageCrop
           />
         </div>
 
-        <div className="flex items-center gap-4">
-          <div className="flex flex-col items-center gap-1.5">
-            <div
-              className="rounded-lg bg-canvas"
-              style={{ width: DETAIL_PREVIEW_WIDTH, height: DETAIL_PREVIEW_HEIGHT, ...detailPreviewStyle }}
-            />
-            <span className="text-xs text-muted">No produto</span>
+        <div className="space-y-2">
+          <p className="text-xs font-medium text-muted">
+            Prévia — não tem ajuste próprio, só mostra como o recorte de cima vai aparecer:
+          </p>
+          <div className="flex items-center gap-4">
+            <div className="flex flex-col items-center gap-1.5">
+              <div
+                className="rounded-lg bg-canvas"
+                style={{ width: DETAIL_PREVIEW_WIDTH, height: DETAIL_PREVIEW_HEIGHT, ...detailPreviewStyle }}
+              />
+              <span className="text-xs text-muted">No produto</span>
+            </div>
+            <div className="flex flex-col items-center gap-1.5">
+              <div
+                className="rounded-[18px] bg-canvas"
+                style={{ width: THUMB_PREVIEW_SIZE, height: THUMB_PREVIEW_SIZE, ...thumbPreviewStyle }}
+              />
+              <span className="text-xs text-muted">Na lista</span>
+            </div>
+            <p className="flex-1 text-xs text-muted">
+              A miniatura da lista corta um pouco mais a lateral — normal, sem ajuste separado.
+            </p>
           </div>
-          <div className="flex flex-col items-center gap-1.5">
-            <div
-              className="rounded-[18px] bg-canvas"
-              style={{ width: THUMB_PREVIEW_SIZE, height: THUMB_PREVIEW_SIZE, ...thumbPreviewStyle }}
-            />
-            <span className="text-xs text-muted">Na lista</span>
-          </div>
-          <p className="flex-1 text-xs text-muted">Assim fica no cardápio do cliente — a miniatura da lista corta mais a lateral, normal.</p>
         </div>
 
         <label className="flex items-center gap-3 text-sm font-body text-muted">
