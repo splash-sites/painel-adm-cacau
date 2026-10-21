@@ -21,6 +21,10 @@ guia/
 # Planilha exportada/gerada localmente (pode ter dado real de cliente — nunca versionar)
 *.xlsx
 
+# Backup de pg_dump do banco de produção (dado real de cliente — nunca versionar).
+# Só esse padrão, não *.sql: migrations/seed ficam em supabase/ e continuam versionadas normal.
+backup-*.sql
+
 # Playwright
 test-results
 playwright-report
