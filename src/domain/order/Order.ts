@@ -73,6 +73,6 @@ export interface Order {
   attendantName: string | null
   /** Preenchido só na transição pra "cancelled" (loja ou cliente) — null pra qualquer outro status. */
   cancellationReason: string | null
-  /** Cliente é do clube (Lover)? Perguntado ao finalizar. null = não perguntado (vale o preço normal). */
+  /** Cliente é lover? Perguntado ao finalizar. null = não perguntado (vale o preço normal). */
   isLover: boolean | null
 }

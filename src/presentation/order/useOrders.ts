@@ -103,7 +103,7 @@ export function useUpdateOrderItemQuantity() {
 }
 
 /**
- * Finaliza 1 ou N pedidos (N = "Finalizar tudo" da mesa). isLover = resposta do "Cliente é do clube?"
+ * Finaliza 1 ou N pedidos (N = "Finalizar tudo" da mesa). isLover = resposta do "Cliente é lover?"
  * (null = não perguntado, pedido sem diferença de preço) — gravado antes do avanço, que passa pelo
  * change_order_status de sempre. Orquestração client-side.
  */

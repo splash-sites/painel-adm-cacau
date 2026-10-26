@@ -59,7 +59,7 @@ async function api(page: Page, path: string, init: { method?: string; body?: unk
   )
 }
 
-test('finalizar pergunta se o cliente é do clube e grava a resposta', async ({ page }) => {
+test('finalizar pergunta se o cliente é lover e grava a resposta', async ({ page }) => {
   const orderId = await createOrder('E2E Lover', 2)
   await login(page)
 
@@ -80,11 +80,11 @@ test('finalizar pergunta se o cliente é do clube e grava a resposta', async ({ 
   await expect(cardIn('delivered')).toBeVisible({ timeout: 10_000 })
 
   await cardIn('delivered').getByRole('button', { name: 'Finalizar' }).click()
-  const dialog = page.getByRole('dialog').filter({ hasText: 'Cliente é do clube?' })
+  const dialog = page.getByRole('dialog').filter({ hasText: 'Cliente é lover?' })
   await expect(dialog).toBeVisible()
   await expect(dialog.getByText('R$ 10,00')).toBeVisible()
   await expect(dialog.getByText('R$ 8,00')).toBeVisible()
-  await dialog.getByRole('button', { name: 'Sim, é do clube' }).click()
+  await dialog.getByRole('button', { name: 'Sim é lover' }).click()
   await expect(dialog).toHaveCount(0)
 
   await expect
