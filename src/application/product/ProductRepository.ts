@@ -1,6 +1,7 @@
 import type { Product } from '../../domain/product/Product'
 import type { ImportPreviewRow } from '../../domain/product/import/buildImportPreview'
 import type { ProductImportValues } from '../../domain/product/import/ProductImportRow'
+import type { MenuChannel } from '../../domain/product/groupByCategory'
 
 export interface ProductInput {
   externalCode: string
@@ -56,10 +57,11 @@ export interface ProductRepository {
   /** Todos os produtos da loja, sem paginação — pra exportação de planilha e organização do cardápio. */
   listAll(storeId: string): Promise<Product[]>
   /**
-   * Grava a nova ordem (`sort_order` = posição na lista) dos produtos de UMA categoria.
+   * Grava a nova ordem (posição na lista) dos produtos de UMA categoria, no canal dado
+   * (`dine_in` = Cafeteria/`sort_order`, `pickup`/`reseller` = suas próprias colunas).
    * `categoryId = null` reordena os produtos sem categoria. Renumeração é por categoria (0..n).
    */
-  reorderInCategory(storeId: string, categoryId: string | null, orderedIds: string[]): Promise<void>
+  reorderInCategory(storeId: string, categoryId: string | null, orderedIds: string[], channel: MenuChannel): Promise<void>
   getById(id: string): Promise<Product | null>
   create(storeId: string, input: ProductInput): Promise<Product>
   update(id: string, input: ProductInput): Promise<Product>

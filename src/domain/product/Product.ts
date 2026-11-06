@@ -21,7 +21,12 @@ export interface Product {
   costPrice: number | null
   price: number
   loverPrice: number
+  /** Ordem no cardápio Cafeteria (dine_in) — a ordem "de sempre", a mesma coluna de antes do organizar por canal. */
   sortOrder: number
+  /** Ordem no cardápio Para levar/entrega (pickup) — independente da Cafeteria. */
+  sortOrderPickup: number
+  /** Ordem no cardápio Revendedor (reseller) — independente da Cafeteria. */
+  sortOrderReseller: number
   active: boolean
   availableDineIn: boolean
   availablePickup: boolean

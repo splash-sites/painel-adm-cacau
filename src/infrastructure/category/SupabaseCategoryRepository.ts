@@ -2,6 +2,7 @@ import { supabase } from '../supabase/client'
 import { CategoryInUseError } from '../../application/category/CategoryInUseError'
 import type { CategoryInput, CategoryRepository } from '../../application/category/CategoryRepository'
 import type { Category } from '../../domain/category/Category'
+import type { MenuChannel } from '../../domain/product/groupByCategory'
 
 interface CategoryRow {
   id: string
@@ -9,13 +10,29 @@ interface CategoryRow {
   name: string
   active: boolean
   sort_order: number
+  sort_order_pickup: number
+  sort_order_reseller: number
 }
 
 function toCategory(row: CategoryRow): Category {
-  return { id: row.id, storeId: row.store_id, name: row.name, active: row.active, sortOrder: row.sort_order }
+  return {
+    id: row.id,
+    storeId: row.store_id,
+    name: row.name,
+    active: row.active,
+    sortOrder: row.sort_order,
+    sortOrderPickup: row.sort_order_pickup,
+    sortOrderReseller: row.sort_order_reseller,
+  }
 }
 
-const CATEGORY_SELECT = 'id, store_id, name, active, sort_order'
+function sortColumnFor(channel: MenuChannel): 'sort_order' | 'sort_order_pickup' | 'sort_order_reseller' {
+  if (channel === 'pickup') return 'sort_order_pickup'
+  if (channel === 'reseller') return 'sort_order_reseller'
+  return 'sort_order'
+}
+
+const CATEGORY_SELECT = 'id, store_id, name, active, sort_order, sort_order_pickup, sort_order_reseller'
 
 export class SupabaseCategoryRepository implements CategoryRepository {
   async list(storeId: string): Promise<Category[]> {
@@ -69,7 +86,7 @@ export class SupabaseCategoryRepository implements CategoryRepository {
     }
   }
 
-  async reorder(storeId: string, orderedIds: string[]): Promise<void> {
+  async reorder(storeId: string, orderedIds: string[], channel: MenuChannel): Promise<void> {
     // Upsert em 1 lote precisa do row inteiro (name/store_id são NOT NULL — upsert parcial
     // falha no ON CONFLICT DO UPDATE, mesmo caso já confirmado em promotions/product_addon_groups).
     const { data, error: fetchError } = await supabase
@@ -79,11 +96,12 @@ export class SupabaseCategoryRepository implements CategoryRepository {
 
     if (fetchError) throw new Error(fetchError.message)
 
+    const sortColumn = sortColumnFor(channel)
     const rowById = new Map((data as CategoryRow[]).map((row) => [row.id, row]))
     const payload = orderedIds.map((id, index) => {
       const row = rowById.get(id)
       if (!row) throw new Error('Categoria não encontrada nessa loja')
-      return { ...row, sort_order: index }
+      return { ...row, [sortColumn]: index }
     })
 
     const { error } = await supabase.from('categories').upsert(payload)

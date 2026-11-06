@@ -10,6 +10,7 @@ import { ProductInUseError } from '../../application/product/ProductInUseError'
 import type { Product } from '../../domain/product/Product'
 import type { ImportPreviewRow } from '../../domain/product/import/buildImportPreview'
 import type { ProductImportValues } from '../../domain/product/import/ProductImportRow'
+import type { MenuChannel } from '../../domain/product/groupByCategory'
 
 /** Colunas mínimas pra montar o snapshot de merge da importação (ver listForImportMerge). */
 interface ImportMergeRow {
@@ -50,6 +51,8 @@ interface ProductRow {
   price: number
   lover_price: number
   sort_order: number
+  sort_order_pickup: number
+  sort_order_reseller: number
   active: boolean
   available_dine_in: boolean
   available_pickup: boolean
@@ -79,6 +82,8 @@ function toProduct(row: ProductRow): Product {
     price: row.price,
     loverPrice: row.lover_price,
     sortOrder: row.sort_order,
+    sortOrderPickup: row.sort_order_pickup,
+    sortOrderReseller: row.sort_order_reseller,
     active: row.active,
     availableDineIn: row.available_dine_in,
     availablePickup: row.available_pickup,
@@ -112,6 +117,12 @@ function toRow(input: ProductInput) {
 }
 
 const PRODUCT_SELECT = '*, categories(name)'
+
+function sortColumnFor(channel: MenuChannel): 'sort_order' | 'sort_order_pickup' | 'sort_order_reseller' {
+  if (channel === 'pickup') return 'sort_order_pickup'
+  if (channel === 'reseller') return 'sort_order_reseller'
+  return 'sort_order'
+}
 
 export class SupabaseProductRepository implements ProductRepository {
   async list({
@@ -176,6 +187,7 @@ export class SupabaseProductRepository implements ProductRepository {
     storeId: string,
     categoryId: string | null,
     orderedIds: string[],
+    channel: MenuChannel,
   ): Promise<void> {
     // Upsert em lote precisa do row inteiro (products tem várias colunas NOT NULL — upsert
     // parcial falha no ON CONFLICT DO UPDATE, mesmo caso de promotions/categories).
@@ -185,6 +197,7 @@ export class SupabaseProductRepository implements ProductRepository {
     const { data, error: fetchError } = await fetch
     if (fetchError) throw new Error(fetchError.message)
 
+    const sortColumn = sortColumnFor(channel)
     const rowById = new Map((data as Record<string, unknown>[]).map((row) => [row.id as string, row]))
     const payload = orderedIds.map((id, index) => {
       const row = rowById.get(id)
@@ -193,7 +206,7 @@ export class SupabaseProductRepository implements ProductRepository {
       // revendedor, e reescrever o valor lido aqui poderia desfazer uma baixa feita no meio.
       // A coluna tem default, então o upsert sem ela continua válido.
       const { reseller_stock_quantity: _resellerStock, ...rest } = row
-      return { ...rest, sort_order: index }
+      return { ...rest, [sortColumn]: index }
     })
     if (payload.length === 0) return
 

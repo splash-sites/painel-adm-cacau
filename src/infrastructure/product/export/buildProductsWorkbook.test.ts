@@ -24,6 +24,8 @@ const product: Product = {
   price: 7,
   loverPrice: 6,
   sortOrder: 3,
+  sortOrderPickup: 3,
+  sortOrderReseller: 3,
   active: false,
   availableDineIn: true,
   availablePickup: false,

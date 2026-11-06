@@ -3,6 +3,7 @@ import { SupabaseProductRepository } from '../../infrastructure/product/Supabase
 import { buildProductsWorkbook } from '../../infrastructure/product/export/buildProductsWorkbook'
 import type { ProductInput, ProductMenuType } from '../../application/product/ProductRepository'
 import type { Product } from '../../domain/product/Product'
+import type { MenuChannel } from '../../domain/product/groupByCategory'
 
 export const productRepository = new SupabaseProductRepository()
 const PAGE_SIZE = 10
@@ -95,8 +96,14 @@ export function useDeleteProduct() {
   })
 }
 
+const SORT_FIELD_BY_CHANNEL: Record<MenuChannel, 'sortOrder' | 'sortOrderPickup' | 'sortOrderReseller'> = {
+  dine_in: 'sortOrder',
+  pickup: 'sortOrderPickup',
+  reseller: 'sortOrderReseller',
+}
+
 /**
- * Reordena os produtos de uma categoria (categoryId null = sem categoria).
+ * Reordena os produtos de uma categoria no canal dado (categoryId null = sem categoria).
  * Atualização otimista no cache ['products','all',storeId]; reverte + refetch no erro.
  */
 export function useReorderProductsInCategory(storeId: string) {
@@ -104,19 +111,25 @@ export function useReorderProductsInCategory(storeId: string) {
   const key = ['products', 'all', storeId]
 
   return useMutation({
-    mutationFn: ({ categoryId, orderedIds }: { categoryId: string | null; orderedIds: string[] }) =>
-      productRepository.reorderInCategory(storeId, categoryId, orderedIds),
-    onMutate: async ({ orderedIds }) => {
+    mutationFn: ({
+      categoryId,
+      orderedIds,
+      channel,
+    }: {
+      categoryId: string | null
+      orderedIds: string[]
+      channel: MenuChannel
+    }) => productRepository.reorderInCategory(storeId, categoryId, orderedIds, channel),
+    onMutate: async ({ orderedIds, channel }) => {
       await queryClient.cancelQueries({ queryKey: key })
       const previous = queryClient.getQueryData<Product[]>(key)
       if (previous) {
+        const field = SORT_FIELD_BY_CHANNEL[channel]
         const position = new Map(orderedIds.map((id, index) => [id, index]))
         queryClient.setQueryData<Product[]>(
           key,
           previous.map((product) =>
-            position.has(product.id)
-              ? { ...product, sortOrder: position.get(product.id) as number }
-              : product,
+            position.has(product.id) ? { ...product, [field]: position.get(product.id) as number } : product,
           ),
         )
       }

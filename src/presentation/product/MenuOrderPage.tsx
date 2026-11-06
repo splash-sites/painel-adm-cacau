@@ -3,16 +3,23 @@ import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, ChevronDown, ChevronRight, GripVertical } from 'lucide-react'
 import { toast } from 'sonner'
 import { useEffectiveStoreId } from '../storeContext/useEffectiveStoreId'
-import { groupByCategory, type CategoryGroup } from '../../domain/product/groupByCategory'
+import { groupByCategory, type CategoryGroup, type MenuChannel } from '../../domain/product/groupByCategory'
 import { isProductIncomplete } from '../../domain/product/isProductIncomplete'
 import type { Product } from '../../domain/product/Product'
 import { useCategoryList, useReorderCategories } from '../category/useCategories'
+import { useStore } from '../store/useStores'
 import { useAllProducts, useReorderProductsInCategory } from './useProducts'
 import { Button } from '../ui/Button'
 import { SortableItem, SortableList } from '../ui/SortableList'
 import { cardClass, tableCardClass } from '../ui/styles'
 
 const UNCATEGORIZED_KEY = '__uncategorized__'
+
+const CHANNEL_LABEL: Record<MenuChannel, string> = {
+  dine_in: 'Cafeteria',
+  pickup: 'Para levar ou entrega',
+  reseller: 'Revendedor',
+}
 
 function formatCurrency(value: number): string {
   return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
@@ -25,6 +32,7 @@ function groupKey(group: CategoryGroup): string {
 export function MenuOrderPage() {
   const storeId = useEffectiveStoreId()
   const navigate = useNavigate()
+  const { data: store } = useStore(storeId)
   const { data: categories, isLoading: loadingCategories } = useCategoryList(storeId ?? '')
   const { data: products, isLoading: loadingProducts, error } = useAllProducts(storeId ?? '')
   const reorderCategories = useReorderCategories()
@@ -32,9 +40,21 @@ export function MenuOrderPage() {
 
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
 
+  const availableChannels = useMemo<MenuChannel[]>(() => {
+    if (!store) return ['dine_in', 'pickup', 'reseller']
+    return (['dine_in', 'pickup', 'reseller'] as MenuChannel[]).filter((channel) => {
+      if (channel === 'dine_in') return store.supportsDineIn
+      if (channel === 'pickup') return store.supportsPickup
+      return store.resellerEnabled
+    })
+  }, [store])
+
+  const [channel, setChannel] = useState<MenuChannel>('dine_in')
+  const activeChannel = availableChannels.includes(channel) ? channel : availableChannels[0]
+
   const groups = useMemo(
-    () => (categories && products ? groupByCategory(products, categories) : []),
-    [categories, products],
+    () => (categories && products && activeChannel ? groupByCategory(products, categories, activeChannel) : []),
+    [categories, products, activeChannel],
   )
   const draggableCategoryIds = groups
     .filter((group) => group.category !== null)
@@ -50,9 +70,9 @@ export function MenuOrderPage() {
   }
 
   function handleCategoryReorder(nextIds: string[]) {
-    if (!storeId) return
+    if (!storeId || !activeChannel) return
     reorderCategories.mutate(
-      { storeId, orderedIds: nextIds },
+      { storeId, orderedIds: nextIds, channel: activeChannel },
       {
         onError: (e) =>
           toast.error(e instanceof Error ? e.message : 'Falha ao reordenar categorias'),
@@ -61,8 +81,9 @@ export function MenuOrderPage() {
   }
 
   function handleProductReorder(categoryId: string | null, nextIds: string[]) {
+    if (!activeChannel) return
     reorderProducts.mutate(
-      { categoryId, orderedIds: nextIds },
+      { categoryId, orderedIds: nextIds, channel: activeChannel },
       {
         onError: (e) =>
           toast.error(e instanceof Error ? e.message : 'Falha ao reordenar produtos'),
@@ -78,7 +99,7 @@ export function MenuOrderPage() {
         <div>
           <h2 className="font-display text-[28px] font-bold leading-tight tracking-tight text-ink">Organizar cardápio</h2>
           <p className="font-body text-sm text-muted">
-            Arraste as categorias e os produtos pra montar a ordem que aparece no cardápio. Salva na hora.
+            Arraste as categorias e os produtos pra montar a ordem que aparece no cardápio de cada canal. Salva na hora.
           </p>
         </div>
         {storeId && (
@@ -88,6 +109,23 @@ export function MenuOrderPage() {
           </Button>
         )}
       </div>
+
+      {storeId && availableChannels.length > 1 && (
+        <div className="flex w-fit gap-1 rounded-lg bg-surface-2 p-1">
+          {availableChannels.map((key) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setChannel(key)}
+              className={`rounded-md px-3 py-1.5 text-sm font-body transition ${
+                activeChannel === key ? 'bg-surface text-ink shadow-sm' : 'text-muted hover:text-ink'
+              }`}
+            >
+              {CHANNEL_LABEL[key]}
+            </button>
+          ))}
+        </div>
+      )}
 
       {!storeId && <p className="font-body">Selecione uma loja pra organizar o cardápio.</p>}
       {isLoading && storeId && <p className="font-body">Carregando...</p>}

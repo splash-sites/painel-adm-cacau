@@ -34,7 +34,9 @@ export function CategoryListPage() {
   function handleReorder(nextIds: string[]) {
     if (!storeId) return
     reorderCategories.mutate(
-      { storeId, orderedIds: nextIds },
+      // Essa lista é a de Categorias (CRUD), não a de "Organizar cardápio" — reordena sempre
+      // a Cafeteria (dine_in), a ordem "de sempre"; pickup/revendedor têm a própria tela.
+      { storeId, orderedIds: nextIds, channel: 'dine_in' },
       {
         onError: (reorderError) =>
           toast.error(

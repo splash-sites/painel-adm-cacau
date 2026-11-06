@@ -23,6 +23,8 @@ function makeProduct(overrides: Partial<Product> = {}): Product {
     price: 10,
     loverPrice: 8,
     sortOrder: 0,
+    sortOrderPickup: 0,
+    sortOrderReseller: 0,
     active: true,
     availableDineIn: true,
     availablePickup: true,

@@ -3,11 +3,24 @@ import { groupByCategory } from './groupByCategory'
 import type { Category } from '../category/Category'
 import type { Product } from './Product'
 
-function cat(id: string, name: string, sortOrder: number): Category {
-  return { id, storeId: 's1', name, active: true, sortOrder }
+function cat(
+  id: string,
+  name: string,
+  sortOrder: number,
+  sortOrderPickup = sortOrder,
+  sortOrderReseller = sortOrder,
+): Category {
+  return { id, storeId: 's1', name, active: true, sortOrder, sortOrderPickup, sortOrderReseller }
 }
 
-function prod(id: string, name: string, categoryId: string | null, sortOrder: number): Product {
+function prod(
+  id: string,
+  name: string,
+  categoryId: string | null,
+  sortOrder: number,
+  sortOrderPickup = sortOrder,
+  sortOrderReseller = sortOrder,
+): Product {
   return {
     id,
     storeId: 's1',
@@ -28,6 +41,8 @@ function prod(id: string, name: string, categoryId: string | null, sortOrder: nu
     price: 0,
     loverPrice: 0,
     sortOrder,
+    sortOrderPickup,
+    sortOrderReseller,
     active: true,
     availableDineIn: true,
     availablePickup: true,
@@ -71,5 +86,33 @@ describe('groupByCategory', () => {
 
     const withoutNull = groupByCategory([prod('p1', 'Café', 'c-beb', 0)], [bebidas])
     expect(withoutNull.some((g) => g.category === null)).toBe(false)
+  })
+
+  it('orders independently per channel (dine_in, pickup, reseller)', () => {
+    const natal = prod('p-natal', 'Especial de Natal', 'c-beb', 0, 5, 5) // topo na Cafeteria, por último no resto
+    const agua = prod('p-agua', 'Água', 'c-beb', 1, 0, 0)
+    const products = [natal, agua]
+
+    const dineIn = groupByCategory(products, [bebidas], 'dine_in')
+    expect(dineIn[0].products.map((p) => p.name)).toEqual(['Especial de Natal', 'Água'])
+
+    const pickup = groupByCategory(products, [bebidas], 'pickup')
+    expect(pickup[0].products.map((p) => p.name)).toEqual(['Água', 'Especial de Natal'])
+
+    const reseller = groupByCategory(products, [bebidas], 'reseller')
+    expect(reseller[0].products.map((p) => p.name)).toEqual(['Água', 'Especial de Natal'])
+  })
+
+  it('defaults to dine_in (Cafeteria) when channel is omitted', () => {
+    const products = [prod('p-natal', 'Especial de Natal', 'c-beb', 0, 9, 9), prod('p-agua', 'Água', 'c-beb', 1, 0, 0)]
+    const groups = groupByCategory(products, [bebidas])
+    expect(groups[0].products.map((p) => p.name)).toEqual(['Especial de Natal', 'Água'])
+  })
+
+  it('orders categories independently per channel too', () => {
+    const bebidasChannel = cat('c-beb', 'Bebidas', 0, 1, 1)
+    const docesChannel = cat('c-doc', 'Doces', 1, 0, 0)
+    const groups = groupByCategory([], [bebidasChannel, docesChannel], 'pickup')
+    expect(groups.map((g) => g.category?.name)).toEqual(['Doces', 'Bebidas'])
   })
 })

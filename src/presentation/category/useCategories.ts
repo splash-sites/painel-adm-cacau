@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { SupabaseCategoryRepository } from '../../infrastructure/category/SupabaseCategoryRepository'
 import type { CategoryInput } from '../../application/category/CategoryRepository'
 import type { Category } from '../../domain/category/Category'
+import type { MenuChannel } from '../../domain/product/groupByCategory'
 
 export const categoryRepository = new SupabaseCategoryRepository()
 
@@ -53,8 +54,15 @@ export function useReorderCategories() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: ({ storeId, orderedIds }: { storeId: string; orderedIds: string[] }) =>
-      categoryRepository.reorder(storeId, orderedIds),
+    mutationFn: ({
+      storeId,
+      orderedIds,
+      channel,
+    }: {
+      storeId: string
+      orderedIds: string[]
+      channel: MenuChannel
+    }) => categoryRepository.reorder(storeId, orderedIds, channel),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['categories'] })
     },

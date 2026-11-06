@@ -1,4 +1,5 @@
 import type { Category } from '../../domain/category/Category'
+import type { MenuChannel } from '../../domain/product/groupByCategory'
 
 export interface CategoryInput {
   name: string
@@ -6,11 +7,11 @@ export interface CategoryInput {
 }
 
 export interface CategoryRepository {
-  /** Ordenado por sort_order (e nome como desempate). */
+  /** Ordenado por sort_order (Cafeteria) e nome como desempate. */
   list(storeId: string): Promise<Category[]>
   create(storeId: string, input: CategoryInput): Promise<Category>
   update(id: string, input: CategoryInput): Promise<void>
   delete(id: string): Promise<void>
-  /** Grava a nova ordem (sort_order = posição na lista) de todas as categorias da loja. */
-  reorder(storeId: string, orderedIds: string[]): Promise<void>
+  /** Grava a nova ordem (posição na lista) de todas as categorias da loja, no canal dado. */
+  reorder(storeId: string, orderedIds: string[], channel: MenuChannel): Promise<void>
 }
